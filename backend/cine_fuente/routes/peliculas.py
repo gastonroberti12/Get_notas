@@ -5,8 +5,8 @@ from cine_fuente.services.omdb_service import (
     OmdbError,
     OmdbResponseError,
     OmdbUnavailableError,
-    get_movie_details,
-    search_movies,
+    obtener_detalle_pelicula,
+    buscar_peliculas as buscar_peliculas_omdb,
 )
 
 
@@ -29,7 +29,7 @@ def buscar_peliculas():
         return jsonify({"error": "El parámetro pagina debe estar entre 1 y 100."}), 400
 
     try:
-        result = search_movies(query, page)
+        result = buscar_peliculas_omdb(query, page)
     except OmdbConfigurationError as error:
         return jsonify({"error": str(error)}), 503
     except OmdbResponseError as error:
@@ -43,7 +43,7 @@ def buscar_peliculas():
 @peliculas_bp.get("/<imdb_id>")
 def detalle_pelicula(imdb_id):
     try:
-        movie = get_movie_details(imdb_id)
+        movie = obtener_detalle_pelicula(imdb_id)
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
     except OmdbConfigurationError as error:
