@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-from .constants import DB_URL
+from constants import DB_URL
 
 # Motor de conexion compartido por toda la aplicacion.
 # El pool de conexiones lo maneja SQLAlchemy automaticamente.
