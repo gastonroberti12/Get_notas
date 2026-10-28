@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Cine Paradiso{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body>
     <header class="navbar">
-        <a class="logo" href="{{ url_for('#') }}">Cine Paradiso</a>
+        <a class="logo" href="#">Cine Paradiso</a>
         <nav>
-            <a href="{{ url_for('#') }}">Películas</a>
-            <a href="{{ url_for('#') }}">Cines</a>
+            <a href="#">Películas</a> {# {{ url_for('#') }} #}
+            <a href="#">Cines</a>
             {% if session.get('usuario') %}
-                <a href="{{ url_for('#') }}">{{ session['usuario']['nombre'] }}</a>
+                <a href="#">{{ session['usuario']['nombre'] }}</a>
             {% else %}
-                <a href="{{ url_for('#') }}">Ingresar</a>
+                <a class="nav-ingreso" href="#">Ingresar</a>
             {% endif %}
         </nav>
     </header>
