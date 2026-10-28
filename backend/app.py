@@ -9,13 +9,13 @@ from cine_fuente.routes.peliculas import peliculas_bp
 load_dotenv(Path(__file__).with_name(".env"), override=False)
 
 
-def create_app():
+def crear_app():
     app = Flask(__name__)
     app.register_blueprint(peliculas_bp)
     return app
 
 
-app = create_app()
+app = crear_app()
 
 
 if __name__ == "__main__":
