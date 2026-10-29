@@ -51,4 +51,6 @@ def registro():
 
 @users_bp.route("/perfil")
 def profile():
+    if 'usuario' not in session:
+        return redirect(url_for('users.login'))
     return render_template("perfil.html")
