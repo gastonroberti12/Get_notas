@@ -21,7 +21,7 @@ def clausula_in(valores, prefijo):
     return marcadores_parametros, parametros
 
 
-# GET /reservas y /usuarios/me/reservas
+# GET /reservas, /usuarios/me/reservas y /reservas/{id}
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
@@ -85,3 +85,14 @@ def contar_reservas(filtros, usuario_propio_id=None):
     where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
     filas = consultar(f"SELECT COUNT(*) AS total FROM reservas AS r {where}", parametros)
     return int(filas[0]["total"]) if filas else 0
+
+
+def obtener_reserva_por_id(reserva_id):
+    """Obtiene una reserva."""
+    sql = """
+        SELECT id, usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion, total
+        FROM reservas
+        WHERE id = :reserva_id
+    """
+    filas = consultar(sql, {"reserva_id": reserva_id})
+    return filas[0] if filas else None
