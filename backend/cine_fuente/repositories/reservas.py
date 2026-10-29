@@ -301,7 +301,7 @@ def procesar_reservas_vencidas(ahora):
             try:
                 restaurar_estado_reserva(reserva_id, "pendiente", None)
             except Exception:
-                # Se conserva el error original; el servicio y la ruta lo registrarán.
+                # Conservo el error original si no puedo restaurar el estado de la reserva.
                 pass
             raise
 
