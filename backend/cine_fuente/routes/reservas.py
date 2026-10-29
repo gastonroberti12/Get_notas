@@ -52,3 +52,21 @@ def get_reservas():
         return respuesta_error_excepcion(error)
     except Exception:
         return respuesta_error_interno()
+
+
+# Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
+@reservas_bp.get("/usuarios/me/reservas")
+@requiere_token()
+def get_mis_reservas():
+    try:
+        estado = validar_estado_propio(request.args)
+        limit, offset = validar_paginacion(request.args)
+        filtros = {"usuario_id": None, "funcion_id": None, "estado": estado, "fecha_desde": None, "fecha_hasta": None}
+        reservas, total = compras_service.listar_reservas(
+            filtros, limit, offset, usuario_propio_id=int(g.usuario["id"])
+        )
+        return respuesta_paginada("reservas", reservas, total, limit, offset)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
