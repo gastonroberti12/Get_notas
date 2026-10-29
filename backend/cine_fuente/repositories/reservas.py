@@ -283,3 +283,26 @@ def listar_reservas_vencidas(fecha_limite):
         ORDER BY id
     """
     return consultar(sql, {"fecha_limite": fecha_limite})
+
+
+def procesar_reservas_vencidas(ahora):
+    """Expira reservas con diez minutos o más."""
+    fecha_limite = (ahora - timedelta(minutes=10)).replace(tzinfo=None)
+    vencidas = listar_reservas_vencidas(fecha_limite)
+    procesadas = 0
+
+    for fila in vencidas:
+        reserva_id = int(fila["id"])
+        try:
+            actualizar_estado_reserva(reserva_id, "expirada")
+            eliminar_entradas_reserva(reserva_id)
+            procesadas += 1
+        except Exception:
+            try:
+                restaurar_estado_reserva(reserva_id, "pendiente", None)
+            except Exception:
+                # Se conserva el error original; el servicio y la ruta lo registrarán.
+                pass
+            raise
+
+    return procesadas
