@@ -254,3 +254,49 @@ def confirmar_pago(reserva_id, usuario):
         except Exception:
             logger.exception("No se pudo restaurar la reserva %s después de un fallo de pago", reserva_id)
         raise
+
+
+# PATCH /reservas/{id}
+
+def cancelar_reserva(reserva_id, usuario):
+    """Cancela la reserva si pertenece al usuario y faltan al menos 60 minutos."""
+    ahora = ahora_gmt3()
+    procesar_expiraciones()
+    reserva = compras_repo.obtener_reserva_por_id(reserva_id)
+    if reserva is None:
+        error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
+    verificar_titular_o_admin(reserva, usuario)
+
+    estado_anterior = reserva["estado"]
+    fecha_cancelacion_anterior = reserva.get("fecha_cancelacion")
+    if estado_anterior not in ("pendiente", "confirmada"):
+        error(
+            "RESERVA_NO_CANCELABLE",
+            "Reserva no cancelable",
+            "Solo se pueden cancelar reservas pendientes o confirmadas.",
+            409,
+        )
+
+    fecha_funcion = compras_repo.obtener_fecha_funcion_de_reserva(reserva_id)
+    if fecha_funcion is None:
+        error("FUNCION_NO_ENCONTRADA", "Función no encontrada", "La función asociada a la reserva no existe.", 404)
+    if normalizar_fecha_local(fecha_funcion) - ahora < timedelta(hours=1):
+        error(
+            "PLAZO_CANCELACION_VENCIDO",
+            "No se puede cancelar la reserva",
+            "La cancelación requiere al menos una hora de anticipación.",
+            409,
+        )
+
+    try:
+        compras_repo.actualizar_estado_reserva(
+            reserva_id, "cancelada", fecha_cancelacion=ahora.replace(tzinfo=None)
+        )
+        compras_repo.eliminar_entradas_reserva(reserva_id)
+    except Exception:
+        # Si la segunda escritura falla, se restaura el estado previo de la reserva.
+        try:
+            compras_repo.restaurar_estado_reserva(reserva_id, estado_anterior, fecha_cancelacion_anterior)
+        except Exception:
+            logger.exception("No se pudo restaurar la reserva %s tras un error de cancelación", reserva_id)
+        raise
