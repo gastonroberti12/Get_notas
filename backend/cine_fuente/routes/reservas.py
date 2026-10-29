@@ -37,3 +37,18 @@ def respuesta_error_interno():
     return jsonify(construir_error_api(
         "ERROR_INTERNO", "Error interno del servidor", "No se pudo completar la operación solicitada."
     )), 500
+
+
+# Endpoint GET /reservas
+@reservas_bp.get("/reservas")
+@requiere_token(("administrador",))
+def get_reservas():
+    try:
+        filtros = validar_filtros_listado(request.args)
+        limit, offset = validar_paginacion(request.args)
+        reservas, total = compras_service.listar_reservas(filtros, limit, offset)
+        return respuesta_paginada("reservas", reservas, total, limit, offset)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
