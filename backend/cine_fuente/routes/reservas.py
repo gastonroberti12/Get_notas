@@ -122,7 +122,7 @@ def post_reserva():
 
 # Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
 @reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
-@requiere_token("Cliente")
+@requiere_token("cliente")
 def post_pago_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -137,7 +137,7 @@ def post_pago_reserva(id_reserva):
 
 # Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
-@requiere_token("Cliente")
+@requiere_token("cliente", "administrador")
 def patch_cancelar_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
