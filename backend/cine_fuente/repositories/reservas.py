@@ -269,3 +269,17 @@ def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
 def eliminar_entradas_reserva(reserva_id):
     """PATCH /reservas/{id} y expiración: elimina entradas para liberar las butacas."""
     return escribir("DELETE FROM entrada WHERE reserva_id = :reserva_id", {"reserva_id": reserva_id})
+
+
+# Expiración
+
+
+def listar_reservas_vencidas(fecha_limite):
+    """Lista reservas pendientes vencidas."""
+    sql = """
+        SELECT id
+        FROM reservas
+        WHERE estado = 'pendiente' AND fecha_compra <= :fecha_limite
+        ORDER BY id
+    """
+    return consultar(sql, {"fecha_limite": fecha_limite})
