@@ -226,7 +226,7 @@ def obtener_fecha_funcion_de_reserva(reserva_id):
     sql = """
         SELECT f.fecha_hora
         FROM reservas AS r
-        INNER JOIN funciones AS f ON f.id = r.funcion_id
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
         WHERE r.id = :reserva_id
     """
     filas = consultar(sql, {"reserva_id": reserva_id})

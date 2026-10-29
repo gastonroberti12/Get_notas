@@ -2,15 +2,15 @@ import logging
 
 from flask import Blueprint, g, jsonify, make_response, request
 
-from cine_fuente.services import compras_service
-from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
+from cine_fuente.services import reservas as compras_service
+# from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
 from cine_fuente.utils import (
     construir_error_api,
     requiere_token,
     respuesta_paginada,
     validar_paginacion,
 )
-from cine_fuente.validators.compra import (
+from cine_fuente.validators.reservas import (
     validar_body_cancelar_reserva,
     validar_body_crear_reserva,
     validar_filtros_listado,
@@ -56,7 +56,7 @@ def get_reservas():
 
 # Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
 @reservas_bp.route("/usuarios/me/reservas", methods=["GET"])
-@requiere_token("cliente", "administrador")
+@requiere_token(("cliente",))
 def get_mis_reservas():
     try:
         estado = validar_estado_propio(request.args)
@@ -74,7 +74,7 @@ def get_mis_reservas():
 
 # Endpoint GET /reservas/{id}: devuelve una reserva solo al titular o al administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["GET"])
-@requiere_token("cliente", "administrador")
+@requiere_token(("cliente", "administrador"))
 def get_reserva_id(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -88,7 +88,7 @@ def get_reserva_id(id_reserva):
 
 # Endpoint GET /reservas/{id}/entradas: devuelve las entradas con paginación, al titular o administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>/entradas", methods=["GET"])
-@requiere_token("cliente", "administrador")
+@requiere_token(("cliente", "administrador"))
 def get_entradas_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -122,12 +122,15 @@ def post_reserva():
 
 # Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
 @reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
-@requiere_token("cliente")
+@requiere_token(("cliente",))
 def post_pago_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
         reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
-        enviar_confirmacion_pago(datos_notificacion)
+        try:
+            enviar_confirmacion_pago(datos_notificacion)
+        except Exception:
+            logger.exception("No se pudo enviar el mail de la reserva %s", id_valido)
         return jsonify(reserva), 200
     except ValueError as error:
         return respuesta_error_excepcion(error)

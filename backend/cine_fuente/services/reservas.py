@@ -3,6 +3,8 @@ from datetime import timedelta, timezone
 from uuid import uuid4
 
 from cine_fuente.repositories import reservas as compras_repo
+from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
+from cine_fuente.repositories.butacas import obtener_butacas as obtener_butacas
 from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 
 logger = logging.getLogger(__name__)
@@ -95,7 +97,7 @@ def listar_entradas_reserva(reserva_id, usuario, limit, offset):
     return [entrada_api(entrada) for entrada in entradas], total
 
 
-# POST /reservasy /reservas/{id}/pago
+# POST /reservas y /reservas/{id}/pago
 
 
 def crear_reserva(usuario_id, funcion_id, butaca_ids):
@@ -106,7 +108,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
     # Se procesan vencimientos antes de comprobar disponibilidad.
     procesar_expiraciones()
 
-    funcion = compras_repo.obtener_funcion(funcion_id)
+    funcion = obtener_funcion(funcion_id)
     if funcion is None:
         error(
             "FUNCION_NO_ENCONTRADA",
@@ -123,7 +125,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
             409,
         )
 
-    butacas = compras_repo.obtener_butacas(butaca_ids)
+    butacas = obtener_butacas(butaca_ids)
 
     if len(butacas) != len(butaca_ids):
         encontradas = {int(butaca["id"]) for butaca in butacas}
