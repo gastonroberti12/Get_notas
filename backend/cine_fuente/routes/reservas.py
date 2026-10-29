@@ -56,7 +56,7 @@ def get_reservas():
 
 # Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
 @reservas_bp.route("/usuarios/me/reservas", methods=["GET"])
-@requiere_token()
+@requiere_token("cliente", "administrador")
 def get_mis_reservas():
     try:
         estado = validar_estado_propio(request.args)
@@ -74,7 +74,7 @@ def get_mis_reservas():
 
 # Endpoint GET /reservas/{id}: devuelve una reserva solo al titular o al administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["GET"])
-@requiere_token()
+@requiere_token("cliente", "administrador")
 def get_reserva_id(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -88,7 +88,7 @@ def get_reserva_id(id_reserva):
 
 # Endpoint GET /reservas/{id}/entradas: devuelve las entradas con paginación, al titular o administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>/entradas", methods=["GET"])
-@requiere_token()
+@requiere_token("cliente", "administrador")
 def get_entradas_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -122,7 +122,7 @@ def post_reserva():
 
 # Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
 @reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
-@requiere_token()
+@requiere_token("Cliente")
 def post_pago_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
@@ -137,7 +137,7 @@ def post_pago_reserva(id_reserva):
 
 # Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
-@requiere_token()
+@requiere_token("Cliente")
 def patch_cancelar_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
