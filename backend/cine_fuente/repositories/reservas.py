@@ -217,3 +217,55 @@ def obtener_datos_notificacion(reserva_id):
         {"reserva_id": reserva_id},
     )
     return datos
+
+
+# PATCH /reservas/{id}
+
+def obtener_fecha_funcion_de_reserva(reserva_id):
+    """Obtiene la fecha de la función para validar la anticipación de cancelación."""
+    sql = """
+        SELECT f.fecha_hora
+        FROM reservas AS r
+        INNER JOIN funciones AS f ON f.id = r.funcion_id
+        WHERE r.id = :reserva_id
+    """
+    filas = consultar(sql, {"reserva_id": reserva_id})
+    return filas[0]["fecha_hora"] if filas else None
+
+
+def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
+    """Actualiza el estado de la reserva."""
+    if estado == "cancelada":
+        sql = """
+            UPDATE reservas
+            SET estado = :estado, fecha_cancelacion = :fecha_cancelacion
+            WHERE id = :reserva_id
+        """
+        parametros = {
+            "estado": estado,
+            "fecha_cancelacion": fecha_cancelacion,
+            "reserva_id": reserva_id,
+        }
+    else:
+        sql = "UPDATE reservas SET estado = :estado WHERE id = :reserva_id"
+        parametros = {"estado": estado, "reserva_id": reserva_id}
+    return escribir(sql, parametros)
+
+
+def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
+    """Compensa una escritura parcial ante un error."""
+    sql = """
+        UPDATE reservas
+        SET estado = :estado, fecha_cancelacion = :fecha_cancelacion
+        WHERE id = :reserva_id
+    """
+    return escribir(sql, {
+        "estado": estado,
+        "fecha_cancelacion": fecha_cancelacion,
+        "reserva_id": reserva_id,
+    })
+
+
+def eliminar_entradas_reserva(reserva_id):
+    """PATCH /reservas/{id} y expiración: elimina entradas para liberar las butacas."""
+    return escribir("DELETE FROM entrada WHERE reserva_id = :reserva_id", {"reserva_id": reserva_id})
