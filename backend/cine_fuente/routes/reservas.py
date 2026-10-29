@@ -133,3 +133,18 @@ def post_pago_reserva(id_reserva):
         return respuesta_error_excepcion(error)
     except Exception:
         return respuesta_error_interno()
+
+
+# Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
+@reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
+@requiere_token()
+def patch_cancelar_reserva(id_reserva):
+    try:
+        id_valido = validar_id_reserva(id_reserva)
+        validar_body_cancelar_reserva(request.get_json(silent=True))
+        compras_service.cancelar_reserva(id_valido, g.usuario)
+        return "", 204
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
