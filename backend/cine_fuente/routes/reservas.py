@@ -84,3 +84,18 @@ def get_reserva_id(id_reserva):
         return respuesta_error_excepcion(error)
     except Exception:
         return respuesta_error_interno()
+
+
+# Endpoint GET /reservas/{id}/entradas: devuelve las entradas con paginación, al titular o administrador.
+@reservas_bp.route("/reservas/<int:id_reserva>/entradas", methods=["GET"])
+@requiere_token()
+def get_entradas_reserva(id_reserva):
+    try:
+        id_valido = validar_id_reserva(id_reserva)
+        limit, offset = validar_paginacion(request.args)
+        entradas, total = compras_service.listar_entradas_reserva(id_valido, g.usuario, limit, offset)
+        return respuesta_paginada("entradas", entradas, total, limit, offset)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
