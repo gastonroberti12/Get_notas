@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Crear cuenta{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="section-registro">
+    <h1>Crear cuenta</h1>
+    <p class="formulario_intro">Registrate para comprar entradas y ver tus compras.</p>
+
+    {% if error %}
+    <div class="formulario_alerta" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('users.registro') }}" class="formulario-registro">
+        <div class="formulario_fila">
+            <label class="formulario_campo">
+                <span>Nombre *</span>
+                <input type="text" name="nombre" required maxlength="80" autocomplete="given-name" value="{{ nombre or '' }}">
+            </label>
+
+            <label class="formulario_campo">
+                <span>Apellido *</span>
+                <input type="text" name="apellido" required maxlength="80" autocomplete="family-name" value="{{ apellido or '' }}">
+            </label>
+        </div>
+
+        <label class="formulario_campo">
+            <span>Email *</span>
+            <input type="email" name="email" required maxlength="150" autocomplete="email" value="{{ email or '' }}">
+        </label>
+
+        <label class="formulario_campo">
+            <span>Contraseña *</span>
+            <input type="password" name="password" required minlength="8" maxlength="255">
+        </label>
+
+        <div class="formulario_acciones">
+            <button type="submit" class="boton">Crear cuenta</button>
+        </div>
+    </form>
+
+    <p class="formulario_link">¿Ya tenés cuenta? <a href="{{ url_for('users.login') }}">Ingresá</a></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %}
