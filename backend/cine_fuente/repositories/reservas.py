@@ -21,7 +21,7 @@ def clausula_in(valores, prefijo):
     return marcadores_parametros, parametros
 
 
-# GET /reservas, /usuarios/me/reservas y /reservas/{id}
+# GET /reservas, /usuarios/me/reservas, /reservas/{id} y /reservas/{id}/entradas
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
@@ -96,3 +96,24 @@ def obtener_reserva_por_id(reserva_id):
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     return filas[0] if filas else None
+
+
+def listar_entradas_reserva(reserva_id, limit, offset):
+    """GET /reservas/{id}/entradas: lista las entradas de la reserva con paginación."""
+    sql = """
+        SELECT id, reserva_id, butaca_id, codigo_qr, estado, fecha_uso
+        FROM entrada
+        WHERE reserva_id = :reserva_id
+        ORDER BY id ASC
+        LIMIT :limit OFFSET :offset
+    """
+    return consultar(sql, {"reserva_id": reserva_id, "limit": limit, "offset": offset})
+
+
+def contar_entradas_reserva(reserva_id):
+    """GET /reservas/{id}/entradas: cuenta entradas para construir los enlaces de paginación."""
+    filas = consultar(
+        "SELECT COUNT(*) AS total FROM entrada WHERE reserva_id = :reserva_id",
+        {"reserva_id": reserva_id},
+    )
+    return int(filas[0]["total"]) if filas else 0
