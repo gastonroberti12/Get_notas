@@ -46,7 +46,7 @@ def entrada_api(fila):
     }
 
 
-# GET /reservas, /usuarios/me/reservas y /reservas/{id}
+# GET /reservas, /usuarios/me/reservas, /reservas/{id} y /reservas/{id}/entradas
 
 
 def procesar_expiraciones():
@@ -69,11 +69,11 @@ def obtener_reserva(reserva_id, usuario, exige_titular_o_admin=True):
     if reserva is None:
         error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
     if exige_titular_o_admin:
-        _verificar_titular_o_admin(reserva, usuario)
+        verificar_titular_o_admin(reserva, usuario)
     return reserva_api(reserva)
 
 
-def _verificar_titular_o_admin(reserva, usuario):
+def verificar_titular_o_admin(reserva, usuario):
     """Autoriza titular o administrador."""
     if usuario.get("rol") != "administrador" and int(reserva["usuario_id"]) != int(usuario["id"]):
         error(
@@ -82,3 +82,15 @@ def _verificar_titular_o_admin(reserva, usuario):
             "La reserva no pertenece al usuario autenticado.",
             403,
         )
+
+
+def listar_entradas_reserva(reserva_id, usuario, limit, offset):
+    """Lsta las entradas de la reserva para su titular o administrador."""
+    procesar_expiraciones()
+    reserva = compras_repo.obtener_reserva_por_id(reserva_id)
+    if reserva is None:
+        error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
+    verificar_titular_o_admin(reserva, usuario)
+    entradas = compras_repo.listar_entradas_reserva(reserva_id, limit, offset)
+    total = compras_repo.contar_entradas_reserva(reserva_id)
+    return [entrada_api(entrada) for entrada in entradas], total
