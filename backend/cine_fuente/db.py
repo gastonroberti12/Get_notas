@@ -1,20 +1,32 @@
-from sqlalchemy import create_engine, text
-from .constants import DB_URL
+import pymysql
+from pymysql.cursors import DictCursor
 
-# Motor de conexion compartido por toda la aplicacion.
-# El pool de conexiones lo maneja SQLAlchemy automaticamente.
-motor = create_engine(DB_URL, pool_pre_ping=True)
+from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 
-def ejecutar_consulta(sql: str, params: dict = None) -> list[dict]:
-    """Ejecuta consulta SQL de lectura en BD"""
-    with motor.connect() as conexion:
-        resultado = conexion.execute(text(sql), params or {})
-        return [dict(fila._mapping) for fila in resultado]
+
+def obtener_conexion():
+    return pymysql.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        charset="utf8mb4", #para tildes 
+        cursorclass=DictCursor,
+    )
 
 
-def ejecutar_escritura(sql: str, params: dict = None) -> int:
-    """Ejecuta consulta SQL de escritura en BD"""
-    with motor.begin() as conexion:
-        resultado = conexion.execute(text(sql), params or {})
-        return resultado.lastrowid
+def ejecutar_consulta(sql, params=None):
+    """Ejecuta un SELECT y devuelve una lista de diccionarios."""
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql, params)
+        return cursor.fetchall()
+
+
+def ejecutar_escritura(sql, params=None):
+    """Ejecuta un INSERT/UPDATE/DELETE, confirma y devuelve el id generado."""
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql, params)
+        conexion.commit()
+        return cursor.lastrowid

@@ -1,5 +1,5 @@
 -- seed.sql - Datos iniciales de Cine Paradiso 
--- Esto se ejecuta despues del init_db.sql
+-- Esto se ejecuta despues del cine_paradiso.sql
 
 -- #37 Sucursales y salas con capacidades distintas
 
@@ -28,7 +28,7 @@ INSERT INTO butacas (sala_id, fila, numero)
 WITH RECURSIVE filas AS (
     SELECT 1 AS columna
     UNION ALL
-    SELECT columna + 1 --toma el ultimo numero generado y le suma 1
+    SELECT columna + 1 -- toma el ultimo numero generado y le suma 1
     FROM filas
     WHERE columna < 10 -- se repite mientras el numero sea menor a 10
 ),
@@ -38,9 +38,9 @@ numeros_butaca AS (
 )
 SELECT
     salas.id,
-    CHAR(64 + filas.columna) AS fila, --convierte un numero en un caracter (ASCII) sirve para filas en letras
+    CHAR(64 + filas.columna) AS fila, -- convierte un numero en un caracter (ASCII) sirve para filas en letras
     numeros_butaca.columna AS columna
 FROM salas
 JOIN filas
-    ON filas.columna <= salas.capacidad / 10 --determina cuantas filas va a tener la sala
-CROSS JOIN numeros_butaca; --combina cada fila con las 10 butacas posibles
+    ON filas.columna <= salas.capacidad / 10 -- determina cuantas filas va a tener la sala
+CROSS JOIN numeros_butaca; -- combina cada fila con las 10 butacas posibles

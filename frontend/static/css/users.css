@@ -1,0 +1,125 @@
+.section-login,
+.section-registro {
+  max-width: 440px;
+  margin: 24px auto 0;
+  padding: 36px 32px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.section-login h1,
+.section-registro h1 {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 34px;
+  margin: 0 0 6px;
+}
+
+.formulario_intro {
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+/* ===== Formulario ===== */
+.formulario-login,
+.formulario-registro {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.formulario_fila {
+  display: flex;
+  gap: 14px;
+}
+
+.formulario_campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.formulario_campo span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.formulario_campo input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--border-input);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.formulario_campo input::placeholder { 
+    color: var(--text-faint); 
+}
+
+.formulario_campo input:hover { 
+    border-color: var(--text-faint); 
+}
+
+.formulario_campo input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.formulario_campo input:user-invalid { 
+    border-color: var(--danger); 
+}
+
+/* ===== Botón y mensajes ===== */
+.formulario_acciones { 
+    margin-top: 6px; 
+}
+
+.boton {
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--red);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) { 
+    background: var(--red-hover); 
+}
+
+.boton:disabled { 
+    opacity: .6; cursor: default; 
+}
+
+.formulario_alerta {
+  margin-bottom: 18px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.formulario_link {
+  margin: 22px 0 0;
+  text-align: center;
+  color: var(--text-muted);
+}
+.formulario_link a { 
+    color: var(--gold); font-weight: 600; 
+}
+.formulario_link a:hover { 
+    color: var(--gold-hover); 
+}
