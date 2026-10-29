@@ -1,30 +1,36 @@
-from cine_fuente.db import ejecutar_consulta
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from constants import CAMPOS_SERVICIOS_PERMITIDOS
 
+
+# GET /servicios
 def consultar_servicios():
-    query = """
+    sql = """
         SELECT id, nombre, descripcion, precio
         FROM servicios
         WHERE activo = TRUE
     """
-    return ejecutar_consulta(query)
 
+    return ejecutar_consulta(sql)
+
+
+# GET /servicios/<id>
 def consultar_servicio_por_id(servicio_id):
-    query = """
+    sql = """
         SELECT id, nombre, descripcion, precio
         FROM servicios
-        WHERE id = :id AND activo = TRUE
+        WHERE id = %(id)s AND activo = TRUE
     """
 
-    resultados = ejecutar_consulta(query, {"id": servicio_id})
+    resultado = ejecutar_consulta(sql, {"id": servicio_id})
 
-    return resultados[0] if resultados else None
+    return resultado[0] if resultado else None
 
-from cine_fuente.db import ejecutar_escritura
 
+# POST /servicios
 def insertar_servicio(nombre, descripcion, precio):
-    query = """
+    sql = """
         INSERT INTO servicios (nombre, descripcion, precio)
-        VALUES (:nombre, :descripcion, :precio)
+        VALUES (%(nombre)s, %(descripcion)s, %(precio)s)
     """
 
     params = {
@@ -33,4 +39,42 @@ def insertar_servicio(nombre, descripcion, precio):
         "precio": precio
     }
 
-    return ejecutar_escritura(query, params)
+    return ejecutar_escritura(sql, params)
+
+
+# Comprobar existencia, incluso si está inactivo
+def existe_servicio(servicio_id):
+    sql = """
+        SELECT id
+        FROM servicios
+        WHERE id = %(id)s
+    """
+
+    resultado = ejecutar_consulta(sql, {"id": servicio_id})
+
+    return len(resultado) > 0
+
+
+# PATCH /servicios/<id>
+def actualizar_servicio(servicio_id, campos):
+
+    if not campos:
+        raise ValueError("No hay campos para actualizar")
+
+    for campo in campos:
+        if campo not in CAMPOS_SERVICIOS_PERMITIDOS:
+            raise ValueError(f"Campo no permitido: {campo}")
+
+    modificaciones = ", ".join(
+        f"{campo} = %({campo})s" for campo in campos
+    )
+
+    sql = f"""
+        UPDATE servicios
+        SET {modificaciones}
+        WHERE id = %(id)s
+    """
+
+    params = {**campos, "id": servicio_id}
+
+    ejecutar_escritura(sql, params)

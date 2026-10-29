@@ -1,3 +1,4 @@
+from constants import CAMPOS_SERVICIOS_PERMITIDOS
 
 def validar_id_servicio(servicio_id):
     return servicio_id > 0
@@ -51,3 +52,35 @@ def validar_precio(precio):
         raise ValueError("El precio debe tener como máximo dos decimales")
 
     return precio
+
+def validar_activo(activo):
+    if not isinstance(activo, bool):
+        raise ValueError("El campo activo debe ser true o false")
+
+    return activo
+
+
+def validar_campos_servicio(datos): # devuelve los campos que se pasan en la request en un diccionario campo:valor ya validados
+
+    if not isinstance(datos, dict) or not datos:
+        raise ValueError("No se enviaron datos válidos")
+
+    validadores = {     
+        "nombre": validar_nombre,
+        "descripcion": validar_descripcion,
+        "precio": validar_precio,
+        "activo": validar_activo
+    }
+    #es un diccionario donde los valores de las claves hacen referencia a las funciones, por eso va sin los () pq no la estamos ejecutando
+
+    campos = {}
+
+    for campo, valor in datos.items():
+
+        if campo not in CAMPOS_SERVICIOS_PERMITIDOS:
+            raise ValueError(f"Campo no permitido: {campo}")
+
+        campos[campo] = validadores[campo](valor)
+        # validadores["nombre"]("Pochoclos XL") equivale a validar_nombre("Pochoclos XL")
+
+    return campos

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
-from cine_fuente.repositories.servicios import consultar_servicios, consultar_servicio_por_id, insertar_servicio
-from cine_fuente.validators.servicios import validar_id_servicio, validar_nombre, validar_descripcion, validar_precio
+from cine_fuente.repositories.servicios import consultar_servicios, consultar_servicio_por_id, insertar_servicio, existe_servicio, actualizar_servicio
+from cine_fuente.validators.servicios import validar_id_servicio, validar_nombre, validar_descripcion, validar_precio, validar_activo, validar_campos_servicio
 
 
 
@@ -23,7 +23,6 @@ def obtener_servicio_por_id(servicio_id):
         return jsonify({"error": "Servicio no encontrado"}), 404
 
     return jsonify(servicio), 200
-
 
 
 from flask import request, jsonify, session
@@ -58,4 +57,31 @@ def crear_servicio():
     insertar_servicio(nombre, descripcion, precio)
 
     return jsonify({"mensaje": "Servicio creado correctamente"}), 201
+
+
+@servicios_bp.route("/servicios/<int:servicio_id>", methods=["PATCH"])
+def modificar_servicio(servicio_id):
+
+    if session.get("rol") != "admin":
+        return jsonify({"error": "Acceso denegado"}), 403
+
+    if not validar_id_servicio(servicio_id):
+        return jsonify({"error": "ID inválido"}), 400
+
+    try:
+        datos = request.get_json(silent=True)
+        campos = validar_campos_servicio(datos)
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    if not existe_servicio(servicio_id):
+        return jsonify({"error": "Servicio no encontrado"}), 404
+
+    actualizar_servicio(servicio_id, campos)
+
+    return jsonify({
+        "mensaje": "Servicio actualizado correctamente",
+        "id": servicio_id
+    }), 200
+    
     
