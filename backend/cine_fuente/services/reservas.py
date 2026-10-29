@@ -41,7 +41,6 @@ def entrada_api(fila):
         "reserva_id": int(fila["reserva_id"]),
         "butaca_id": int(fila["butaca_id"]),
         "codigo_qr": fila.get("codigo_qr"),
-        "estado": fila["estado"],
         "fecha_uso": formatear_fecha_hora(fila.get("fecha_uso")),
     }
 

@@ -50,7 +50,7 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
     sql = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
-               r.fecha_cancelacion, r.total
+        r.fecha_cancelacion, r.total
         FROM reservas AS r
         {where}
         ORDER BY r.fecha_compra DESC, r.id DESC
@@ -101,7 +101,7 @@ def obtener_reserva_por_id(reserva_id):
 def listar_entradas_reserva(reserva_id, limit, offset):
     """GET /reservas/{id}/entradas: lista las entradas de la reserva con paginación."""
     sql = """
-        SELECT id, reserva_id, butaca_id, codigo_qr, estado, fecha_uso
+        SELECT id, reserva_id, butaca_id, codigo_qr, fecha_uso
         FROM entrada
         WHERE reserva_id = :reserva_id
         ORDER BY id ASC
@@ -117,3 +117,103 @@ def contar_entradas_reserva(reserva_id):
         {"reserva_id": reserva_id},
     )
     return int(filas[0]["total"]) if filas else 0
+
+
+# POST /reservas y /reservas/{id}/pago
+
+
+def obtener_butacas_ocupadas(funcion_id, butaca_ids):
+    """Comprueba si las butacas tienen entradas asociadas a esa función."""
+    if not butaca_ids:
+        return []
+
+    placeholders, parametros_in = clausula_in(butaca_ids, "ocupada")
+    sql = f"""
+        SELECT e.butaca_id
+        FROM entrada AS e
+        INNER JOIN reservas AS r ON e.reserva_id = r.id
+        WHERE r.funcion_id = :funcion_id
+        AND e.butaca_id IN ({placeholders})
+    """
+    parametros = {"funcion_id": funcion_id}
+    parametros.update(parametros_in)
+
+    filas = consultar(sql, parametros)
+    return [int(fila["butaca_id"]) for fila in filas]
+
+
+def insertar_reserva(datos):
+    """Inserta una reserva pendiente común a las butacas seleccionadas."""
+    sql = """
+        INSERT INTO reservas
+            (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion, total)
+        VALUES
+            (:usuario_id, :funcion_id, :fecha_compra, :estado, NULL, :total)
+    """
+    return escribir(sql, datos)
+
+
+def insertar_entrada(reserva_id, butaca_id):
+    """Inserta una entrada por butaca con código QR nulo."""
+    sql = """
+        INSERT INTO entrada (reserva_id, butaca_id, codigo_qr, fecha_uso)
+        VALUES (:reserva_id, :butaca_id, NULL, NULL)
+    """
+    return escribir(sql, {"reserva_id": reserva_id, "butaca_id": butaca_id})
+
+
+def eliminar_reserva_incompleta(reserva_id):
+    """Elimina la fila recién creada si falló la creación de sus entradas."""
+    return escribir("DELETE FROM reservas WHERE id = :reserva_id", {"reserva_id": reserva_id})
+
+
+def obtener_entradas_para_pago(reserva_id):
+    """Obtiene todas las entradas cuyos QR deben generarse."""
+    sql = """
+        SELECT id, reserva_id, butaca_id, codigo_qr, fecha_uso
+        FROM entrada
+        WHERE reserva_id = :reserva_id
+        ORDER BY id ASC
+    """
+    return consultar(sql, {"reserva_id": reserva_id})
+
+
+def actualizar_entrada_qr(entrada_id, codigo_qr):
+    """Asigna un QR."""
+    sql = """
+        UPDATE entrada
+        SET codigo_qr = :codigo_qr
+        WHERE id = :entrada_id
+    """
+    return escribir(sql, {"codigo_qr": codigo_qr, "entrada_id": entrada_id})
+
+
+def restaurar_entrada_pendiente(entrada_id):
+    """Limpia el QR si falla la confirmación parcial del pago."""
+    sql = """
+        UPDATE entrada
+        SET codigo_qr = NULL
+        WHERE id = :entrada_id
+    """
+    return escribir(sql, {"entrada_id": entrada_id})
+
+
+def obtener_datos_notificacion(reserva_id):
+    """Obtiene email y datos necesarios para el comprobante y sus QR."""
+    sql = """
+        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado, r.total,
+        u.nombre, u.apellido, u.email
+        FROM reservas AS r
+        INNER JOIN usuarios AS u ON u.id = r.usuario_id
+        WHERE r.id = :reserva_id
+    """
+    filas = consultar(sql, {"reserva_id": reserva_id})
+    if not filas:
+        return None
+
+    datos = filas[0]
+    datos["entradas"] = consultar(
+        "SELECT id, butaca_id, codigo_qr FROM entrada WHERE reserva_id = :reserva_id ORDER BY id",
+        {"reserva_id": reserva_id},
+    )
+    return datos
