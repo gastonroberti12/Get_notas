@@ -40,7 +40,7 @@ def respuesta_error_interno():
 
 
 # Endpoint GET /reservas
-@reservas_bp.get("/reservas")
+@reservas_bp.route("/reservas", methods=["GET"])
 @requiere_token(("administrador",))
 def get_reservas():
     try:
@@ -55,7 +55,7 @@ def get_reservas():
 
 
 # Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
-@reservas_bp.get("/usuarios/me/reservas")
+@reservas_bp.route("/usuarios/me/reservas", methods=["GET"])
 @requiere_token()
 def get_mis_reservas():
     try:
@@ -66,6 +66,20 @@ def get_mis_reservas():
             filtros, limit, offset, usuario_propio_id=int(g.usuario["id"])
         )
         return respuesta_paginada("reservas", reservas, total, limit, offset)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
+
+
+# Endpoint GET /reservas/{id}: devuelve una reserva solo al titular o al administrador.
+@reservas_bp.route("/reservas/<int:id_reserva>", methods=["GET"])
+@requiere_token()
+def get_reserva_id(id_reserva):
+    try:
+        id_valido = validar_id_reserva(id_reserva)
+        reserva = compras_service.obtener_reserva(id_valido, g.usuario)
+        return jsonify(reserva), 200
     except ValueError as error:
         return respuesta_error_excepcion(error)
     except Exception:
