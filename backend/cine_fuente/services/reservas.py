@@ -200,3 +200,57 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
                 )
 
         raise
+
+
+def confirmar_pago(reserva_id, usuario):
+    """Simula el pago, confirma la reserva y asigna QR a sus entradas."""
+    procesar_expiraciones()
+    reserva = compras_repo.obtener_reserva_por_id(reserva_id)
+    if reserva is None:
+        error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
+    if int(reserva["usuario_id"]) != int(usuario["id"]):
+        error("RECURSO_NO_AUTORIZADO", "Acceso denegado", "Solo el titular puede pagar la reserva.", 403)
+    if reserva["estado"] != "pendiente":
+        error(
+            "RESERVA_NO_PENDIENTE",
+            "No se puede pagar la reserva",
+            "La reserva debe estar pendiente y dentro del plazo de pago.",
+            409,
+        )
+
+    entradas = compras_repo.obtener_entradas_para_pago(reserva_id)
+    if not entradas:
+        error(
+            "RESERVA_SIN_ENTRADAS",
+            "La reserva no tiene entradas",
+            "No se puede confirmar una reserva sin entradas asociadas.",
+            409,
+        )
+
+    entradas_actualizadas = []
+    try:
+        for entrada in entradas:
+            entrada_id = int(entrada["id"])
+            compras_repo.actualizar_entrada_qr(entrada_id, str(uuid4()))
+            entradas_actualizadas.append(entrada_id)
+
+        compras_repo.actualizar_estado_reserva(reserva_id, "confirmada")
+        reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
+        datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
+        if reserva_actualizada is None or datos_notificacion is None:
+            raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
+
+        return reserva_api(reserva_actualizada), datos_notificacion
+
+    except Exception:
+        # Se intenta dejar el pago en estado pendiente y quitar todos los QR parciales.
+        for entrada_id in entradas_actualizadas:
+            try:
+                compras_repo.restaurar_entrada_pendiente(entrada_id)
+            except Exception:
+                logger.exception("No se pudo restaurar la entrada %s después de un fallo de pago", entrada_id)
+        try:
+            compras_repo.restaurar_estado_reserva(reserva_id, "pendiente", None)
+        except Exception:
+            logger.exception("No se pudo restaurar la reserva %s después de un fallo de pago", reserva_id)
+        raise
