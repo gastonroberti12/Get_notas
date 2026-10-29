@@ -118,3 +118,18 @@ def post_reserva():
         return respuesta_error_excepcion(error)
     except Exception:
         return respuesta_error_interno()
+
+
+# Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
+@reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
+@requiere_token()
+def post_pago_reserva(id_reserva):
+    try:
+        id_valido = validar_id_reserva(id_reserva)
+        reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
+        enviar_confirmacion_pago(datos_notificacion)
+        return jsonify(reserva), 200
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
