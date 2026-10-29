@@ -99,3 +99,22 @@ def get_entradas_reserva(id_reserva):
         return respuesta_error_excepcion(error)
     except Exception:
         return respuesta_error_interno()
+
+
+# Endpoint POST /reservas: el cliente crea una reserva pendiente y bloquea temporalmente sus butacas.
+@reservas_bp.route("/reservas", methods=["POST"])
+@requiere_token(("cliente",))
+def post_reserva():
+    try:
+        body = request.get_json(silent=True)
+        datos = validar_body_crear_reserva(body)
+        reserva_id = compras_service.crear_reserva(
+            int(g.usuario["id"]), datos["funcion_id"], datos["butaca_ids"]
+        )
+        respuesta = make_response(jsonify({"id": reserva_id}), 201)
+        respuesta.headers["Location"] = f"/reservas/{reserva_id}"
+        return respuesta
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception:
+        return respuesta_error_interno()
