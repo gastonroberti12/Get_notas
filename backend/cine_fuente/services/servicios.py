@@ -65,7 +65,6 @@ def verificar_reserva(reserva_id, usuario, modificar=False):
             "Reserva no modificable",
             "Solo se pueden modificar reservas pendientes dentro de los 10 minutos"
         ), 409
-
     return None
 
 
@@ -90,5 +89,4 @@ def verificar_servicio_reservado(reserva_id, servicio_reserva_id, usuario):
             "Servicio no encontrado",
             "El servicio no pertenece a la reserva indicada"
         ), 404
-
     return None

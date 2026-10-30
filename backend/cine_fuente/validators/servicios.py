@@ -117,6 +117,3 @@ def validar_modificacion_servicio_reserva(datos):
 
     return validar_cantidad(datos["cantidad"])
 
-
-
-

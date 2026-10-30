@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container d-flex flex-column justify-content-center align-items-center text-center"
+     style="min-height: 75vh;">
+
+    <h1 class="display-1 fw-bold mb-3">403</h1>
+
+    <h2 class="fw-bold mb-3" style="color: var(--text);">
+        Acceso restringido
+    </h2>
+
+    <p class="fs-5 mb-4" style="color: var(--text-muted);">
+        Parece que no tenes entrada para esta funcion.<br>
+        No tenes los permisos necesarios para acceder a esta seccion.
+    </p>
+
+    <a href="{{ url_for('peliculas.inicio') }}" class="btn-gold">
+        Volver al inicio
+    </a>
+
+</div>
+
+{% endblock %}
