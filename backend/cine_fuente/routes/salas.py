@@ -3,13 +3,13 @@ import pymysql
 
 from cine_fuente.repositories.salas import actualizar_sala, consultar_sala_por_id, consultar_salas, eliminar_sala, insertar_sala
 from cine_fuente.repositories.sucursales import consultar_sucursal_por_id
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
 salas_bp = Blueprint("salas", __name__, url_prefix="/api/salas")
 
 
 def error(codigo, mensaje, descripcion, estado):
-    return jsonify(construir_error_api(codigo, mensaje, descripcion)), estado
+    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 @salas_bp.get("")
@@ -19,7 +19,7 @@ def listar_salas():
         limit, offset = validar_paginacion(request.args)
         salas = consultar_salas(request.args.get("sucursal_id", type=int))
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     return respuesta_paginada("salas", salas[offset:offset + limit], len(salas), limit, offset)
 
 
@@ -48,7 +48,7 @@ def crear_sala():
         return error("invalid.body", "Datos incompletos", f"Falta el campo '{campo.args[0]}'.", 400)
     except (TypeError, ValueError) as error_validacion:
         respuesta = error_validacion.args[0] if error_validacion.args else construir_error_api("invalid.body", "Datos inválidos", "Los datos enviados no son válidos.")
-        return jsonify(respuesta), 400
+        return respuesta_error_api(respuesta, 400)
     if consultar_sucursal_por_id(sucursal_id) is None:
         return error("sucursal.not.found", "Sucursal no encontrada", "La sucursal indicada no existe.", 404)
     try:

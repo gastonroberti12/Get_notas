@@ -5,13 +5,13 @@ from cine_fuente.repositories.servicios import (
     actualizar_servicio, consultar_servicio_por_id, consultar_servicios,
     desactivar_servicio, insertar_servicio,
 )
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
 servicios_bp = Blueprint("servicios", __name__, url_prefix="/api/servicios")
 
 
 def error(codigo, mensaje, descripcion, estado):
-    return jsonify(construir_error_api(codigo, mensaje, descripcion)), estado
+    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 def validar_texto(valor, campo, maximo):
@@ -40,7 +40,7 @@ def listar_servicios():
         limit, offset = validar_paginacion(request.args)
         servicios = consultar_servicios()
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     return respuesta_paginada("servicios", servicios[offset:offset + limit], len(servicios), limit, offset)
 
 
@@ -62,7 +62,7 @@ def crear_servicio():
         descripcion = validar_texto(datos.get("descripcion"), "descripcion", 255) if datos.get("descripcion") else None
         precio = validar_precio(datos.get("precio"))
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     try:
         servicio_id = insertar_servicio(nombre, descripcion, precio)
     except pymysql.err.IntegrityError:
@@ -89,7 +89,7 @@ def modificar_servicio(servicio_id):
                 return error("invalid.activo.format", "Formato inválido", "activo debe ser true o false.", 400)
             cambios["activo"] = datos["activo"]
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     if not cambios:
         return error("invalid.body", "Datos inválidos", "No se enviaron campos para modificar.", 400)
     actualizar_servicio(servicio_id, cambios)

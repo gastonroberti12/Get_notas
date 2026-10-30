@@ -3,13 +3,13 @@ import pymysql
 
 from cine_fuente.repositories.butacas import consultar_butaca_por_id, consultar_butacas_por_sala, contar_butacas, eliminar_butaca, eliminar_butacas_de_sala, insertar_butaca
 from cine_fuente.repositories.salas import consultar_sala_por_id
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
 butacas_bp = Blueprint("butacas", __name__, url_prefix="/api")
 
 
 def error(codigo, mensaje, descripcion, estado):
-    return jsonify(construir_error_api(codigo, mensaje, descripcion)), estado
+    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 @butacas_bp.get("/salas/<int:sala_id>/butacas")
@@ -21,7 +21,7 @@ def listar_butacas_sala(sala_id):
         limit, offset = validar_paginacion(request.args)
         butacas = consultar_butacas_por_sala(sala_id)
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     return respuesta_paginada("butacas", butacas[offset:offset + limit], len(butacas), limit, offset)
 
 

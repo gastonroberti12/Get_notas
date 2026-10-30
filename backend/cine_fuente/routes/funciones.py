@@ -3,7 +3,7 @@ from werkzeug.exceptions import HTTPException
 
 from cine_fuente.services import funciones as service
 from cine_fuente.validators import funciones as validator
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
 funciones_bp = Blueprint('funciones', __name__, url_prefix='/api/funciones')
 
@@ -50,7 +50,7 @@ def borrar_funcion(funcion_id):
 @funciones_bp.errorhandler(ValueError)
 def manejar_error_datos(error):
     respuesta = error.args[0]
-    codigo = respuesta['errors'][0]['code']
+    codigo = respuesta['errors'][0]['codigo']
     estados = {
         'funcion.not.found': 404,
         'pelicula.not.found': 404,
@@ -58,7 +58,9 @@ def manejar_error_datos(error):
         'funcion.overlap': 409,
         'funcion.has.reservas': 409,
     }
-    return jsonify(respuesta), estados.get(codigo, 400)
+    if len(error.args) > 1 and isinstance(error.args[1], int):
+        return respuesta_error_excepcion(error)
+    return respuesta_error_api(respuesta, estados.get(codigo, 400))
 
 
 @funciones_bp.errorhandler(HTTPException)

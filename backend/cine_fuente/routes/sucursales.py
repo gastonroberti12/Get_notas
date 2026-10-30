@@ -2,13 +2,13 @@ from flask import Blueprint, jsonify, request
 import pymysql
 
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
 sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/api/sucursales")
 
 
 def error(codigo, mensaje, descripcion, estado):
-    return jsonify(construir_error_api(codigo, mensaje, descripcion)), estado
+    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 def validar_texto(datos, campo, maximo):
@@ -28,7 +28,7 @@ def listar_sucursales():
         limit, offset = validar_paginacion(request.args)
         sucursales = consultar_sucursales()
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     return respuesta_paginada("sucursales", sucursales[offset:offset + limit], len(sucursales), limit, offset)
 
 
@@ -52,7 +52,7 @@ def crear_sucursal():
         if telefono is not None:
             telefono = str(telefono).strip() or None
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     sucursal_id = insertar_sucursal(nombre, direccion, telefono)
     return jsonify(consultar_sucursal_por_id(sucursal_id)), 201
 
@@ -71,7 +71,7 @@ def modificar_sucursal(sucursal_id):
         if "telefono" in datos:
             cambios["telefono"] = str(datos["telefono"]).strip() or None
     except ValueError as error_validacion:
-        return jsonify(error_validacion.args[0]), 400
+        return respuesta_error_excepcion(error_validacion)
     if not cambios:
         return error("invalid.body", "Datos inválidos", "No se enviaron campos para modificar.", 400)
     actualizar_sucursal(sucursal_id, cambios)

@@ -5,7 +5,13 @@ from cine_fuente.repositories.peliculas import (
     consultar_peliculas as listar_peliculas_locales,
     insertar_pelicula,
 )
-from cine_fuente.utils import construir_error_api, requiere_token, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import (
+    construir_error_api,
+    requiere_token,
+    respuesta_error_api,
+    respuesta_paginada,
+    validar_paginacion,
+)
 from cine_fuente.services.omdb_service import (
     OmdbConfigurationError,
     OmdbError,
@@ -35,11 +41,11 @@ def crear_pelicula():
     titulo = datos.get("titulo")
 
     if not isinstance(titulo, str) or not titulo.strip():
-        return jsonify(construir_error_api(
+        return respuesta_error_api(construir_error_api(
             "pelicula.invalid",
             "Datos de película inválidos",
             "El título es obligatorio.",
-        )), 400
+        ), 400)
 
     campos_permitidos = (
         "titulo", "sinopsis", "poster_url", "duracion_min", "clasificacion",
@@ -59,7 +65,10 @@ def crear_pelicula():
 def consultar_pelicula(pelicula_id):
     pelicula = obtener_pelicula(pelicula_id)
     if pelicula is None:
-        return jsonify(construir_error_api("pelicula.not.found", "Película no encontrada", "La película solicitada no existe.")), 404
+        return respuesta_error_api(construir_error_api(
+            "pelicula.not.found", "Película no encontrada",
+            "La película solicitada no existe."
+        ), 404)
     return jsonify(pelicula), 200
 
 
@@ -68,25 +77,43 @@ def consultar_pelicula(pelicula_id):
 def buscar_peliculas():
     query = request.args.get("q", "").strip()
     if not query:
-        return jsonify({"error": "El parámetro q es obligatorio."}), 400
+        return respuesta_error_api(construir_error_api(
+            "pelicula.query.required", "Parámetro inválido",
+            "El parámetro q es obligatorio."
+        ), 400)
     if len(query) > 100:
-        return jsonify({"error": "El parámetro q no puede superar 100 caracteres."}), 400
+        return respuesta_error_api(construir_error_api(
+            "pelicula.query.max", "Parámetro inválido",
+            "El parámetro q no puede superar 100 caracteres."
+        ), 400)
 
     try:
         page = int(request.args.get("pagina", "1"))
     except ValueError:
-        return jsonify({"error": "El parámetro pagina debe ser un número entero."}), 400
+        return respuesta_error_api(construir_error_api(
+            "pelicula.page.format", "Parámetro inválido",
+            "El parámetro pagina debe ser un número entero."
+        ), 400)
     if not 1 <= page <= 100:
-        return jsonify({"error": "El parámetro pagina debe estar entre 1 y 100."}), 400
+        return respuesta_error_api(construir_error_api(
+            "pelicula.page.range", "Parámetro inválido",
+            "El parámetro pagina debe estar entre 1 y 100."
+        ), 400)
 
     try:
         result = buscar_peliculas_omdb(query, page)
     except OmdbConfigurationError as error:
-        return jsonify({"error": str(error)}), 503
+        return respuesta_error_api(construir_error_api(
+            "omdb.configuration", "Configuración de OMDb inválida", str(error)
+        ), 503)
     except OmdbResponseError as error:
-        return jsonify({"error": str(error)}), 502
+        return respuesta_error_api(construir_error_api(
+            "omdb.response", "Respuesta inválida de OMDb", str(error)
+        ), 502)
     except OmdbUnavailableError as error:
-        return jsonify({"error": str(error)}), 502
+        return respuesta_error_api(construir_error_api(
+            "omdb.unavailable", "OMDb no disponible", str(error)
+        ), 502)
 
     return jsonify({"pagina": page, **result}), 200
 
@@ -97,14 +124,24 @@ def detalle_pelicula(imdb_id):
     try:
         movie = obtener_detalle_pelicula(imdb_id)
     except ValueError as error:
-        return jsonify({"error": str(error)}), 400
+        return respuesta_error_api(construir_error_api(
+            "pelicula.invalid", "Identificador inválido", str(error)
+        ), 400)
     except OmdbConfigurationError as error:
-        return jsonify({"error": str(error)}), 503
+        return respuesta_error_api(construir_error_api(
+            "omdb.configuration", "Configuración de OMDb inválida", str(error)
+        ), 503)
     except OmdbResponseError as error:
-        return jsonify({"error": str(error)}), 404
+        return respuesta_error_api(construir_error_api(
+            "pelicula.not.found", "Película no encontrada", str(error)
+        ), 404)
     except OmdbUnavailableError as error:
-        return jsonify({"error": str(error)}), 502
+        return respuesta_error_api(construir_error_api(
+            "omdb.unavailable", "OMDb no disponible", str(error)
+        ), 502)
     except OmdbError as error:
-        return jsonify({"error": str(error)}), 502
+        return respuesta_error_api(construir_error_api(
+            "omdb.error", "Error de OMDb", str(error)
+        ), 502)
 
     return jsonify(movie), 200

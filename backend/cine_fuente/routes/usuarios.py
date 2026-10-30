@@ -24,5 +24,5 @@ def get_usuarios():
         return respuesta_paginada("usuarios", usuarios, total, limit, offset)
     except ValueError as error:
         return respuesta_error_excepcion(error)
-    except Exception:
-        return respuesta_error_interno()
+    except Exception as error:
+        return respuesta_error_interno(error)
