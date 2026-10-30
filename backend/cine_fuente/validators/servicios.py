@@ -91,6 +91,7 @@ def validar_campos_servicio(datos):
 
 
 # Validar el cuerpo del POST /servicios usando los mismos validadores del PATCH.
+#exige que estén nombre y precio, porque son obligatorios para crear un servicio
 def validar_creacion_servicio(datos):
     campos = validar_campos_servicio(datos)
 

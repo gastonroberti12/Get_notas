@@ -34,6 +34,8 @@ if %ERRORLEVEL% neq 0 (
     echo [OK] virtualenv ya esta instalado
 )
 
+cd /d "%~dp0backend"
+
 REM Crear el ambiente virtual
 echo Creando ambiente virtual...
 if not exist ".venv" (
@@ -76,7 +78,7 @@ echo.
 echo Para desactivar el ambiente virtual, ejecuta:
 echo   deactivate
 echo.
-echo Asegurate de tener la base de datos MySQL corriendo:
+echo Asegurate de tener la base de datos MySQL corriendo desde la raiz del proyecto:
 echo   docker compose up -d
 echo.
 echo Iniciando la aplicacion...

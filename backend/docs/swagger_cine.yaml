@@ -1,0 +1,2799 @@
+openapi: 3.0.0
+info:
+  title: API de Cine Paradiso
+  description: "API REST del sistema de venta de entradas de Cine Paradiso.\n\n- **Autenticación:**
+    `POST /auth/login` devuelve un token que se envía en `Authorization: Bearer <token>`.
+    Los endpoints sin candado son públicos.\n- **Fechas:** `date-time` en GMT-3 con
+    6 decimales. Los importes son enteros en centavos.\n- **Errores:** siempre con
+    el formato `{\"errors\": [...]}`.\n- **Paginación:** `_limit` y `_offset`, con
+    enlaces HATEOAS en `_links`. Los listados vacíos responden 204.\n- **Roles:**
+    Público general (sin cuenta), Cliente y Administrador. El backend valida rol y
+    titularidad en cada endpoint."
+  version: 1.0.0
+servers:
+- url: /
+  description: Servidor local de desarrollo
+tags:
+- name: Autenticación
+  description: Inicio y cierre de sesión
+- name: Usuarios
+  description: Registro, perfil e historial de usuarios
+- name: Películas
+  description: Cartelera, sincronizada con OMDb
+- name: Funciones
+  description: Proyecciones de una película en una sala y horario
+- name: Sucursales
+  description: Locales del cine
+- name: Salas
+  description: Salas de cada sucursal
+- name: Butacas
+  description: Asientos de cada sala
+- name: Reservas
+  description: 'Compra de entradas: reserva pendiente, pago y cancelación'
+- name: Servicios
+  description: Servicios adicionales (comida, bebida, estacionamiento) y su 
+    compra en una reserva
+- name: Entradas
+  description: Entradas con QR y validación de ingreso
+- name: Estadísticas
+  description: Backoffice. `fecha_desde` y `fecha_hasta` filtran por fecha de la
+    función (ocupación) o de la compra (ventas y cancelaciones)
+paths:
+  /usuarios:
+    get:
+      summary: Listar usuarios
+      description: Listado paginado. Permite filtrar por rol y por nombre o 
+        apellido (búsqueda parcial e insensible a mayúsculas). **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/UsuarioRolFilter'
+      - $ref: '#/components/parameters/NombreFilter'
+      - $ref: '#/components/parameters/EmailFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUsuariosList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Registrar un usuario cliente
+      description: Crea un usuario con rol `cliente`. El email debe ser único. 
+        **Rol autorizado:** Público general.
+      tags:
+      - Usuarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /usuarios/me:
+    get:
+      summary: Consultar el perfil propio
+      description: '**Rol autorizado:** Cliente.'
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUsuario200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /usuarios/me/reservas:
+    get:
+      summary: Listar las reservas propias
+      description: '**Rol autorizado:** Cliente.'
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReservaEstadoFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReservasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /usuarios/me/entradas:
+    get:
+      summary: Listar las entradas propias
+      description: El filtro `estado` es el de la reserva a la que pertenece cada
+        entrada. **Rol autorizado:** Cliente.
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReservaEstadoFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEntradasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /usuarios/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener un usuario por ID
+      description: '**Rol autorizado:** Administrador o titular.'
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUsuario200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente un usuario
+      description: El titular puede modificar sus datos personales; el campo 
+        `rol` solo lo modifica el Administrador. **Rol autorizado:** 
+        Administrador o titular.
+      tags:
+      - Usuarios
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      description: 'Devuelve el token que se envía luego en `Authorization: Bearer
+        <token>`. **Rol autorizado:** Público general.'
+      tags:
+      - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credenciales'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetSesion200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/logout:
+    post:
+      summary: Cerrar sesión
+      description: Cerrar sesión. **Rol autorizado:** Público general.
+      tags:
+      - Autenticación
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /peliculas:
+    get:
+      summary: Listar películas en cartelera
+      description: Devuelve solo las películas activas y vigentes en cartelera. 
+        **Rol autorizado:** Público general.
+      tags:
+      - Películas
+      parameters:
+      - $ref: '#/components/parameters/TituloFilter'
+      - $ref: '#/components/parameters/GeneroFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPeliculasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Agregar una película a la cartelera
+      description: El backend consulta OMDb con `id_externo` y guarda sus datos 
+        (como `genero` se usa el primero que informa OMDb). 404 si OMDb no la 
+        encuentra, 409 si ya existe y 502 si OMDb no responde. **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Películas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeliculaCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /peliculas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una película por ID
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Películas
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPelicula200'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente una película
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Películas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeliculaUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Dar de baja una película
+      description: 'Baja lógica: marca `activa` en false. **Rol autorizado:** Administrador.'
+      tags:
+      - Películas
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /funciones:
+    get:
+      summary: Listar funciones disponibles
+      description: Devuelve solo funciones que todavía no comenzaron. **Rol 
+        autorizado:** Público general.
+      tags:
+      - Funciones
+      parameters:
+      - $ref: '#/components/parameters/PeliculaIdFilter'
+      - $ref: '#/components/parameters/SucursalIdFilter'
+      - $ref: '#/components/parameters/SalaIdFilter'
+      - $ref: '#/components/parameters/FechaFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetFuncionesList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear una función
+      description: Valida que la película esté en cartelera y que la sala esté 
+        libre, con media hora de margen entre funciones (409 si hay 
+        superposición). **Rol autorizado:** Administrador.
+      tags:
+      - Funciones
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuncionCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /funciones/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una función por ID
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Funciones
+      responses:
+        '200':
+          $ref: '#/components/responses/GetFuncion200'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente una función
+      description: 409 si genera superposición de horarios o si la función ya 
+        tiene reservas y se cambia sala o `fecha_hora`. **Rol autorizado:** 
+        Administrador.
+      tags:
+      - Funciones
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuncionUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar una función
+      description: 409 si la función tiene reservas asociadas. **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Funciones
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /funciones/{id}/butacas:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Consultar butacas disponibles
+      description: Devuelve únicamente las butacas disponibles para la función 
+        consultada. La respuesta utiliza los campos de la tabla `butacas` (`id`,
+        `sala_id`, `fila` y `numero`); la disponibilidad se refiere a esa 
+        función y no es un estado persistente de la butaca. **Rol autorizado:** 
+        Público general.
+      tags:
+      - Funciones
+      responses:
+        '200':
+          $ref: '#/components/responses/GetButacasDisponibles200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sucursales:
+    get:
+      summary: Listar sucursales
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Sucursales
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetSucursalesList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear una sucursal
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Sucursales
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sucursales/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una sucursal por ID
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Sucursales
+      responses:
+        '200':
+          $ref: '#/components/responses/GetSucursal200'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente una sucursal
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Sucursales
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar una sucursal
+      description: 409 si la sucursal tiene salas asociadas. **Rol autorizado:**
+        Administrador.
+      tags:
+      - Sucursales
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /salas:
+    get:
+      summary: Listar salas
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Salas
+      parameters:
+      - $ref: '#/components/parameters/SucursalIdFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetSalasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear una sala
+      description: 404 si la sucursal no existe. **Rol autorizado:** 
+        Administrador.
+      tags:
+      - Salas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /salas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una sala por ID
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Salas
+      responses:
+        '200':
+          $ref: '#/components/responses/GetSala200'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente una sala
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Salas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar una sala
+      description: 409 si la sala tiene butacas o funciones asociadas. **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Salas
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /salas/{id}/butacas:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Consultar las butacas de una sala
+      description: Devuelve todas las butacas de la sala sin paginar, para poder
+        dibujar el mapa de asientos. **Rol autorizado:** Público general.
+      tags:
+      - Butacas
+      responses:
+        '200':
+          $ref: '#/components/responses/GetButacasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear butacas para una sala
+      description: Crea todas las butacas o ninguna. 409 si se supera la 
+        `capacidad` de la sala o se repite una fila y número. **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Butacas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButacasCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreatedMany'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /butacas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    patch:
+      summary: Actualizar parcialmente una butaca
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Butacas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ButacaUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar una butaca
+      description: 409 si la butaca tiene entradas asociadas. **Rol 
+        autorizado:** Administrador.
+      tags:
+      - Butacas
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas:
+    get:
+      summary: Listar reservas
+      description: Permite filtrar por usuario, función, estado y rango de fecha
+        de compra (extremos inclusive). **Rol autorizado:** Administrador.
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/UsuarioIdFilter'
+      - $ref: '#/components/parameters/FuncionIdFilter'
+      - $ref: '#/components/parameters/ReservaEstadoFilter'
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReservasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear una reserva
+      description: Crea la reserva en estado `pendiente` y bloquea las butacas 
+        durante 10 minutos. 409 si alguna butaca ya está ocupada o la función ya
+        comenzó. **Rol autorizado:** Cliente.
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una reserva por ID
+      description: '**Rol autorizado:** Administrador o dueño de la reserva.'
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReserva200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Cancelar una reserva
+      description: Solo admite cambiar el estado a `cancelada`. 409 si faltan 
+        menos de 1 hora para la función o la reserva no está pendiente o 
+        confirmada. Registra `fecha_cancelacion` y libera las butacas. Las 
+        entradas siguen el estado de la reserva. **Rol autorizado:** Administrador o dueño de la reserva.
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas/{id}/pago:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    post:
+      summary: Confirmar el pago de una reserva
+      description: Pago simulado, sin cuerpo. Pasa la reserva a `confirmada`, 
+        genera una entrada con QR por butaca y envía por email la confirmación, 
+        la factura y los QR. 409 si la reserva no está pendiente o ya expiró. 
+        **Rol autorizado:** Dueño de la reserva.
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReserva200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas/{id}/entradas:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Listar las entradas de una reserva
+      description: '**Rol autorizado:** Administrador o dueño de la reserva.'
+      tags:
+      - Reservas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEntradasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas/{id}/servicios:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Listar los servicios de una reserva
+      description: '**Rol autorizado:** Administrador o dueño de la reserva.'
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReservaServiciosList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Agregar un servicio a una reserva
+      description: Solo con la reserva `pendiente`. 409 si el servicio no está 
+        activo o la reserva ya no admite cambios. **Rol autorizado:** Dueño de 
+        la reserva.
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaServicioCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /reservas/{id_reserva}/servicios/{id_servicio}:
+    parameters:
+    - name: id_reserva
+      in: path
+      required: true
+      description: Identificador de la reserva
+      schema:
+        type: integer
+      example: 1
+    - name: id_servicio
+      in: path
+      required: true
+      description: Identificador del servicio asociado a la reserva
+      schema:
+        type: integer
+      example: 1
+    patch:
+      summary: Modificar un servicio de una reserva
+      description: Solo con la reserva `pendiente`. **Rol autorizado:** Dueño de
+        la reserva.
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaServicioUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar un servicio de una reserva
+      description: Solo con la reserva `pendiente`. **Rol autorizado:** Dueño de
+        la reserva.
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /entradas:
+    get:
+      summary: Listar entradas
+      description: El filtro `estado` es el de la reserva a la que pertenece cada
+        entrada. **Rol autorizado:** Administrador.
+      tags:
+      - Entradas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ReservaIdFilter'
+      - $ref: '#/components/parameters/ReservaEstadoFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEntradasList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /entradas/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener una entrada por ID
+      description: '**Rol autorizado:** Administrador o dueño de la reserva.'
+      tags:
+      - Entradas
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEntrada200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /entradas/{id}/validacion:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    post:
+      summary: Validar el QR de una entrada
+      description: Valida que `codigo_qr` corresponda a la entrada, que su reserva 
+        esté `confirmada`, que la entrada no haya sido usada y que su función 
+        esté en curso. Al validar registra `fecha_uso`. 409 si la reserva no 
+        está confirmada, la entrada ya fue usada o la función ya se realizó. 
+        **Rol autorizado:** Administrador.
+      tags:
+      - Entradas
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionEntrada'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEntrada200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /servicios:
+    get:
+      summary: Listar servicios
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Servicios
+      parameters:
+      - $ref: '#/components/parameters/NombreFilter'
+      - $ref: '#/components/parameters/ActivoFilter'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetServiciosList200'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Crear un servicio
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicioCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /servicios/{id}:
+    parameters:
+    - $ref: '#/components/parameters/Id'
+    get:
+      summary: Obtener un servicio por ID
+      description: '**Rol autorizado:** Público general.'
+      tags:
+      - Servicios
+      responses:
+        '200':
+          $ref: '#/components/responses/GetServicio200'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Actualizar parcialmente un servicio
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicioUpdate'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Eliminar un servicio
+      description: '409 si el servicio fue comprado en alguna reserva; en ese caso
+        se desactiva con PATCH (`activo`: false). **Rol autorizado:** Administrador.'
+      tags:
+      - Servicios
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ocupacion/general:
+    get:
+      summary: Consultar la ocupación total
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetOcupacion200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ocupacion/salas:
+    get:
+      summary: Consultar la ocupación de cada sala
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetOcupacionSalas200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ocupacion/franjas_horarias:
+    get:
+      summary: Consultar entradas vendidas por franja horaria
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetFranjasHorarias200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ventas/total:
+    get:
+      summary: Consultar las ventas totales
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVentasTotal200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ventas/generos:
+    get:
+      summary: Consultar las ventas por género
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVentasGeneros200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/ventas/peliculas:
+    get:
+      summary: Consultar las ventas por película
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVentasPeliculas200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /admin/estadisticas/cancelaciones:
+    get:
+      summary: Consultar las cancelaciones
+      description: '**Rol autorizado:** Administrador.'
+      tags:
+      - Estadísticas
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/FechaDesdeFilter'
+      - $ref: '#/components/parameters/FechaHastaFilter'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetCancelaciones200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token devuelto por POST /auth/login
+  schemas:
+    FechaHora:
+      type: string
+      format: date-time
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$
+      description: Fecha y hora en GMT-3 con 6 decimales de precisión
+      example: '2026-11-20T21:30:00.000000-03:00'
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único del usuario
+          example: 1
+        nombre:
+          type: string
+          description: Nombre del usuario
+          example: Lucía
+        apellido:
+          type: string
+          description: Apellido del usuario
+          example: Hernández
+        email:
+          type: string
+          description: Correo electrónico único
+          format: email
+          example: lucia@example.com
+        rol:
+          type: string
+          description: Rol del usuario
+          enum:
+          - cliente
+          - administrador
+          example: cliente
+        fecha_registro:
+          description: Fecha de registro
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+    UsuarioCreate:
+      type: object
+      required:
+      - nombre
+      - apellido
+      - email
+      - contrasenia
+      properties:
+        nombre:
+          type: string
+          description: Nombre del usuario
+          example: Lucía
+        apellido:
+          type: string
+          description: Apellido del usuario
+          example: Hernández
+        email:
+          type: string
+          description: Correo electrónico único
+          format: email
+          example: lucia@example.com
+        contrasenia:
+          type: string
+          description: Contraseña (nunca se devuelve en las respuestas)
+          format: password
+          minLength: 8
+          writeOnly: true
+          example: Secreta123
+    UsuarioUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: Nombre del usuario
+          example: Lucía
+        apellido:
+          type: string
+          description: Apellido del usuario
+          example: Hernández
+        email:
+          type: string
+          description: Correo electrónico único
+          format: email
+          example: lucia@example.com
+        contrasenia:
+          type: string
+          description: Contraseña (nunca se devuelve en las respuestas)
+          format: password
+          minLength: 8
+          writeOnly: true
+          example: Secreta123
+        rol:
+          type: string
+          description: Nuevo rol. Solo lo puede modificar el Administrador
+          enum:
+          - cliente
+          - administrador
+          example: cliente
+    Credenciales:
+      type: object
+      required:
+      - email
+      - contrasenia
+      properties:
+        email:
+          type: string
+          description: Correo electrónico único
+          format: email
+          example: lucia@example.com
+        contrasenia:
+          type: string
+          description: Contraseña (nunca se devuelve en las respuestas)
+          format: password
+          minLength: 8
+          writeOnly: true
+          example: Secreta123
+    Sesion:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 'Token de sesión para el header `Authorization: Bearer <token>`'
+          example: b7e2f6c0a91d4e35
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+    Pelicula:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la película
+          example: 1
+        titulo:
+          type: string
+          description: Título de la película
+          example: Inception
+        sinopsis:
+          type: string
+          description: Sinopsis
+          example: Un ladrón que roba secretos a través de los sueños recibe una
+            última misión.
+        poster_url:
+          type: string
+          description: URL del póster
+          format: uri
+          example: https://example.com/posters/inception.jpg
+        duracion_min:
+          type: integer
+          description: Duración en minutos
+          minimum: 1
+          example: 148
+        clasificacion:
+          type: string
+          description: Clasificación por edad
+          example: PG-13
+        genero:
+          type: string
+          description: Género principal
+          example: Sci-Fi
+        id_externo:
+          type: string
+          description: Identificador de la película en OMDb (imdbID)
+          example: tt1375666
+        fecha_inicio_cartelera:
+          description: Inicio de la permanencia en cartelera
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        fecha_fin_cartelera:
+          description: Fin de la permanencia en cartelera (máximo una semana 
+            desde el inicio)
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        activa:
+          type: boolean
+          description: Indica si la película está activa (baja lógica)
+          example: true
+    PeliculaCreate:
+      type: object
+      required:
+      - id_externo
+      - fecha_inicio_cartelera
+      - fecha_fin_cartelera
+      properties:
+        id_externo:
+          type: string
+          description: Identificador de la película en OMDb (imdbID). El resto 
+            de los datos se obtienen de OMDb
+          example: tt1375666
+        fecha_inicio_cartelera:
+          description: Inicio de la permanencia en cartelera
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        fecha_fin_cartelera:
+          description: Fin de la permanencia en cartelera (máximo una semana 
+            desde el inicio)
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+    PeliculaUpdate:
+      type: object
+      properties:
+        titulo:
+          type: string
+          description: Título de la película
+          example: Inception
+        sinopsis:
+          type: string
+          description: Sinopsis
+          example: Un ladrón que roba secretos a través de los sueños recibe una
+            última misión.
+        poster_url:
+          type: string
+          description: URL del póster
+          format: uri
+          example: https://example.com/posters/inception.jpg
+        duracion_min:
+          type: integer
+          description: Duración en minutos
+          minimum: 1
+          example: 148
+        clasificacion:
+          type: string
+          description: Clasificación por edad
+          example: PG-13
+        genero:
+          type: string
+          description: Género principal
+          example: Sci-Fi
+        fecha_inicio_cartelera:
+          description: Inicio de la permanencia en cartelera
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        fecha_fin_cartelera:
+          description: Fin de la permanencia en cartelera (máximo una semana 
+            desde el inicio)
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        activa:
+          type: boolean
+          description: Indica si la película está activa
+          example: true
+    Sucursal:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la sucursal
+          example: 1
+        nombre:
+          type: string
+          description: Nombre de la sucursal
+          example: Paradiso Centro
+        direccion:
+          type: string
+          description: Dirección
+          example: Av. Corrientes 1234, CABA
+        telefono:
+          type: string
+          description: Teléfono de contacto
+          example: +54 11 4000-1234
+    SucursalCreate:
+      type: object
+      required:
+      - nombre
+      - direccion
+      properties:
+        nombre:
+          type: string
+          description: Nombre de la sucursal
+          example: Paradiso Centro
+        direccion:
+          type: string
+          description: Dirección
+          example: Av. Corrientes 1234, CABA
+        telefono:
+          type: string
+          description: Teléfono de contacto
+          example: +54 11 4000-1234
+    SucursalUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: Nombre de la sucursal
+          example: Paradiso Centro
+        direccion:
+          type: string
+          description: Dirección
+          example: Av. Corrientes 1234, CABA
+        telefono:
+          type: string
+          description: Teléfono de contacto
+          example: +54 11 4000-1234
+    Sala:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la sala
+          example: 1
+        sucursal_id:
+          type: integer
+          description: Sucursal a la que pertenece
+          example: 1
+        nombre:
+          type: string
+          description: Nombre de la sala
+          example: Sala 1 - VIP
+        capacidad:
+          type: integer
+          description: Cantidad de butacas de la sala
+          minimum: 1
+          example: 80
+    SalaCreate:
+      type: object
+      required:
+      - sucursal_id
+      - nombre
+      - capacidad
+      properties:
+        sucursal_id:
+          type: integer
+          description: Sucursal a la que pertenece
+          example: 1
+        nombre:
+          type: string
+          description: Nombre de la sala
+          example: Sala 1 - VIP
+        capacidad:
+          type: integer
+          description: Cantidad de butacas de la sala
+          minimum: 1
+          example: 80
+    SalaUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: Nombre de la sala
+          example: Sala 1 - VIP
+        capacidad:
+          type: integer
+          description: Cantidad de butacas de la sala
+          minimum: 1
+          example: 80
+    Butaca:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la butaca
+          example: 1
+        sala_id:
+          type: integer
+          description: Sala a la que pertenece
+          example: 1
+        fila:
+          type: string
+          description: Fila de la butaca
+          example: C
+        numero:
+          type: integer
+          description: Número de butaca dentro de la fila
+          minimum: 1
+          example: 7
+    ButacasCreate:
+      type: object
+      required:
+      - butacas
+      properties:
+        butacas:
+          type: array
+          description: Butacas a crear en la sala
+          items:
+            type: object
+            required:
+            - fila
+            - numero
+            properties:
+              fila:
+                type: string
+                description: Fila de la butaca
+                example: C
+              numero:
+                type: integer
+                description: Número de butaca dentro de la fila
+                minimum: 1
+                example: 7
+    ButacaUpdate:
+      type: object
+      properties:
+        fila:
+          type: string
+          description: Fila de la butaca
+          example: C
+        numero:
+          type: integer
+          description: Número de butaca dentro de la fila
+          minimum: 1
+          example: 7
+    Funcion:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la función
+          example: 1
+        pelicula_id:
+          type: integer
+          description: Película proyectada
+          example: 1
+        sala_id:
+          type: integer
+          description: Sala donde se proyecta
+          example: 1
+        fecha_hora:
+          description: Fecha y hora de inicio de la función
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        precio:
+          type: integer
+          description: Precio por entrada en centavos (varía según 2D, 3D o sala
+            VIP)
+          minimum: 1
+          example: 450000
+    FuncionCreate:
+      type: object
+      required:
+      - pelicula_id
+      - sala_id
+      - fecha_hora
+      - precio
+      properties:
+        pelicula_id:
+          type: integer
+          description: Película proyectada
+          example: 1
+        sala_id:
+          type: integer
+          description: Sala donde se proyecta
+          example: 1
+        fecha_hora:
+          description: Fecha y hora de inicio de la función
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        precio:
+          type: integer
+          description: Precio por entrada en centavos (varía según 2D, 3D o sala
+            VIP)
+          minimum: 1
+          example: 450000
+    FuncionUpdate:
+      type: object
+      properties:
+        pelicula_id:
+          type: integer
+          description: Película proyectada
+          example: 1
+        sala_id:
+          type: integer
+          description: Sala donde se proyecta
+          example: 1
+        fecha_hora:
+          description: Fecha y hora de inicio de la función
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        precio:
+          type: integer
+          description: Precio por entrada en centavos (varía según 2D, 3D o sala
+            VIP)
+          minimum: 1
+          example: 450000
+    Reserva:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la reserva
+          example: 1
+        usuario_id:
+          type: integer
+          description: Cliente titular de la reserva
+          example: 1
+        funcion_id:
+          type: integer
+          description: Función reservada
+          example: 1
+        fecha_compra:
+          description: Fecha de creación de la reserva. Los 10 minutos para 
+            pagar se cuentan desde acá
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+        estado:
+          type: string
+          description: Estado de la reserva
+          enum:
+          - pendiente
+          - confirmada
+          - cancelada
+          - expirada
+          - finalizada
+          example: pendiente
+        fecha_cancelacion:
+          description: Fecha de cancelación. Es null si no fue cancelada
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+          nullable: true
+        total:
+          type: integer
+          description: Importe total en centavos. No se almacena, se calcula al 
+            consultar como la suma del precio de las entradas y los subtotales 
+            de los servicios contratados
+          example: 900000
+    ReservaCreate:
+      type: object
+      required:
+      - funcion_id
+      - butaca_ids
+      properties:
+        funcion_id:
+          type: integer
+          description: Función a reservar
+          example: 1
+        butaca_ids:
+          type: array
+          description: Butacas elegidas de la sala de la función
+          items:
+            type: integer
+            description: Identificador de butaca
+            example: 1
+          minItems: 1
+          uniqueItems: true
+          example:
+          - 12
+          - 13
+    ReservaUpdate:
+      type: object
+      required:
+      - estado
+      properties:
+        estado:
+          type: string
+          description: 'Único valor admitido: `cancelada`'
+          enum:
+          - cancelada
+          example: cancelada
+    Entrada:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único de la entrada
+          example: 1
+        reserva_id:
+          type: integer
+          description: Reserva a la que pertenece
+          example: 1
+        butaca_id:
+          type: integer
+          description: Butaca asignada
+          example: 12
+        codigo_qr:
+          type: string
+          description: Código único del QR. Se asigna al confirmar el pago
+          nullable: true
+          example: a3f9c2d1-7b4e-4c1a-9d2f-5e6b8a0c1d3e
+        fecha_uso:
+          description: Fecha y hora en que se validó el QR. Es null si no se usó
+          allOf:
+          - $ref: '#/components/schemas/FechaHora'
+          nullable: true
+    ValidacionEntrada:
+      type: object
+      required:
+      - codigo_qr
+      properties:
+        codigo_qr:
+          type: string
+          description: Código leído del QR
+          example: a3f9c2d1-7b4e-4c1a-9d2f-5e6b8a0c1d3e
+    Servicio:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único del servicio
+          example: 1
+        nombre:
+          type: string
+          description: Nombre del servicio
+          example: Combo pochoclos + gaseosa
+        descripcion:
+          type: string
+          description: Descripción del servicio
+          example: Pochoclos grandes y gaseosa de 500 ml
+        precio:
+          type: integer
+          description: Precio unitario en centavos
+          minimum: 1
+          example: 350000
+        activo:
+          type: boolean
+          description: Indica si se puede agregar a nuevas reservas
+          example: true
+    ServicioCreate:
+      type: object
+      required:
+      - nombre
+      - precio
+      properties:
+        nombre:
+          type: string
+          description: Nombre del servicio
+          example: Combo pochoclos + gaseosa
+        descripcion:
+          type: string
+          description: Descripción del servicio
+          example: Pochoclos grandes y gaseosa de 500 ml
+        precio:
+          type: integer
+          description: Precio unitario en centavos
+          minimum: 1
+          example: 350000
+        activo:
+          type: boolean
+          description: Indica si se puede agregar a nuevas reservas
+          default: true
+          example: true
+    ServicioUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: Nombre del servicio
+          example: Combo pochoclos + gaseosa
+        descripcion:
+          type: string
+          description: Descripción del servicio
+          example: Pochoclos grandes y gaseosa de 500 ml
+        precio:
+          type: integer
+          description: Precio unitario en centavos
+          minimum: 1
+          example: 350000
+        activo:
+          type: boolean
+          description: Indica si se puede agregar a nuevas reservas
+          example: false
+    ReservaServicio:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador del servicio dentro de la reserva
+          example: 1
+        reserva_id:
+          type: integer
+          description: Reserva a la que pertenece
+          example: 1
+        servicio_id:
+          type: integer
+          description: Servicio contratado
+          example: 1
+        cantidad:
+          type: integer
+          description: Cantidad de unidades
+          minimum: 1
+          example: 2
+        subtotal:
+          type: integer
+          description: Precio × cantidad en centavos, calculado por el servidor
+          example: 700000
+    ReservaServicioCreate:
+      type: object
+      required:
+      - servicio_id
+      - cantidad
+      properties:
+        servicio_id:
+          type: integer
+          description: Servicio a agregar
+          example: 1
+        cantidad:
+          type: integer
+          description: Cantidad de unidades
+          minimum: 1
+          example: 2
+    ReservaServicioUpdate:
+      type: object
+      required:
+      - cantidad
+      properties:
+        cantidad:
+          type: integer
+          description: Cantidad de unidades
+          minimum: 1
+          example: 2
+    Ocupacion:
+      type: object
+      properties:
+        entradas_vendidas:
+          type: integer
+          description: Entradas vendidas (de reservas confirmadas y finalizadas)
+          example: 320
+        capacidad_total:
+          type: integer
+          description: Butacas disponibles en las funciones consideradas
+          example: 800
+        porcentaje_ocupacion:
+          type: number
+          description: Porcentaje de ocupación
+          example: 40.0
+    OcupacionSala:
+      allOf:
+      - type: object
+        properties:
+          sala_id:
+            type: integer
+            description: Identificador de la sala
+            example: 1
+          sala_nombre:
+            type: string
+            description: Nombre de la sala
+            example: Sala 1 - VIP
+      - $ref: '#/components/schemas/Ocupacion'
+    OcupacionSalas:
+      type: object
+      properties:
+        salas:
+          type: array
+          items:
+            $ref: '#/components/schemas/OcupacionSala'
+    FranjasHorarias:
+      type: object
+      properties:
+        franjas:
+          type: array
+          items:
+            type: object
+            properties:
+              hora:
+                type: integer
+                description: Hora de inicio de la función (0 a 23)
+                minimum: 0
+                maximum: 23
+                example: 21
+              entradas_vendidas:
+                type: integer
+                description: Entradas vendidas en esa hora
+                example: 150
+    VentasTotal:
+      type: object
+      properties:
+        entradas_vendidas:
+          type: integer
+          description: Entradas vendidas
+          example: 320
+        monto_entradas:
+          type: integer
+          description: Monto por entradas en centavos
+          example: 12600000
+        monto_servicios:
+          type: integer
+          description: Monto por servicios adicionales en centavos
+          example: 12600000
+        monto_total:
+          type: integer
+          description: Monto total en centavos
+          example: 12600000
+    Venta:
+      type: object
+      properties:
+        entradas_vendidas:
+          type: integer
+          description: Entradas vendidas
+          example: 320
+        monto_total:
+          type: integer
+          description: Monto total en centavos
+          example: 12600000
+    VentasGeneros:
+      type: object
+      properties:
+        generos:
+          type: array
+          items:
+            allOf:
+            - type: object
+              properties:
+                genero:
+                  type: string
+                  description: Género
+                  example: Sci-Fi
+            - $ref: '#/components/schemas/Venta'
+    VentasPeliculas:
+      type: object
+      properties:
+        peliculas:
+          type: array
+          items:
+            allOf:
+            - type: object
+              properties:
+                pelicula_id:
+                  type: integer
+                  description: Identificador de la película
+                  example: 1
+                titulo:
+                  type: string
+                  description: Título
+                  example: Inception
+            - $ref: '#/components/schemas/Venta'
+    Cancelaciones:
+      type: object
+      properties:
+        reservas_canceladas:
+          type: integer
+          description: Reservas canceladas
+          example: 12
+        reservas_totales:
+          type: integer
+          description: Reservas totales
+          example: 200
+        porcentaje_cancelacion:
+          type: number
+          description: Porcentaje de cancelación
+          example: 6.0
+    UsuariosListResponse:
+      type: object
+      properties:
+        usuarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+        _links:
+          $ref: '#/components/schemas/Links'
+    PeliculasListResponse:
+      type: object
+      properties:
+        peliculas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pelicula'
+        _links:
+          $ref: '#/components/schemas/Links'
+    FuncionesListResponse:
+      type: object
+      properties:
+        funciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Funcion'
+        _links:
+          $ref: '#/components/schemas/Links'
+    SucursalesListResponse:
+      type: object
+      properties:
+        sucursales:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sucursal'
+        _links:
+          $ref: '#/components/schemas/Links'
+    SalasListResponse:
+      type: object
+      properties:
+        salas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sala'
+        _links:
+          $ref: '#/components/schemas/Links'
+    ReservasListResponse:
+      type: object
+      properties:
+        reservas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reserva'
+        _links:
+          $ref: '#/components/schemas/Links'
+    EntradasListResponse:
+      type: object
+      properties:
+        entradas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entrada'
+        _links:
+          $ref: '#/components/schemas/Links'
+    ServiciosListResponse:
+      type: object
+      properties:
+        servicios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Servicio'
+        _links:
+          $ref: '#/components/schemas/Links'
+    ButacasListResponse:
+      type: object
+      properties:
+        butacas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Butaca'
+    ReservaServiciosListResponse:
+      type: object
+      properties:
+        servicios:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservaServicio'
+    Links:
+      type: object
+      description: Enlaces HATEOAS para navegar entre páginas
+      properties:
+        _first:
+          $ref: '#/components/schemas/Link'
+        _prev:
+          $ref: '#/components/schemas/Link'
+        _next:
+          $ref: '#/components/schemas/Link'
+        _last:
+          $ref: '#/components/schemas/Link'
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+          description: URI para navegar a la página indicada
+          example: http://localhost:5000/peliculas?_offset=0&_limit=10
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador del recurso creado
+          example: 15
+    IdsResponse:
+      type: object
+      properties:
+        ids:
+          type: array
+          description: Identificadores de los recursos creados
+          items:
+            type: integer
+            description: Identificador de butaca creada
+            example: 1
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código alfanumérico del error
+          example: ERROR_VALIDACION
+        message:
+          type: string
+          description: Resumen breve del error
+          example: El cuerpo de la solicitud es inválido
+        level:
+          type: string
+          description: Nivel del error
+          enum:
+          - info
+          - warning
+          - error
+          example: error
+        description:
+          type: string
+          description: Descripción detallada del error
+          example: El campo 'precio' debe ser un entero mayor a cero
+    Errores:
+      type: object
+      properties:
+        errors:
+          type: array
+          description: Listado de errores
+          items:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Identificador entero positivo del recurso
+      schema:
+        type: integer
+      example: 1
+    Limit:
+      name: _limit
+      in: query
+      description: Cantidad máxima de registros por página
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      example: 10
+    Offset:
+      name: _offset
+      in: query
+      description: Desplazamiento desde el primer registro
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+    NombreFilter:
+      name: nombre
+      in: query
+      description: Búsqueda parcial e insensible a mayúsculas por nombre
+      schema:
+        type: string
+      example: Lucía
+    EmailFilter:
+      name: email
+      in: query
+      description: Búsqueda parcial e insensible a mayúsculas por email
+      schema:
+        type: string
+        maxLength: 150
+      example: lucia@
+    TituloFilter:
+      name: titulo
+      in: query
+      description: Búsqueda parcial e insensible a mayúsculas por título
+      schema:
+        type: string
+      example: Incep
+    GeneroFilter:
+      name: genero
+      in: query
+      description: Filtrar por género
+      schema:
+        type: string
+      example: Sci-Fi
+    UsuarioRolFilter:
+      name: rol
+      in: query
+      description: Filtrar por rol
+      schema:
+        type: string
+        enum:
+        - cliente
+        - administrador
+      example: cliente
+    ActivoFilter:
+      name: activo
+      in: query
+      description: Filtrar por indicador de activo
+      schema:
+        type: boolean
+      example: true
+    FechaFilter:
+      name: fecha
+      in: query
+      description: Filtrar por día de la función
+      schema:
+        type: string
+        format: date
+      example: '2026-11-20'
+    FechaDesdeFilter:
+      name: fecha_desde
+      in: query
+      description: Fecha inicial del rango inclusive
+      schema:
+        type: string
+        format: date
+      example: '2026-11-01'
+    FechaHastaFilter:
+      name: fecha_hasta
+      in: query
+      description: Fecha final del rango inclusive
+      schema:
+        type: string
+        format: date
+      example: '2026-11-30'
+    ReservaEstadoFilter:
+      name: estado
+      in: query
+      description: Filtrar por estado de la reserva
+      schema:
+        type: string
+        enum:
+        - pendiente
+        - confirmada
+        - cancelada
+        - expirada
+        - finalizada
+      example: confirmada
+    PeliculaIdFilter:
+      name: pelicula_id
+      in: query
+      description: Filtrar por identificador de película
+      schema:
+        type: integer
+      example: 1
+    SucursalIdFilter:
+      name: sucursal_id
+      in: query
+      description: Filtrar por identificador de sucursal
+      schema:
+        type: integer
+      example: 1
+    SalaIdFilter:
+      name: sala_id
+      in: query
+      description: Filtrar por identificador de sala
+      schema:
+        type: integer
+      example: 1
+    FuncionIdFilter:
+      name: funcion_id
+      in: query
+      description: Filtrar por identificador de función
+      schema:
+        type: integer
+      example: 1
+    UsuarioIdFilter:
+      name: usuario_id
+      in: query
+      description: Filtrar por identificador de usuario
+      schema:
+        type: integer
+      example: 1
+    ReservaIdFilter:
+      name: reserva_id
+      in: query
+      description: Filtrar por identificador de reserva
+      schema:
+        type: integer
+      example: 1
+  responses:
+    GetUsuariosList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UsuariosListResponse'
+    GetUsuario200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Usuario'
+    GetReservasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReservasListResponse'
+    GetEntradasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EntradasListResponse'
+    GetSesion200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Sesion'
+    GetPeliculasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PeliculasListResponse'
+    GetPelicula200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Pelicula'
+    GetFuncionesList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FuncionesListResponse'
+    GetFuncion200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Funcion'
+    GetSucursalesList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SucursalesListResponse'
+    GetSucursal200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Sucursal'
+    GetSalasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SalasListResponse'
+    GetSala200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Sala'
+    GetButacasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ButacasListResponse'
+    GetReserva200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Reserva'
+    GetReservaServiciosList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReservaServiciosListResponse'
+    GetEntrada200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Entrada'
+    GetServiciosList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiciosListResponse'
+    GetServicio200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Servicio'
+    GetOcupacion200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Ocupacion'
+    GetOcupacionSalas200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OcupacionSalas'
+    GetFranjasHorarias200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FranjasHorarias'
+    GetVentasTotal200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VentasTotal'
+    GetVentasGeneros200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VentasGeneros'
+    GetVentasPeliculas200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VentasPeliculas'
+    GetCancelaciones200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Cancelaciones'
+    Created:
+      description: Creado
+      headers:
+        Location:
+          description: URI del recurso creado
+          schema:
+            type: string
+          example: /reservas/15
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IdResponse'
+    CreatedMany:
+      description: Creados
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IdsResponse'
+    NoContent:
+      description: Sin contenido
+    BadRequest:
+      description: Solicitud inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Unauthorized:
+      description: Falta el token o es inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Forbidden:
+      description: El rol o el usuario no tiene permiso sobre el recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    Conflict:
+      description: Conflicto de negocio
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    BadGateway:
+      description: La API externa (OMDb) no respondió
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Errores'
+    GetButacasDisponibles200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ButacasListResponse'

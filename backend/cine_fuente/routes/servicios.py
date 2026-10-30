@@ -110,8 +110,7 @@ def crear_servicio():
     )
 
     return jsonify({"id": id_creado}), 201, {
-        "Location": f"/servicios/{id_creado}"
-    }
+        "Location": f"/servicios/{id_creado}"} #location es un header para indicar dónde se encuentra el recurso recién creado.
 
 
 # 4. PATCH /servicios/{id}
