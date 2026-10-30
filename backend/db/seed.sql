@@ -1,9 +1,5 @@
 -- seed.sql - Datos iniciales de Cine Paradiso 
-<<<<<<< HEAD
--- Esto se ejecuta despues del init_db.sql
-=======
 -- Esto se ejecuta despues del cine_paradiso.sql
->>>>>>> 84c28877f0a96c63354b5a8278c32b20077d270d
 
 -- #37 Sucursales y salas con capacidades distintas
 
@@ -32,11 +28,7 @@ INSERT INTO butacas (sala_id, fila, numero)
 WITH RECURSIVE filas AS (
     SELECT 1 AS columna
     UNION ALL
-<<<<<<< HEAD
-    SELECT columna + 1 --toma el ultimo numero generado y le suma 1
-=======
     SELECT columna + 1 -- toma el ultimo numero generado y le suma 1
->>>>>>> 84c28877f0a96c63354b5a8278c32b20077d270d
     FROM filas
     WHERE columna < 10 -- se repite mientras el numero sea menor a 10
 ),
@@ -46,18 +38,16 @@ numeros_butaca AS (
 )
 SELECT
     salas.id,
-<<<<<<< HEAD
-    CHAR(64 + filas.columna) AS fila, --convierte un numero en un caracter (ASCII) sirve para filas en letras
-    numeros_butaca.columna AS columna
-FROM salas
-JOIN filas
-    ON filas.columna <= salas.capacidad / 10 --determina cuantas filas va a tener la sala
-CROSS JOIN numeros_butaca; --combina cada fila con las 10 butacas posibles
-=======
     CHAR(64 + filas.columna) AS fila, -- convierte un numero en un caracter (ASCII) sirve para filas en letras
     numeros_butaca.columna AS columna
 FROM salas
 JOIN filas
     ON filas.columna <= salas.capacidad / 10 -- determina cuantas filas va a tener la sala
 CROSS JOIN numeros_butaca; -- combina cada fila con las 10 butacas posibles
->>>>>>> 84c28877f0a96c63354b5a8278c32b20077d270d
+    CHAR(64 + filas.columna) AS fila, -- convierte un numero en un caracter (ASCII) sirve para filas en letras
+    numeros_butaca.columna AS columna
+FROM salas
+JOIN filas
+    ON filas.columna <= salas.capacidad / 10 -- determina cuantas filas va a tener la sala
+CROSS JOIN numeros_butaca; -- combina cada fila con las 10 butacas posibles
+
