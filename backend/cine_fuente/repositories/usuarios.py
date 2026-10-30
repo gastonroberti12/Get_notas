@@ -92,7 +92,7 @@ def crear_usuario(nombre, apellido, email, contrasenia):
         INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
         VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
     """
-    return ejecutar_escritura(sql, {
+    return _escribir_usuario(sql, {
         "nombre": nombre,
         "apellido": apellido,
         "email": email,

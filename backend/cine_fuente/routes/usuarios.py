@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, g
 
 from cine_fuente.services import usuarios as usuarios_service
 from cine_fuente.utils import (
@@ -76,6 +76,8 @@ def patch_usuario(id_usuario):
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error)
+
+    
 # Endpoint GET /usuarios/me: devuelve el perfil del usuario autenticado.
 @usuarios_bp.route("/usuarios/me", methods=["GET"])
 @requiere_token(("cliente", "administrador"))
