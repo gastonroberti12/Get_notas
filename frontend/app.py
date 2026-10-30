@@ -25,26 +25,6 @@ def create_app():
     
     # Context processors para que las funciones de roles estén disponibles en todas las plantillas. esto le pasa al render_template el rol segun lo q tenga el template
     app.context_processor(lambda: {'esta_logueado': esta_logueado, 'es_admin': es_admin, 'es_cliente': es_cliente})
-
-    @app.errorhandler(404)
-    def page_not_found(error):
-        return render_template("errores/404.html"), 404
-
-    @app.errorhandler(500)
-    def internar_server_error(error):
-        return render_template("errores/500.html"), 500
-
-    @app.errorhandler(403)
-    def forbidden_error(error):
-        return render_template("errores/403.html"), 403
-
-    @app.errorhandler(503)
-    def service_unavailable(error):
-        return render_template("errores/503.html"), 503
-
-    @app.errorhandler(405)
-    def method_not_allowed(error):
-        return render_template("errores/405.html"), 405
     
     return app
 
