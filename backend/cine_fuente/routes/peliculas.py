@@ -1,7 +1,11 @@
 from flask import Blueprint, jsonify, request
 
-from cine_fuente.repositories.peliculas import consultar_peliculas as listar_peliculas_locales, consultar_pelicula_por_id as obtener_pelicula
-from cine_fuente.utils import construir_error_api, respuesta_paginada, validar_paginacion
+from cine_fuente.repositories.peliculas import (
+    consultar_pelicula_por_id as obtener_pelicula,
+    consultar_peliculas as listar_peliculas_locales,
+    insertar_pelicula,
+)
+from cine_fuente.utils import construir_error_api, requiere_token, respuesta_paginada, validar_paginacion
 from cine_fuente.services.omdb_service import (
     OmdbConfigurationError,
     OmdbError,
@@ -21,6 +25,33 @@ def listar_peliculas():
     limit, offset = validar_paginacion(request.args)
     peliculas = listar_peliculas_locales()
     return respuesta_paginada("peliculas", peliculas[offset:offset + limit], len(peliculas), limit, offset)
+
+
+@peliculas_bp.post("")
+@requiere_token(("administrador",))
+# Permite al administrador cargar una película manualmente.
+def crear_pelicula():
+    datos = request.get_json(silent=True) or {}
+    titulo = datos.get("titulo")
+
+    if not isinstance(titulo, str) or not titulo.strip():
+        return jsonify(construir_error_api(
+            "pelicula.invalid",
+            "Datos de película inválidos",
+            "El título es obligatorio.",
+        )), 400
+
+    campos_permitidos = (
+        "titulo", "sinopsis", "poster_url", "duracion_min", "clasificacion",
+        "genero", "id_externo", "fecha_inicio_cartelera",
+        "fecha_fin_cartelera", "activa",
+    )
+    pelicula = {campo: datos[campo] for campo in campos_permitidos if campo in datos}
+    pelicula["titulo"] = titulo.strip()
+    pelicula["activa"] = pelicula.get("activa", True)
+
+    pelicula_id = insertar_pelicula(pelicula)
+    return jsonify(obtener_pelicula(pelicula_id)), 201
 
 
 @peliculas_bp.get("/<int:pelicula_id>")
