@@ -1,4 +1,4 @@
-from cine_fuente.validators.reservas import error_validacion
+from cine_fuente.validators.reservas import error_validacion, validar_entero_positivo
 
 ROLES_VALIDOS = ("cliente", "administrador")
 # Longitudes máximas según las columnas de la tabla usuarios.
@@ -49,3 +49,8 @@ def validar_body_crear_usuario(body) -> dict:
             error_validacion("Campo inválido", f"'{campo}' debe ser un texto no vacío.")
         datos[campo] = valor.strip()
     return datos
+
+
+def validar_id_usuario(id_usuario) -> int:
+    """Valida el ID de la URL para GET/PATCH /usuarios/{id}."""
+    return validar_entero_positivo(id_usuario, "id")
