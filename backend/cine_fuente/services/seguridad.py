@@ -19,27 +19,6 @@ def verificar_contrasenia(hash_guardado: str, contrasenia: str) -> bool:
     return check_password_hash(hash_guardado, contrasenia)
 
 
-from datetime import datetime, timedelta, timezone
-
-import jwt
-from werkzeug.security import check_password_hash, generate_password_hash
-
-from constants import JWT_EXPIRACION_MINUTOS, JWT_SECRET_KEY
-from cine_fuente.utils import construir_error_api
-
-ALGORITMO = "HS256"
-
-
-def hashear_contrasenia(contrasenia: str) -> str:
-    """Devuelve el hash a guardar en usuarios.contrasena (usar al registrar)."""
-    return generate_password_hash(contrasenia)
-
-
-def verificar_contrasenia(hash_guardado: str, contrasenia: str) -> bool:
-    """Compara la contraseña ingresada con el hash guardado en la base."""
-    return check_password_hash(hash_guardado, contrasenia)
-
-
 def generar_token(usuario_id: int, rol: str) -> str:
     """Firma un JWT con id, rol y vencimiento. No se guarda en ningún lado."""
     ahora = datetime.now(timezone.utc)
