@@ -179,7 +179,7 @@ def validar_body_pago(body) -> None:
     if not isinstance(mes, str) or not re.fullmatch(r"(?:0[1-9]|1[0-2])", mes):
         error_validacion("Vencimiento inválido", "'mes_vencimiento' debe ser un texto entre '01' y '12'.")
 
-    if not isinstance(anio, str) or not re.fullmatch(r"\d{4}", anio):
+    if not isinstance(anio, str) or not anio.isascii() or not re.fullmatch(r"\d{4}", anio):
         error_validacion("Vencimiento inválido", "'anio_vencimiento' debe contener cuatro dígitos.")
 
     # Una tarjeta es válida hasta el último día de su mes de vencimiento.
