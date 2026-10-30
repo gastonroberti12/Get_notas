@@ -1,9 +1,11 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from Routes.products import peliculas_bp
-from Routes.cines import cines_bp
-from Routes.users import users_bp
+from flask import render_template
+from routes.products import peliculas_bp
+from routes.cines import cines_bp
+from routes.users import users_bp
+
 
 load_dotenv()
 
@@ -16,6 +18,26 @@ def create_app():
     app.register_blueprint(cines_bp)
     app.register_blueprint(users_bp)
 
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return render_template("errores/404.html"), 404
+
+    @app.errorhandler(500)
+    def internar_server_error(error):
+        return render_template("errores/500.html"), 500
+
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template("errores/403.html"), 403
+
+    @app.errorhandler(503)
+    def service_unavailable(error):
+        return render_template("errores/503.html"), 503
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return render_template("errores/405.html"), 405
+    
     return app
 
 
