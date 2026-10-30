@@ -110,3 +110,19 @@ def validar_estado_propio(args) -> str | None:
     if estado is not None and estado not in estados_validos:
         error_validacion("Estado inválido", f"'estado' debe ser uno de: {', '.join(estados_validos)}.")
     return estado
+
+
+def validar_luhn(numero: str) -> bool:
+    """Comprueba el dígito verificador; no demuestra que la tarjeta exista o tenga fondos."""
+    suma = 0
+    # La paridad determina qué dígitos se duplican al recorrer el número desde la derecha.
+    paridad = len(numero) % 2
+    for indice, caracter in enumerate(numero):
+        digito = int(caracter)
+        if indice % 2 == paridad:
+            digito *= 2
+            if digito > 9:
+                digito -= 9
+        suma += digito
+    # Un número supera Luhn cuando la suma total es múltiplo de diez.
+    return suma % 10 == 0
