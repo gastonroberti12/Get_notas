@@ -13,7 +13,7 @@ def validar_entero_positivo(valor, nombre: str) -> int:
         error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo.")
     if isinstance(valor, int):
         entero = valor
-    elif isinstance(valor, str) and valor.strip().isdigit():
+    elif isinstance(valor, str) and valor.strip().isdecimal():
         entero = int(valor.strip())
     else:
         error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo.")
