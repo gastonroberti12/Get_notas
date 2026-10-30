@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d "%~dp0backend"
 
 echo === Configuracion del ambiente con pipenv ===
 

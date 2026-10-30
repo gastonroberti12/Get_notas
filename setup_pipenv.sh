@@ -4,6 +4,9 @@ set -e
 
 echo "=== Configuración del ambiente con pipenv ==="
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/backend"
+
 if ! command -v python3 &> /dev/null; then
     echo "Python3 no está instalado. Instalando..."
     if command -v apt-get &> /dev/null; then

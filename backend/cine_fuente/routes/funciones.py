@@ -9,6 +9,7 @@ funciones_bp = Blueprint('funciones', __name__, url_prefix='/api/funciones')
 
 
 @funciones_bp.get('')
+# Lista las funciones disponibles.
 def listar_funciones():
     limit, offset = validar_paginacion(request.args)
     filtros = validator.validar_filtros(request.args)
@@ -23,6 +24,7 @@ def obtener_funcion(funcion_id):
 
 
 @funciones_bp.post('')
+# Registra una nueva función.
 def crear_funcion():
     pelicula_id, sala_id, fecha_hora, precio = validator.validar_creacion(request.get_json(silent=True))
     return jsonify(service.crear_funcion(pelicula_id, sala_id, fecha_hora, precio)), 201
@@ -37,6 +39,7 @@ def modificar_funcion(funcion_id):
 
 
 @funciones_bp.delete('/<int:funcion_id>')
+# Elimina o desactiva una función.
 def borrar_funcion(funcion_id):
     datos = request.get_json(silent=True) or {}
     service.eliminar_funcion_por_id(funcion_id, datos.get('fisica') is True)
@@ -59,5 +62,6 @@ def manejar_error_datos(error):
 
 
 @funciones_bp.errorhandler(HTTPException)
+# Mantiene el manejo estándar de errores HTTP.
 def manejar_http(error):
     raise error

@@ -3,8 +3,10 @@ from urllib.parse import urlencode
 
 from flask import g, jsonify, request
 
-from cine_fuente.repositories.seguridad import obtener_usuario_por_token
-
+try:
+    from cine_fuente.repositories.usuarios import obtener_usuario_por_token
+except (ImportError, AttributeError):
+    obtener_usuario_por_token = None
 
 PARAMETRO_LIMIT = "_limit"
 PARAMETRO_OFFSET = "_offset"
@@ -25,6 +27,20 @@ def construir_error_api(code: str, message: str, description: str, level: str = 
             "description": description,
         }]
     }
+
+
+def respuesta_error_excepcion(error: ValueError):
+    payload = error.args[0] if error.args and isinstance(error.args[0], dict) else construir_error_api(
+        "ERROR_VALIDACION", "Solicitud inválida", "Los datos enviados no son válidos."
+    )
+    status = error.args[1] if len(error.args) > 1 and isinstance(error.args[1], int) else 400
+    return jsonify(payload), status
+
+
+def respuesta_error_interno():
+    return jsonify(construir_error_api(
+        "ERROR_INTERNO", "Error interno del servidor", "No se pudo completar la operación solicitada."
+    )), 500
 
 
 def formatear_fecha_hora(valor):
