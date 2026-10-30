@@ -26,3 +26,14 @@ def get_usuarios():
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error)
+
+# Endpoint GET /usuarios/me: devuelve el perfil del usuario autenticado.
+@usuarios_bp.route("/usuarios/me", methods=["GET"])
+@requiere_token(("cliente", "administrador"))
+def get_mi_perfil():
+    try:
+        return jsonify(usuarios_service.obtener_perfil(int(g.usuario["id"]))), 200
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception as error:
+        return respuesta_error_interno(error) 

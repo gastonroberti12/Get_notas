@@ -58,3 +58,10 @@ def contar_usuarios(filtros):
     where, parametros = _construir_filtros(filtros)
     filas = ejecutar_consulta(f"SELECT COUNT(*) AS total FROM usuarios {where}", parametros)
     return int(filas[0]["total"]) if filas else 0
+
+def obtener_por_id(usuario_id):
+    filas = ejecutar_consulta(
+        "SELECT id, nombre, apellido, email, rol, fecha_registro FROM usuarios WHERE id = %s",
+        (usuario_id,),
+    )
+    return filas[0] if filas else None
