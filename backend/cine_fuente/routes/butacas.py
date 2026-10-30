@@ -1,9 +1,24 @@
 from flask import Blueprint, jsonify, request
 import pymysql
 
-from cine_fuente.repositories.butacas import consultar_butaca_por_id, consultar_butacas_por_sala, contar_butacas, eliminar_butaca, eliminar_butacas_de_sala, insertar_butaca
+from cine_fuente.repositories.butacas import (
+    actualizar_butaca,
+    consultar_butaca_por_id,
+    consultar_butacas_por_sala,
+    contar_butacas,
+    eliminar_butaca,
+    eliminar_butacas_de_sala,
+    insertar_butaca,
+)
 from cine_fuente.repositories.salas import consultar_sala_por_id
-from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import (
+    construir_error_api,
+    requiere_token,
+    respuesta_error_api,
+    respuesta_error_excepcion,
+    respuesta_paginada,
+    validar_paginacion,
+)
 
 butacas_bp = Blueprint("butacas", __name__, url_prefix="/api")
 
@@ -26,6 +41,8 @@ def listar_butacas_sala(sala_id):
 
 
 @butacas_bp.route("/salas/<int:sala_id>/butacas/generar", methods=["POST"])
+@butacas_bp.post("/salas/<int:sala_id>/butacas/generar")
+@requiere_token(("administrador",))
 # Genera las butacas de una sala.
 def generar_butacas(sala_id):
     sala = consultar_sala_por_id(sala_id)
@@ -46,6 +63,8 @@ def generar_butacas(sala_id):
 
 
 @butacas_bp.route("/butacas", methods=["POST"])
+@butacas_bp.post("/butacas")
+@requiere_token(("administrador",))
 # Registra una nueva butaca.
 def crear_butaca():
     datos = request.get_json(silent=True) or {}
@@ -70,7 +89,38 @@ def crear_butaca():
     return jsonify(consultar_butaca_por_id(butaca_id)), 201
 
 
-@butacas_bp.route("/butacas/<int:butaca_id>", methods=["DELETE"])
+@butacas_bp.patch("/butacas/<int:butaca_id>")
+@requiere_token(("administrador",))
+# Modifica los datos de una butaca.
+def modificar_butaca(butaca_id):
+    if consultar_butaca_por_id(butaca_id) is None:
+        return error("butaca.not.found", "Butaca no encontrada", "La butaca solicitada no existe.", 404)
+    datos = request.get_json(silent=True) or {}
+    cambios = {}
+    if "fila" in datos:
+        fila = str(datos["fila"]).strip().upper()
+        if len(fila) != 1 or not fila.isalpha():
+            return error("invalid.fila.format", "Fila inválida", "fila debe ser una letra.", 400)
+        cambios["fila"] = fila
+    if "numero" in datos:
+        try:
+            numero = int(datos["numero"])
+        except (TypeError, ValueError):
+            return error("invalid.numero.value", "Número inválido", "numero debe ser un entero.", 400)
+        if numero < 1:
+            return error("invalid.numero.value", "Número inválido", "numero debe ser mayor que cero.", 400)
+        cambios["numero"] = numero
+    if not cambios:
+        return error("invalid.body", "Datos inválidos", "No se enviaron campos para modificar.", 400)
+    try:
+        actualizar_butaca(butaca_id, cambios)
+    except pymysql.err.IntegrityError:
+        return error("butaca.duplicada", "Butaca duplicada", "La fila y el número ya existen en la sala.", 409)
+    return "", 204
+
+
+@butacas_bp.delete("/butacas/<int:butaca_id>")
+@requiere_token(("administrador",))
 # Elimina una butaca.
 def borrar_butaca(butaca_id):
     if consultar_butaca_por_id(butaca_id) is None:
@@ -82,7 +132,8 @@ def borrar_butaca(butaca_id):
     return "", 204
 
 
-@butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["DELETE"])
+@butacas_bp.delete("/salas/<int:sala_id>/butacas")
+@requiere_token(("administrador",))
 # Elimina las butacas de una sala.
 def borrar_butacas_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
