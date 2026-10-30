@@ -1,13 +1,9 @@
 from constants import CAMPOS_SERVICIOS_PERMITIDOS
 
-def validar_id_servicio(servicio_id):
-    return servicio_id > 0
 
-
-from decimal import Decimal, InvalidOperation
-
-
+# Validar nombre
 def validar_nombre(nombre):
+
     if not isinstance(nombre, str) or not nombre.strip():
         raise ValueError("El nombre es obligatorio")
 
@@ -19,7 +15,9 @@ def validar_nombre(nombre):
     return nombre
 
 
+# Validar descripción
 def validar_descripcion(descripcion):
+
     if descripcion is None:
         return None
 
@@ -33,54 +31,91 @@ def validar_descripcion(descripcion):
 
     return descripcion or None
 
+
+# Validar precio (entero en centavos según Swagger)
 def validar_precio(precio):
-    if precio is None or isinstance(precio, bool):
-        raise ValueError("El precio es obligatorio y debe ser numérico")
 
-    try:
-        precio = Decimal(str(precio))
-    except (InvalidOperation, ValueError):
-        raise ValueError("El precio debe ser numérico")
+    if type(precio) is not int:
+        raise ValueError("El precio debe ser un número entero en centavos")
 
-    if not precio.is_finite() or precio <= 0:
+    if precio <= 0:
         raise ValueError("El precio debe ser mayor a cero")
-
-    if precio > Decimal("99999999.99"):
-        raise ValueError("El precio supera el máximo permitido")
-
-    if precio != precio.quantize(Decimal("0.01")):
-        raise ValueError("El precio debe tener como máximo dos decimales")
 
     return precio
 
+
+# Validar activo
 def validar_activo(activo):
+
     if not isinstance(activo, bool):
         raise ValueError("El campo activo debe ser true o false")
 
     return activo
 
 
-def validar_campos_servicio(datos): # devuelve los campos que se pasan en la request en un diccionario campo:valor ya validados
+# Validar cantidad de servicios en una reserva
+def validar_cantidad(cantidad):
+
+    if type(cantidad) is not int:
+        raise ValueError("La cantidad debe ser un número entero")
+
+    if cantidad <= 0:
+        raise ValueError("La cantidad debe ser mayor a cero")
+
+    return cantidad
+
+
+# Validar campos enviados en PATCH /servicios/{id}
+def validar_campos_servicio(datos):
 
     if not isinstance(datos, dict) or not datos:
         raise ValueError("No se enviaron datos válidos")
 
-    validadores = {     
+    validadores = {
         "nombre": validar_nombre,
         "descripcion": validar_descripcion,
         "precio": validar_precio,
         "activo": validar_activo
     }
-    #es un diccionario donde los valores de las claves hacen referencia a las funciones, por eso va sin los () pq no la estamos ejecutando
 
     campos = {}
 
     for campo, valor in datos.items():
 
-        if campo not in CAMPOS_SERVICIOS_PERMITIDOS:
+        if campo not in CAMPOS_SERVICIOS_PERMITIDOS or campo not in validadores:
             raise ValueError(f"Campo no permitido: {campo}")
 
         campos[campo] = validadores[campo](valor)
-        # validadores["nombre"]("Pochoclos XL") equivale a validar_nombre("Pochoclos XL")
 
     return campos
+
+
+# Validar el cuerpo del POST /servicios usando los mismos validadores del PATCH.
+def validar_creacion_servicio(datos):
+    campos = validar_campos_servicio(datos)
+
+    if "nombre" not in campos or "precio" not in campos:
+        raise ValueError("El nombre y el precio son obligatorios")
+
+    if "descripcion" not in campos:
+        campos["descripcion"] = None
+
+    if "activo" not in campos:
+        campos["activo"] = True
+
+    return campos
+
+
+# En una reserva solamente se puede modificar la cantidad del servicio.
+def validar_modificacion_servicio_reserva(datos):
+    if not isinstance(datos, dict):
+        raise ValueError("Se debe enviar un objeto JSON")
+
+    if "cantidad" not in datos or len(datos) != 1:
+        raise ValueError("Se debe enviar únicamente el campo cantidad")
+
+    return validar_cantidad(datos["cantidad"])
+
+
+
+
