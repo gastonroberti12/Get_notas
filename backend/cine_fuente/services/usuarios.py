@@ -24,6 +24,11 @@ def listar_usuarios(filtros, limit, offset):
     return [usuario_api(usuario) for usuario in usuarios], total
 
 
+def obtener_perfil(usuario_id):
+    fila = usuarios_repo.obtener_por_id(usuario_id)
+    if fila is None:
+        raise ValueError(construir_error_api(
+            "USUARIO_NO_ENCONTRADO", "No encontrado", "El usuario no existe."), 404)
 def crear_usuario(datos):
     """Registra un cliente nuevo y devuelve su id."""
     return int(usuarios_repo.crear_usuario(
