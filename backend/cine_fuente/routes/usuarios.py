@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response,
+from flask import Blueprint, request, jsonify, make_response
 
 from cine_fuente.services import usuarios as usuarios_service
 from cine_fuente.utils import (
