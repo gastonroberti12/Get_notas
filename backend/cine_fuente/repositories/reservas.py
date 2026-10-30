@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion
 
 TOTAL_RESERVA_SQL = """
     (
@@ -181,6 +181,51 @@ def obtener_entradas_para_pago(reserva_id):
         ORDER BY id ASC
     """
     return consultar(sql, {"reserva_id": reserva_id})
+
+
+def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
+    """Confirma una reserva y asigna sus QR en una única transacción."""
+    with obtener_conexion() as conexion:
+        try:
+            with conexion.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE reservas
+                    SET estado = 'confirmada'
+                    WHERE id = %(reserva_id)s
+                      AND estado = 'pendiente'
+                      AND fecha_compra > %(fecha_limite)s
+                    """,
+                    {"reserva_id": reserva_id, "fecha_limite": fecha_limite},
+                )
+                if cursor.rowcount != 1:
+                    conexion.rollback()
+                    return 0
+
+                for entrada_id, codigo_qr in codigos_qr:
+                    cursor.execute(
+                        """
+                        UPDATE entrada
+                        SET codigo_qr = %(codigo_qr)s
+                        WHERE id = %(entrada_id)s
+                          AND reserva_id = %(reserva_id)s
+                          AND codigo_qr IS NULL
+                        """,
+                        {
+                            "codigo_qr": codigo_qr,
+                            "entrada_id": entrada_id,
+                            "reserva_id": reserva_id,
+                        },
+                    )
+                    if cursor.rowcount != 1:
+                        raise RuntimeError(
+                            f"No se pudo asignar el QR de la entrada {entrada_id}."
+                        )
+            conexion.commit()
+            return 1
+        except Exception:
+            conexion.rollback()
+            raise
 
 
 def actualizar_entrada_qr(entrada_id, codigo_qr):
