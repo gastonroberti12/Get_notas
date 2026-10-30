@@ -1,11 +1,11 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from Routes.products import peliculas_bp
-from Routes.cines import cines_bp
-from Routes.users import users_bp
-from Routes.backoffice import backoffice_bp
-from Routes.roles import esta_logueado, es_admin, es_cliente
+from routes.products import peliculas_bp
+from routes.cines import cines_bp
+from routes.users import users_bp
+from routes.backoffice import backoffice_bp
+from routes.roles import esta_logueado, es_admin, es_cliente
 
 load_dotenv()
 
