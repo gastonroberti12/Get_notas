@@ -85,7 +85,7 @@ CREATE TABLE entrada (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     reserva_id INT NOT NULL,
     butaca_id  INT NOT NULL,
-    codigo_qr  VARCHAR(64) NOT NULL UNIQUE,
+    codigo_qr  VARCHAR(64) UNIQUE,
     estado     ENUM('pendiente','confirmada','cancelada','finalizada') NOT NULL DEFAULT 'pendiente',
     fecha_uso  DATETIME,
     FOREIGN KEY (reserva_id) REFERENCES reservas(id),
@@ -110,4 +110,3 @@ CREATE TABLE reserva_servicios (
     FOREIGN KEY (reserva_id)  REFERENCES reservas(id),
     FOREIGN KEY (servicio_id) REFERENCES servicios(id)
 );
-

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import logging
 from urllib.parse import urlencode
 
 from flask import g, jsonify, request
@@ -15,18 +16,23 @@ PAGINACION_LIMIT_MINIMO = 1
 PAGINACION_LIMIT_MAXIMO = 100
 PAGINACION_OFFSET_DEFAULT = 0
 PAGINACION_OFFSET_MINIMO = 0
+logger = logging.getLogger(__name__)
 
 
 def construir_error_api(code: str, message: str, description: str, level: str = "error") -> dict:
     """Construye el formato de error para cualquier endpoint."""
     return {
         "errors": [{
-            "code": code,
-            "message": message,
-            "level": level,
-            "description": description,
+            "codigo": code,
+            "titulo": message,
+            "mensaje": description,
         }]
     }
+
+
+def respuesta_error_api(payload: dict, status: int):
+    """Devuelve un payload de error con su código HTTP."""
+    return jsonify(payload), status
 
 
 def respuesta_error_excepcion(error: ValueError):
@@ -34,13 +40,20 @@ def respuesta_error_excepcion(error: ValueError):
         "ERROR_VALIDACION", "Solicitud inválida", "Los datos enviados no son válidos."
     )
     status = error.args[1] if len(error.args) > 1 and isinstance(error.args[1], int) else 400
-    return jsonify(payload), status
+    return respuesta_error_api(payload, status)
 
 
-def respuesta_error_interno():
-    return jsonify(construir_error_api(
+def respuesta_error_interno(error: Exception | None = None):
+    if error is None:
+        logger.exception("Error interno del servidor")
+    else:
+        logger.error(
+            "Error interno del servidor",
+            exc_info=(type(error), error, error.__traceback__),
+        )
+    return respuesta_error_api(construir_error_api(
         "ERROR_INTERNO", "Error interno del servidor", "No se pudo completar la operación solicitada."
-    )), 500
+    ), 500)
 
 
 def formatear_fecha_hora(valor):
@@ -194,6 +207,8 @@ def requiere_token(roles: tuple[str, ...] | None = None):
     roles_permitidos = tuple(roles or ())
 
     def decorador(funcion):
+        from functools import wraps
+        @wraps(funcion)
         def envoltura(*args, **kwargs):
             cabecera = request.headers.get("Authorization", "")
             partes = cabecera.split(None, 1)
@@ -203,34 +218,34 @@ def requiere_token(roles: tuple[str, ...] | None = None):
                 or partes[0].lower() != "bearer"
                 or not partes[1].strip()
             ):
-                return jsonify(construir_error_api(
+                return respuesta_error_api(construir_error_api(
                     "TOKEN_REQUERIDO",
                     "Autenticación requerida",
                     "Envíe un token válido mediante Authorization: Bearer <token>.",
-                )), 401
+                ), 401)
 
             try:
                 usuario = obtener_usuario_por_token(partes[1].strip())
             except Exception:
-                return jsonify(construir_error_api(
+                return respuesta_error_api(construir_error_api(
                     "ERROR_INTERNO",
                     "Error interno del servidor",
                     "No se pudo validar la autenticación."
-                )), 500
+                ), 500)
 
             if usuario is None:
-                return jsonify(construir_error_api(
+                return respuesta_error_api(construir_error_api(
                     "TOKEN_INVALIDO",
                     "Token inválido",
                     "El token no corresponde a una sesión de usuario válida.",
-                )), 401
+                ), 401)
 
             if roles_permitidos and usuario.get("rol") not in roles_permitidos:
-                return jsonify(construir_error_api(
+                return respuesta_error_api(construir_error_api(
                     "ROL_NO_AUTORIZADO",
                     "Acceso denegado",
                     f"El endpoint requiere uno de estos roles: {', '.join(roles_permitidos)}.",
-                )), 403
+                ), 403)
 
             g.usuario = usuario
             return funcion(*args, **kwargs)
