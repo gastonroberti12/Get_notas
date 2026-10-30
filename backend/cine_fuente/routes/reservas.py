@@ -17,6 +17,7 @@ from cine_fuente.validators.reservas import (
     validar_filtros_listado,
     validar_id_reserva,
     validar_estado_propio,
+    validar_body_pago,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,6 +111,7 @@ def post_reserva():
 def post_pago_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
+        validar_body_pago(request.get_json(silent=True))
         reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
         try:
             enviar_confirmacion_pago(datos_notificacion)
