@@ -1,82 +1,119 @@
-from decimal import Decimal, InvalidOperation
-
-from cine_fuente.utils import construir_error_api
+from constants import CAMPOS_SERVICIOS_PERMITIDOS
 
 
-def error_validacion(descripcion):
-    raise ValueError(construir_error_api(
-        "ERROR_VALIDACION",
-        "Datos inválidos",
-        descripcion,
-    ))
+# Validar nombre
+def validar_nombre(nombre):
 
-
-def validar_precio(valor):
-    try:
-        precio = Decimal(str(valor))
-    except (InvalidOperation, TypeError, ValueError):
-        error_validacion("El precio debe ser un número.")
-
-    if precio < 0:
-        error_validacion("El precio no puede ser negativo.")
-    return float(precio)
-
-
-def validar_creacion_servicio(datos):
-    if not isinstance(datos, dict):
-        error_validacion("El cuerpo de la solicitud debe ser un objeto JSON.")
-
-    nombre = datos.get("nombre")
     if not isinstance(nombre, str) or not nombre.strip():
-        error_validacion("El campo nombre es obligatorio.")
+        raise ValueError("El nombre es obligatorio")
 
-    campos = {
-        "nombre": nombre.strip(),
-        "descripcion": datos.get("descripcion", "").strip()
-        if isinstance(datos.get("descripcion", ""), str)
-        else "",
-        "precio": validar_precio(datos.get("precio")),
-        "activo": datos.get("activo", True),
-    }
-    if not isinstance(campos["activo"], bool):
-        error_validacion("El campo activo debe ser true o false.")
-    return campos
+    nombre = nombre.strip()
+
+    if len(nombre) > 100:
+        raise ValueError("El nombre no puede superar los 100 caracteres")
+
+    return nombre
 
 
-def validar_campos_servicio(datos):
-    if not isinstance(datos, dict) or not datos:
-        error_validacion("No se enviaron campos para modificar.")
+# Validar descripción
+def validar_descripcion(descripcion):
 
-    permitidos = {"nombre", "descripcion", "precio", "activo"}
-    desconocidos = set(datos) - permitidos
-    if desconocidos:
-        error_validacion(
-            "Campos no permitidos: " + ", ".join(sorted(desconocidos)) + "."
-        )
+    if descripcion is None:
+        return None
 
-    campos = dict(datos)
-    if "nombre" in campos:
-        if not isinstance(campos["nombre"], str) or not campos["nombre"].strip():
-            error_validacion("El nombre no puede estar vacío.")
-        campos["nombre"] = campos["nombre"].strip()
-    if "descripcion" in campos:
-        if not isinstance(campos["descripcion"], str):
-            error_validacion("La descripción debe ser texto.")
-        campos["descripcion"] = campos["descripcion"].strip()
-    if "precio" in campos:
-        campos["precio"] = validar_precio(campos["precio"])
-    if "activo" in campos and not isinstance(campos["activo"], bool):
-        error_validacion("El campo activo debe ser true o false.")
-    return campos
+    if not isinstance(descripcion, str):
+        raise ValueError("La descripción debe ser un texto")
+
+    descripcion = descripcion.strip()
+
+    if len(descripcion) > 255:
+        raise ValueError("La descripción no puede superar los 255 caracteres")
+
+    return descripcion or None
 
 
-def validar_modificacion_servicio_reserva(datos):
-    if not isinstance(datos, dict) or "cantidad" not in datos:
-        error_validacion("El campo cantidad es obligatorio.")
+# Validar precio (entero en centavos según Swagger)
+def validar_precio(precio):
 
-    cantidad = datos["cantidad"]
-    if isinstance(cantidad, bool) or not isinstance(cantidad, int):
-        error_validacion("La cantidad debe ser un número entero.")
+    if type(precio) is not int:
+        raise ValueError("El precio debe ser un número entero en centavos")
+
+    if precio <= 0:
+        raise ValueError("El precio debe ser mayor a cero")
+
+    return precio
+
+
+# Validar activo
+def validar_activo(activo):
+
+    if not isinstance(activo, bool):
+        raise ValueError("El campo activo debe ser true o false")
+
+    return activo
+
+
+# Validar cantidad de servicios en una reserva
+def validar_cantidad(cantidad):
+
+    if type(cantidad) is not int:
+        raise ValueError("La cantidad debe ser un número entero")
+
     if cantidad <= 0:
-        error_validacion("La cantidad debe ser mayor que cero.")
+        raise ValueError("La cantidad debe ser mayor a cero")
+
     return cantidad
+
+
+# Validar campos enviados en PATCH /servicios/{id}
+def validar_campos_servicio(datos):
+
+    if not isinstance(datos, dict) or not datos:
+        raise ValueError("No se enviaron datos válidos")
+
+    validadores = {
+        "nombre": validar_nombre,
+        "descripcion": validar_descripcion,
+        "precio": validar_precio,
+        "activo": validar_activo
+    }
+
+    campos = {}
+
+    for campo, valor in datos.items():
+
+        if campo not in CAMPOS_SERVICIOS_PERMITIDOS or campo not in validadores:
+            raise ValueError(f"Campo no permitido: {campo}")
+
+        campos[campo] = validadores[campo](valor)
+
+    return campos
+
+
+# Validar el cuerpo del POST /servicios usando los mismos validadores del PATCH.
+#exige que estén nombre y precio, porque son obligatorios para crear un servicio
+def validar_creacion_servicio(datos):
+    campos = validar_campos_servicio(datos)
+
+    if "nombre" not in campos or "precio" not in campos:
+        raise ValueError("El nombre y el precio son obligatorios")
+
+    if "descripcion" not in campos:
+        campos["descripcion"] = None
+
+    if "activo" not in campos:
+        campos["activo"] = True
+
+    return campos
+
+
+# En una reserva solamente se puede modificar la cantidad del servicio.
+def validar_modificacion_servicio_reserva(datos):
+    if not isinstance(datos, dict):
+        raise ValueError("Se debe enviar un objeto JSON")
+
+    if "cantidad" not in datos or len(datos) != 1:
+        raise ValueError("Se debe enviar únicamente el campo cantidad")
+
+    return validar_cantidad(datos["cantidad"])
+
