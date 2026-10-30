@@ -925,7 +925,7 @@ paths:
     - $ref: '#/components/parameters/Id'
     post:
       summary: Confirmar el pago de una reserva
-      description: Pago simulado, sin cuerpo. Pasa la reserva a `confirmada`, 
+      description: Pago simulado. Valida los datos de la tarjeta sin almacenarlos y pasa la reserva a `confirmada`,
         genera una entrada con QR por butaca y envía por email la confirmación, 
         la factura y los QR. 409 si la reserva no está pendiente o ya expiró. 
         **Rol autorizado:** Dueño de la reserva.
@@ -933,6 +933,34 @@ paths:
       - Reservas
       security:
       - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - titular
+              - numero_tarjeta
+              - mes_vencimiento
+              - anio_vencimiento
+              - cvv
+              properties:
+                titular:
+                  type: string
+                numero_tarjeta:
+                  type: string
+                  pattern: '^[0-9]{13,19}$'
+                mes_vencimiento:
+                  type: string
+                  pattern: '^(0[1-9]|1[0-2])$'
+                anio_vencimiento:
+                  type: string
+                  pattern: '^[0-9]{4}$'
+                cvv:
+                  type: string
+                  pattern: '^[0-9]{3,4}$'
       responses:
         '200':
           $ref: '#/components/responses/GetReserva200'

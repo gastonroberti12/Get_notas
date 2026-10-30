@@ -201,6 +201,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
 
 def confirmar_pago(reserva_id, usuario):
     """Simula el pago, confirma la reserva y asigna QR a sus entradas."""
+    ahora = ahora_gmt3()
     procesar_expiraciones()
     reserva = compras_repo.obtener_reserva_por_id(reserva_id)
     if reserva is None:
@@ -224,44 +225,25 @@ def confirmar_pago(reserva_id, usuario):
             409,
         )
 
-    entradas_actualizadas = []
-    estado_actualizado = False
-    try:
-        for entrada in entradas:
-            entrada_id = int(entrada["id"])
-            compras_repo.actualizar_entrada_qr(entrada_id, str(uuid4()))
-            entradas_actualizadas.append(entrada_id)
-
-        actualizadas = compras_repo.actualizar_estado_reserva(
-            reserva_id, "confirmada", estados_esperados=("pendiente",)
+    codigos_qr = [(int(entrada["id"]), str(uuid4())) for entrada in entradas]
+    fecha_limite = (ahora - timedelta(minutes=10)).replace(tzinfo=None)
+    actualizada = compras_repo.confirmar_reserva_con_qr(
+        reserva_id, codigos_qr, fecha_limite
+    )
+    if actualizada != 1:
+        error(
+            "RESERVA_NO_PENDIENTE",
+            "No se puede pagar la reserva",
+            "La reserva debe estar pendiente y dentro del plazo de pago.",
+            409,
         )
-        if actualizadas != 1:
-            error(
-                "RESERVA_NO_PENDIENTE",
-                "No se puede pagar la reserva",
-                "La reserva debe estar pendiente y dentro del plazo de pago.",
-                409,
-            )
-        estado_actualizado = True
 
-        reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
-        datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
-        if reserva_actualizada is None or datos_notificacion is None:
-            raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
+    reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
+    datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
+    if reserva_actualizada is None or datos_notificacion is None:
+        raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
 
-        return reserva_api(reserva_actualizada), datos_notificacion
-    except Exception:
-        for entrada_id in entradas_actualizadas:
-            try:
-                compras_repo.restaurar_entrada_pendiente(entrada_id)
-            except Exception:
-                logger.exception("No se pudo restaurar la entrada %s después de un fallo de pago", entrada_id)
-        if estado_actualizado:
-            try:
-                compras_repo.restaurar_estado_reserva(reserva_id, "pendiente", None)
-            except Exception:
-                logger.exception("No se pudo restaurar la reserva %s después de un fallo de pago", reserva_id)
-        raise
+    return reserva_api(reserva_actualizada), datos_notificacion
 
 
 # PATCH /reservas/{id}

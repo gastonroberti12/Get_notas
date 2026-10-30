@@ -21,3 +21,5 @@ JWT_EXPIRACION_MINUTOS = int(os.getenv("JWT_EXPIRACION_MINUTOS", "30"))
 
 if not all([DB_USER, DB_PASSWORD, DB_NAME]):
     raise RuntimeError("Faltan variables de configuración de MySQL")
+
+CAMPOS_SERVICIOS_PERMITIDOS = ("nombre", "descripcion", "precio", "activo")
