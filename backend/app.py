@@ -4,19 +4,23 @@ from dotenv import load_dotenv
 from flask import Flask
 
 from cine_fuente.routes.peliculas import peliculas_bp
+from cine_fuente.routes.reservas import reservas_bp
+from cine_fuente.routes.usuarios import usuarios_bp
 
 
 load_dotenv(Path(__file__).with_name(".env"), override=False)
 
 
-def create_app():
+def crear_app():
     app = Flask(__name__)
     app.register_blueprint(peliculas_bp)
+    app.register_blueprint(reservas_bp)
+    app.register_blueprint(usuarios_bp)
     return app
 
 
-app = create_app()
+app = crear_app()
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000)
+    app.run(host="127.0.0.1", port=5001)
