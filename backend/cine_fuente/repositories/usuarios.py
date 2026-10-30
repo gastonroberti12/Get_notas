@@ -1,7 +1,14 @@
-from cine_fuente.db import ejecutar_consulta
+import pymysql
+
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 
 CARACTER_ESCAPE_LIKE = "!"
+
+MYSQL_ERROR_DUPLICADO = 1062
+CARACTER_ESCAPE_LIKE = "!"
+# Columnas que PATCH /usuarios/{id} puede modificar (los valores siempre van enlazados).
+COLUMNAS_ACTUALIZABLES = {"nombre", "apellido", "email", "contrasena", "rol"}
+
 
 # Condiciones de búsqueda parcial e insensible a mayúsculas, una por filtro de texto.
 CONDICIONES_BUSQUEDA = {
@@ -11,6 +18,20 @@ CONDICIONES_BUSQUEDA = {
     ),
     "email": "LOWER(email) LIKE LOWER(%(email)s) ESCAPE '!'",
 }
+
+
+class EmailDuplicadoError(Exception):
+    """El email ya pertenece a otro usuario (violación del UNIQUE de la tabla)."""
+
+
+def _escribir_usuario(sql, parametros):
+    """Ejecuta una escritura sobre usuarios y traduce el error de email duplicado de MySQL."""
+    try:
+        return ejecutar_escritura(sql, parametros)
+    except pymysql.err.IntegrityError as error:
+        if error.args and error.args[0] == MYSQL_ERROR_DUPLICADO:
+            raise EmailDuplicadoError() from error
+        raise
 
 
 def _patron_contiene(texto):
@@ -83,3 +104,20 @@ def obtener_usuario_por_id(id_usuario):
     """
     filas = ejecutar_consulta(sql, {"id": id_usuario})
     return filas[0] if filas else None
+
+
+def email_en_uso(email, excluir_id=None):
+    """True si algún usuario (distinto de excluir_id) ya tiene ese email."""
+    sql = "SELECT id FROM usuarios WHERE email = %(email)s AND id <> %(id)s LIMIT 1"
+    return bool(ejecutar_consulta(sql, {"email": email, "id": excluir_id or 0}))
+
+
+def actualizar_usuario(id_usuario, cambios):
+    """UPDATE parcial: solo las columnas presentes en 'cambios'."""
+    if not cambios or not set(cambios) <= COLUMNAS_ACTUALIZABLES:
+        raise ValueError("Columnas a actualizar inválidas.")
+    asignaciones = ", ".join(f"{columna} = %({columna})s" for columna in cambios)
+    _escribir_usuario(
+        f"UPDATE usuarios SET {asignaciones} WHERE id = %(id)s",
+        {**cambios, "id": id_usuario},
+    )
