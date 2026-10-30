@@ -12,9 +12,12 @@
     <header class="navbar">
         <a class="logo" href="{{ url_for('peliculas.inicio') }}">Cine Paradiso</a>
         <nav>
-            <a href="{{ url_for('peliculas.cartelera') }}">Películas</a> {# {{ url_for('#') }} #}
+            <a href="{{ url_for('peliculas.cartelera') }}">Películas</a>
             <a href="{{ url_for('cines.listado') }}">Cines</a>
-            {% if session.get('usuario') %}
+            {% if es_admin() %}
+                <a href="{{ url_for('backoffice.panel') }}">Backoffice</a>
+            {% endif %}
+            {% if esta_logueado() %}
                 <a href="{{ url_for('users.profile') }}">{{ session['usuario']['nombre'] }}</a>
             {% else %}
                 <a class="nav-ingreso" href="{{ url_for('users.login')}}">Ingresar</a>
