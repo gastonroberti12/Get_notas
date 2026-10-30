@@ -54,9 +54,10 @@ def _guardar_sin_duplicar_email(accion):
 
 def crear_usuario(datos):
     """Registra un cliente nuevo y devuelve su id."""
-    return int(usuarios_repo.crear_usuario(
-        datos["nombre"], datos["apellido"], datos["email"], datos["contrasenia"]
-    ))
+    contrasenia = hashear_contrasenia(datos["contrasenia"])
+    return int(_guardar_sin_duplicar_email(lambda: usuarios_repo.crear_usuario(
+        datos["nombre"], datos["apellido"], datos["email"], contrasenia
+    )))
 
 
 def obtener_usuario(id_usuario):
