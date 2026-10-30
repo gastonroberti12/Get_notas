@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
-from cine_fuente.repositories.butacas import obtener_butacas as obtener_butacas
+from cine_fuente.repositories.butacas import obtener_butacas
 from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 
 logger = logging.getLogger(__name__)
