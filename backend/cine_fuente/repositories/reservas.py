@@ -5,12 +5,12 @@ from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 TOTAL_RESERVA_SQL = """
     (
         (
-            SELECT COUNT(*) * ROUND(f.precio * 100, 0)
+            SELECT COUNT(*) * f.precio
             FROM entrada AS e
             WHERE e.reserva_id = r.id
         )
         + COALESCE((
-            SELECT SUM(rs.cantidad * ROUND(rs.precio_unitario * 100, 0))
+            SELECT SUM(rs.cantidad * rs.precio_unitario)
             FROM reserva_servicios AS rs
             WHERE rs.reserva_id = r.id
         ), 0)

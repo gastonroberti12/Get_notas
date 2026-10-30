@@ -165,9 +165,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
             409,
         )
 
-    precio = float(funcion["precio"])
-
-    if precio <= 0:
+    if funcion["precio"] <= 0:
         error(
             "PRECIO_FUNCION_INVALIDO",
             "Precio de función inválido",
@@ -227,6 +225,7 @@ def confirmar_pago(reserva_id, usuario):
         )
 
     entradas_actualizadas = []
+    estado_actualizado = False
     try:
         for entrada in entradas:
             entrada_id = int(entrada["id"])
@@ -243,6 +242,7 @@ def confirmar_pago(reserva_id, usuario):
                 "La reserva debe estar pendiente y dentro del plazo de pago.",
                 409,
             )
+        estado_actualizado = True
 
         reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
         datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
@@ -256,10 +256,11 @@ def confirmar_pago(reserva_id, usuario):
                 compras_repo.restaurar_entrada_pendiente(entrada_id)
             except Exception:
                 logger.exception("No se pudo restaurar la entrada %s después de un fallo de pago", entrada_id)
-        try:
-            compras_repo.restaurar_estado_reserva(reserva_id, "pendiente", None)
-        except Exception:
-            logger.exception("No se pudo restaurar la reserva %s después de un fallo de pago", reserva_id)
+        if estado_actualizado:
+            try:
+                compras_repo.restaurar_estado_reserva(reserva_id, "pendiente", None)
+            except Exception:
+                logger.exception("No se pudo restaurar la reserva %s después de un fallo de pago", reserva_id)
         raise
 
 
