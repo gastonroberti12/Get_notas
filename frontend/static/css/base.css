@@ -23,6 +23,12 @@
   color: var(--gold);
 }
  
+.navbar .logo-img {
+  height: 44px;
+  width: 44px;
+  object-fit: contain;
+}
+
 .navbar nav {
   display: flex;
   align-items: center;
