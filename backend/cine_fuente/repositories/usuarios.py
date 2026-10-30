@@ -1,6 +1,5 @@
-"""Consultas SQL de usuarios (GET /usuarios)."""
-
 from cine_fuente.db import ejecutar_consulta
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 
 CARACTER_ESCAPE_LIKE = "!"
 
@@ -58,3 +57,17 @@ def contar_usuarios(filtros):
     where, parametros = _construir_filtros(filtros)
     filas = ejecutar_consulta(f"SELECT COUNT(*) AS total FROM usuarios {where}", parametros)
     return int(filas[0]["total"]) if filas else 0
+
+
+def crear_usuario(nombre, apellido, email, contrasenia):
+    """Inserta un usuario con rol 'cliente' y devuelve su id."""
+    sql = """
+        INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
+        VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
+    """
+    return ejecutar_escritura(sql, {
+        "nombre": nombre,
+        "apellido": apellido,
+        "email": email,
+        "contrasena": contrasenia,
+    })
