@@ -5,6 +5,7 @@ from flask import Flask
 
 from cine_fuente.routes.peliculas import peliculas_bp
 from cine_fuente.routes.reservas import reservas_bp
+from cine_fuente.routes.usuarios import usuarios_bp
 
 
 load_dotenv(Path(__file__).with_name(".env"), override=False)
@@ -14,6 +15,7 @@ def crear_app():
     app = Flask(__name__)
     app.register_blueprint(peliculas_bp)
     app.register_blueprint(reservas_bp)
+    app.register_blueprint(usuarios_bp)
     return app
 
 
