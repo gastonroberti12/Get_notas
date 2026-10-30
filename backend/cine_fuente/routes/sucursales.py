@@ -2,7 +2,14 @@ from flask import Blueprint, jsonify, request
 import pymysql
 
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
-from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import (
+    construir_error_api,
+    requiere_token,
+    respuesta_error_api,
+    respuesta_error_excepcion,
+    respuesta_paginada,
+    validar_paginacion,
+)
 
 sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/api/sucursales")
 
@@ -42,6 +49,7 @@ def obtener_sucursal(sucursal_id):
 
 
 @sucursales_bp.post("")
+@requiere_token(("administrador",))
 # Registra una nueva sucursal.
 def crear_sucursal():
     datos = request.get_json(silent=True) or {}
@@ -58,6 +66,7 @@ def crear_sucursal():
 
 
 @sucursales_bp.patch("/<int:sucursal_id>")
+@requiere_token(("administrador",))
 # Actualiza los datos de una sucursal.
 def modificar_sucursal(sucursal_id):
     if consultar_sucursal_por_id(sucursal_id) is None:
@@ -79,6 +88,7 @@ def modificar_sucursal(sucursal_id):
 
 
 @sucursales_bp.delete("/<int:sucursal_id>")
+@requiere_token(("administrador",))
 # Elimina una sucursal existente.
 def borrar_sucursal(sucursal_id):
     if consultar_sucursal_por_id(sucursal_id) is None:
