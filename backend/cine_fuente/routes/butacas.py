@@ -12,7 +12,7 @@ def error(codigo, mensaje, descripcion, estado):
     return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
-@butacas_bp.get("/salas/<int:sala_id>/butacas")
+@butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["GET"])
 # Lista las butacas de una sala.
 def listar_butacas_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
@@ -25,7 +25,7 @@ def listar_butacas_sala(sala_id):
     return respuesta_paginada("butacas", butacas[offset:offset + limit], len(butacas), limit, offset)
 
 
-@butacas_bp.post("/salas/<int:sala_id>/butacas/generar")
+@butacas_bp.route("/salas/<int:sala_id>/butacas/generar", methods=["POST"])
 # Genera las butacas de una sala.
 def generar_butacas(sala_id):
     sala = consultar_sala_por_id(sala_id)
@@ -45,7 +45,7 @@ def generar_butacas(sala_id):
     return jsonify({"mensaje": "Butacas generadas", "cantidad": cantidad}), 201
 
 
-@butacas_bp.post("/butacas")
+@butacas_bp.route("/butacas", methods=["POST"])
 # Registra una nueva butaca.
 def crear_butaca():
     datos = request.get_json(silent=True) or {}
@@ -70,7 +70,7 @@ def crear_butaca():
     return jsonify(consultar_butaca_por_id(butaca_id)), 201
 
 
-@butacas_bp.delete("/butacas/<int:butaca_id>")
+@butacas_bp.route("/butacas/<int:butaca_id>", methods=["DELETE"])
 # Elimina una butaca.
 def borrar_butaca(butaca_id):
     if consultar_butaca_por_id(butaca_id) is None:
@@ -82,7 +82,7 @@ def borrar_butaca(butaca_id):
     return "", 204
 
 
-@butacas_bp.delete("/salas/<int:sala_id>/butacas")
+@butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["DELETE"])
 # Elimina las butacas de una sala.
 def borrar_butacas_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
