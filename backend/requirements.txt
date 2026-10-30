@@ -3,3 +3,4 @@ requests
 python-dotenv
 SQLAlchemy
 mysql-connector-python
+qrcode[pil]

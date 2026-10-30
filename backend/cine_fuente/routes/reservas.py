@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, g, jsonify, make_response, request
 
 from cine_fuente.services import reservas as compras_service
-# from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
+from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
 from cine_fuente.utils import (
     construir_error_api,
     requiere_token,

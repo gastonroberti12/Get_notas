@@ -101,7 +101,7 @@ def listar_entradas_reserva(reserva_id, usuario, limit, offset):
 
 
 def crear_reserva(usuario_id, funcion_id, butaca_ids):
-    """Valida la función y las butacas, calcula el total y crea la reserva pendiente."""
+    """Valida la función y las butacas y crea la reserva pendiente."""
     ahora = ahora_gmt3()
     ahora_db = ahora.replace(tzinfo=None)
 
@@ -165,7 +165,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
             409,
         )
 
-    precio = int(funcion["precio"])
+    precio = float(funcion["precio"])
 
     if precio <= 0:
         error(
@@ -182,7 +182,6 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
                 "funcion_id": funcion_id,
                 "fecha_compra": ahora_db,
                 "estado": "pendiente",
-                "total": precio * len(butaca_ids),
             })
 
         if not reserva_id:

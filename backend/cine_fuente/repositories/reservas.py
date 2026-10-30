@@ -2,6 +2,21 @@ from datetime import timedelta
 
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 
+TOTAL_RESERVA_SQL = """
+    (
+        (
+            SELECT COUNT(*) * ROUND(f.precio * 100, 0)
+            FROM entrada AS e
+            WHERE e.reserva_id = r.id
+        )
+        + COALESCE((
+            SELECT SUM(rs.cantidad * ROUND(rs.precio_unitario * 100, 0))
+            FROM reserva_servicios AS rs
+            WHERE rs.reserva_id = r.id
+        ), 0)
+    ) AS total
+"""
+
 
 def consultar(sql, parametros=None):
     """Ejecuta una consulta de lectura en db.py."""
@@ -54,8 +69,9 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     parametros.update({"limit": limit, "offset": offset})
     sql = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
-        r.fecha_cancelacion, r.total
+        r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
         FROM reservas AS r
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
         {where}
         ORDER BY r.fecha_compra DESC, r.id DESC
         LIMIT :limit OFFSET :offset
@@ -72,10 +88,15 @@ def contar_reservas(filtros, usuario_propio_id=None):
 
 def obtener_reserva_por_id(reserva_id):
     """Obtiene una reserva."""
-    sql = """
+    sql = f"""
         SELECT id, usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion, total
-        FROM reservas
-        WHERE id = :reserva_id
+        FROM (
+            SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+                   r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
+            FROM reservas AS r
+            INNER JOIN funcion AS f ON f.id = r.funcion_id
+            WHERE r.id = :reserva_id
+        ) AS reserva_calculada
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     return filas[0] if filas else None
@@ -127,12 +148,12 @@ def obtener_butacas_ocupadas(funcion_id, butaca_ids):
 
 
 def insertar_reserva(datos):
-    """Inserta una reserva pendiente común a las butacas seleccionadas."""
+    """Inserta una reserva sin almacenar su total calculado."""
     sql = """
         INSERT INTO reservas
-            (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion, total)
+            (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion)
         VALUES
-            (:usuario_id, :funcion_id, :fecha_compra, :estado, NULL, :total)
+            (:usuario_id, :funcion_id, :fecha_compra, :estado, NULL)
     """
     return escribir(sql, datos)
 
@@ -184,11 +205,13 @@ def restaurar_entrada_pendiente(entrada_id):
 
 def obtener_datos_notificacion(reserva_id):
     """Obtiene email y datos necesarios para el comprobante y sus QR."""
-    sql = """
-        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado, r.total,
+    sql = f"""
+        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+        {TOTAL_RESERVA_SQL},
         u.nombre, u.apellido, u.email
         FROM reservas AS r
         INNER JOIN usuarios AS u ON u.id = r.usuario_id
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
         WHERE r.id = :reserva_id
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
