@@ -71,3 +71,15 @@ def crear_usuario(nombre, apellido, email, contrasenia):
         "email": email,
         "contrasena": contrasenia,
     })
+
+
+def obtener_usuario_por_id(id_usuario):
+    """Devuelve la fila del usuario o None. Nunca expone contrasena ni token."""
+    sql = """
+        SELECT id, nombre, apellido, email, rol, fecha_registro
+        FROM usuarios
+        WHERE id = %(id)s
+        LIMIT 1
+    """
+    filas = ejecutar_consulta(sql, {"id": id_usuario})
+    return filas[0] if filas else None
