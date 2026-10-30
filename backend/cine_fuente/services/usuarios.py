@@ -19,3 +19,10 @@ def listar_usuarios(filtros, limit, offset):
     usuarios = usuarios_repo.listar_usuarios(filtros, limit, offset)
     total = usuarios_repo.contar_usuarios(filtros)
     return [usuario_api(usuario) for usuario in usuarios], total
+
+
+def crear_usuario(datos):
+    """Registra un cliente nuevo y devuelve su id."""
+    return int(usuarios_repo.crear_usuario(
+        datos["nombre"], datos["apellido"], datos["email"], datos["contrasenia"]
+    ))
