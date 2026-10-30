@@ -140,7 +140,7 @@ def post_pago_reserva(id_reserva):
 
 # Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
-@requiere_token("cliente", "administrador")
+@requiere_token(("cliente", "administrador"))
 def patch_cancelar_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)

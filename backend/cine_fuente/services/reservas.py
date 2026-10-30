@@ -125,6 +125,14 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
             409,
         )
 
+    if "activa" in funcion and not funcion["activa"]:
+        error(
+            "FUNCION_INACTIVA",
+            "Función inactiva",
+            "No se puede reservar una función inactiva.",
+            409,
+        )
+
     butacas = obtener_butacas(butaca_ids)
 
     if len(butacas) != len(butaca_ids):
@@ -147,7 +155,6 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
                 409,
             )
 
-    # Las entradas de reservas canceladas o vencidas ya se eliminaron.
     ocupadas = compras_repo.obtener_butacas_ocupadas(funcion_id, butaca_ids)
 
     if ocupadas:
@@ -169,38 +176,29 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
         )
 
     reserva_id = None
-
     try:
         reserva_id = compras_repo.insertar_reserva({
-            "usuario_id": usuario_id,
-            "funcion_id": funcion_id,
-            "fecha_compra": ahora_db,
-            "estado": "pendiente",
-            "total": precio * len(butaca_ids),
-        })
+                "usuario_id": usuario_id,
+                "funcion_id": funcion_id,
+                "fecha_compra": ahora_db,
+                "estado": "pendiente",
+                "total": precio * len(butaca_ids),
+            })
 
         if not reserva_id:
-            raise RuntimeError(
-                "La base de datos no devolvió el ID de la reserva creada."
-            )
+            raise RuntimeError("La base de datos no devolvió el ID de la reserva creada.")
 
         for butaca_id in butaca_ids:
             compras_repo.insertar_entrada(reserva_id, butaca_id)
 
         return int(reserva_id)
-
     except Exception:
-        # Limpieza compensatoria: no equivale a una transacción real.
         if reserva_id is not None:
             try:
                 compras_repo.eliminar_entradas_reserva(reserva_id)
                 compras_repo.eliminar_reserva_incompleta(reserva_id)
             except Exception:
-                logger.exception(
-                    "No se pudo limpiar la reserva incompleta %s",
-                    reserva_id,
-                )
-
+                logger.exception("No se pudo limpiar la reserva incompleta %s", reserva_id)
         raise
 
 
@@ -236,16 +234,24 @@ def confirmar_pago(reserva_id, usuario):
             compras_repo.actualizar_entrada_qr(entrada_id, str(uuid4()))
             entradas_actualizadas.append(entrada_id)
 
-        compras_repo.actualizar_estado_reserva(reserva_id, "confirmada")
+        actualizadas = compras_repo.actualizar_estado_reserva(
+            reserva_id, "confirmada", estados_esperados=("pendiente",)
+        )
+        if actualizadas != 1:
+            error(
+                "RESERVA_NO_PENDIENTE",
+                "No se puede pagar la reserva",
+                "La reserva debe estar pendiente y dentro del plazo de pago.",
+                409,
+            )
+
         reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
         datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
         if reserva_actualizada is None or datos_notificacion is None:
             raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
 
         return reserva_api(reserva_actualizada), datos_notificacion
-
     except Exception:
-        # Se intenta dejar el pago en estado pendiente y quitar todos los QR parciales.
         for entrada_id in entradas_actualizadas:
             try:
                 compras_repo.restaurar_entrada_pendiente(entrada_id)
@@ -270,7 +276,6 @@ def cancelar_reserva(reserva_id, usuario):
     verificar_titular_o_admin(reserva, usuario)
 
     estado_anterior = reserva["estado"]
-    fecha_cancelacion_anterior = reserva.get("fecha_cancelacion")
     if estado_anterior not in ("pendiente", "confirmada"):
         error(
             "RESERVA_NO_CANCELABLE",
@@ -290,15 +295,16 @@ def cancelar_reserva(reserva_id, usuario):
             409,
         )
 
-    try:
-        compras_repo.actualizar_estado_reserva(
-            reserva_id, "cancelada", fecha_cancelacion=ahora.replace(tzinfo=None)
+    actualizadas = compras_repo.actualizar_estado_reserva(
+        reserva_id,
+        "cancelada",
+        fecha_cancelacion=ahora.replace(tzinfo=None),
+        estados_esperados=("pendiente", "confirmada"),
+    )
+    if actualizadas != 1:
+        error(
+            "RESERVA_NO_CANCELABLE",
+            "Reserva no cancelable",
+            "La reserva ya no está pendiente o confirmada.",
+            409,
         )
-        compras_repo.eliminar_entradas_reserva(reserva_id)
-    except Exception:
-        # Si la segunda escritura falla, se restaura el estado previo de la reserva.
-        try:
-            compras_repo.restaurar_estado_reserva(reserva_id, estado_anterior, fecha_cancelacion_anterior)
-        except Exception:
-            logger.exception("No se pudo restaurar la reserva %s tras un error de cancelación", reserva_id)
-        raise
