@@ -3,7 +3,14 @@ import pymysql
 
 from cine_fuente.repositories.salas import actualizar_sala, consultar_sala_por_id, consultar_salas, eliminar_sala, insertar_sala
 from cine_fuente.repositories.sucursales import consultar_sucursal_por_id
-from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
+from cine_fuente.utils import (
+    construir_error_api,
+    requiere_token,
+    respuesta_error_api,
+    respuesta_error_excepcion,
+    respuesta_paginada,
+    validar_paginacion,
+)
 
 salas_bp = Blueprint("salas", __name__, url_prefix="/api/salas")
 
@@ -33,6 +40,7 @@ def obtener_sala(sala_id):
 
 
 @salas_bp.post("")
+@requiere_token(("administrador",))
 # Registra una nueva sala.
 def crear_sala():
     datos = request.get_json(silent=True) or {}
@@ -59,6 +67,7 @@ def crear_sala():
 
 
 @salas_bp.patch("/<int:sala_id>")
+@requiere_token(("administrador",))
 # Actualiza los datos de una sala.
 def modificar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
@@ -96,6 +105,7 @@ def modificar_sala(sala_id):
 
 
 @salas_bp.delete("/<int:sala_id>")
+@requiere_token(("administrador",))
 # Elimina una sala existente.
 def borrar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:

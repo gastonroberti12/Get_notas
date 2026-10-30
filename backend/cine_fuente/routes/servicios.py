@@ -1,105 +1,220 @@
-﻿from flask import Blueprint, jsonify, request
-import pymysql
+
+from flask import Blueprint, jsonify, request, g
 
 from cine_fuente.repositories.servicios import (
-    actualizar_servicio, consultar_servicio_por_id, consultar_servicios,
-    desactivar_servicio, insertar_servicio,
+    consultar_servicios,
+    contar_servicios,
+    consultar_servicio_por_id,
+    insertar_servicio,
+    actualizar_servicio,
+    servicio_tiene_reservas,
+    eliminar_servicio,
+    consultar_servicios_reserva,
+    actualizar_cantidad_servicio_reserva,
+    eliminar_servicio_reserva
 )
-from cine_fuente.utils import construir_error_api, respuesta_error_api, respuesta_error_excepcion, respuesta_paginada, validar_paginacion
 
-servicios_bp = Blueprint("servicios", __name__, url_prefix="/api/servicios")
+from cine_fuente.services.servicios import (
+    verificar_servicio,
+    verificar_reserva,
+    verificar_servicio_reservado
+)
 
+from cine_fuente.validators.servicios import (
+    validar_creacion_servicio,
+    validar_campos_servicio,
+    validar_modificacion_servicio_reserva
+)
 
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
-
-
-def validar_texto(valor, campo, maximo):
-    if not isinstance(valor, str) or not valor.strip():
-        raise ValueError(construir_error_api(f"required.{campo}", f"Campo requerido: '{campo}'", f"El campo '{campo}' es obligatorio."))
-    valor = valor.strip()
-    if len(valor) > maximo:
-        raise ValueError(construir_error_api(f"invalid.{campo}.max", "Valor demasiado largo", f"{campo} no puede superar {maximo} caracteres."))
-    return valor
-
-
-def validar_precio(valor):
-    try:
-        precio = float(valor)
-    except (TypeError, ValueError):
-        raise ValueError(construir_error_api("invalid.precio.format", "Formato inválido", "precio debe ser un número mayor que cero."))
-    if precio <= 0:
-        raise ValueError(construir_error_api("invalid.precio.value", "Precio inválido", "precio debe ser mayor que cero."))
-    return precio
+from cine_fuente.utils import (
+    requiere_token,
+    construir_error_api,
+    validar_paginacion,
+    respuesta_paginada
+)
 
 
-@servicios_bp.get("")
-# Lista los servicios disponibles.
+servicios_bp = Blueprint("servicios", __name__)
+
+
+# AUXILIAR - Respuestas de error
+def error_servicio(codigo, mensaje, estado, descripcion=None):
+    return jsonify(
+        construir_error_api(codigo, mensaje, descripcion or mensaje)
+    ), estado
+
+
+# 1. GET /servicios
+@servicios_bp.route("/servicios", methods=["GET"])
 def listar_servicios():
+
     try:
         limit, offset = validar_paginacion(request.args)
-        servicios = consultar_servicios()
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
-    return respuesta_paginada("servicios", servicios[offset:offset + limit], len(servicios), limit, offset)
+    except ValueError as error:
+        return jsonify(error.args[0]), error.args[1]
+
+    nombre = request.args.get("nombre")
+    activo_param = request.args.get("activo")
+
+    if activo_param is None:
+        activo = None
+    elif activo_param.lower() in ("true", "false"):
+        activo = activo_param.lower() == "true"
+    else:
+        return error_servicio(
+            "ERROR_VALIDACION", "Filtro activo inválido", 400
+        )
+
+    total = contar_servicios(nombre, activo)
+    servicios = consultar_servicios(nombre, activo, limit, offset)
+
+    return respuesta_paginada(
+        "servicios", servicios, total, limit, offset
+    )
 
 
-@servicios_bp.get("/<int:servicio_id>")
-# Obtiene un servicio por su identificador.
-def obtener_servicio(servicio_id):
+# 2. GET /servicios/{id}
+@servicios_bp.route("/servicios/<int:servicio_id>", methods=["GET"])
+def obtener_servicio_por_id(servicio_id):
+
+    if servicio_id <= 0:
+        return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
+
     servicio = consultar_servicio_por_id(servicio_id)
+
     if servicio is None:
-        return error("servicio.not.found", "Servicio no encontrado", "El servicio solicitado no existe.", 404)
+        return error_servicio(
+            "SERVICIO_NO_ENCONTRADO", "Servicio no encontrado", 404
+        )
+
     return jsonify(servicio), 200
 
 
-@servicios_bp.post("")
-# Registra un nuevo servicio.
+# 3. POST /servicios
+@servicios_bp.route("/servicios", methods=["POST"])
+@requiere_token(("administrador",))
 def crear_servicio():
-    datos = request.get_json(silent=True) or {}
+
     try:
-        nombre = validar_texto(datos.get("nombre"), "nombre", 100)
-        descripcion = validar_texto(datos.get("descripcion"), "descripcion", 255) if datos.get("descripcion") else None
-        precio = validar_precio(datos.get("precio"))
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
-    try:
-        servicio_id = insertar_servicio(nombre, descripcion, precio)
-    except pymysql.err.IntegrityError:
-        return error("servicio.nombre.duplicado", "Servicio duplicado", "Ya existe un servicio con ese nombre.", 409)
-    return jsonify(consultar_servicio_por_id(servicio_id)), 201
+        campos = validar_creacion_servicio(request.get_json(silent=True))
+    except ValueError as error:
+        return error_servicio(
+            "ERROR_VALIDACION", str(error), 400
+        )
+
+    id_creado = insertar_servicio(
+        campos["nombre"],
+        campos["descripcion"],
+        campos["precio"],
+        campos["activo"]
+    )
+
+    return jsonify({"id": id_creado}), 201, {
+        "Location": f"/servicios/{id_creado}"} #location es un header para indicar dónde se encuentra el recurso recién creado.
 
 
-@servicios_bp.patch("/<int:servicio_id>")
-# Actualiza los datos de un servicio.
+# 4. PATCH /servicios/{id}
+@servicios_bp.route("/servicios/<int:servicio_id>", methods=["PATCH"])
+@requiere_token(("administrador",))
 def modificar_servicio(servicio_id):
-    if consultar_servicio_por_id(servicio_id) is None:
-        return error("servicio.not.found", "Servicio no encontrado", "El servicio solicitado no existe.", 404)
-    datos = request.get_json(silent=True) or {}
-    cambios = {}
+
+    error = verificar_servicio(servicio_id)
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
     try:
-        if "nombre" in datos:
-            cambios["nombre"] = validar_texto(datos["nombre"], "nombre", 100)
-        if "descripcion" in datos:
-            cambios["descripcion"] = validar_texto(datos["descripcion"], "descripcion", 255) if datos["descripcion"] else None
-        if "precio" in datos:
-            cambios["precio"] = validar_precio(datos["precio"])
-        if "activo" in datos:
-            if not isinstance(datos["activo"], bool):
-                return error("invalid.activo.format", "Formato inválido", "activo debe ser true o false.", 400)
-            cambios["activo"] = datos["activo"]
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
-    if not cambios:
-        return error("invalid.body", "Datos inválidos", "No se enviaron campos para modificar.", 400)
-    actualizar_servicio(servicio_id, cambios)
+        campos = validar_campos_servicio(request.get_json(silent=True))
+    except ValueError as error:
+        return error_servicio(
+            "ERROR_VALIDACION", str(error), 400
+        )
+
+    actualizar_servicio(servicio_id, campos)
+
     return "", 204
 
 
-@servicios_bp.delete("/<int:servicio_id>")
-# Desactiva un servicio.
-def borrar_servicio(servicio_id):
-    if consultar_servicio_por_id(servicio_id) is None:
-        return error("servicio.not.found", "Servicio no encontrado", "El servicio solicitado no existe.", 404)
-    desactivar_servicio(servicio_id)
+# 5. DELETE /servicios/{id}
+@servicios_bp.route("/servicios/<int:servicio_id>", methods=["DELETE"])
+@requiere_token(("administrador",))
+def eliminar_servicio_endpoint(servicio_id):
+
+    error = verificar_servicio(servicio_id)
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    if servicio_tiene_reservas(servicio_id):
+        return error_servicio(
+            "SERVICIO_CON_RESERVAS",
+            "El servicio tiene reservas asociadas",
+            409
+        )
+
+    eliminar_servicio(servicio_id)
+
+    return "", 204
+
+
+# 6. GET /reservas/{id}/servicios
+@servicios_bp.route("/reservas/<int:reserva_id>/servicios", methods=["GET"])
+@requiere_token(("cliente", "administrador"))
+def listar_servicios_reserva(reserva_id):
+
+    error = verificar_reserva(reserva_id, g.usuario)
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    servicios = consultar_servicios_reserva(reserva_id)
+
+    if not servicios:
+        return "", 204
+
+    return jsonify({"servicios": servicios}), 200
+
+
+# 7. PATCH /reservas/{id_reserva}/servicios/{id_servicio}
+@servicios_bp.route(
+    "/reservas/<int:reserva_id>/servicios/<int:servicio_reserva_id>",
+    methods=["PATCH"]
+)
+@requiere_token(("cliente",))
+def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
+
+    error = verificar_servicio_reservado(
+        reserva_id, servicio_reserva_id, g.usuario
+    )
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    try:
+        cantidad = validar_modificacion_servicio_reserva(
+            request.get_json(silent=True)
+        )
+    except ValueError as error:
+        return error_servicio(
+            "ERROR_VALIDACION", str(error), 400
+        )
+
+    actualizar_cantidad_servicio_reserva(
+        reserva_id, servicio_reserva_id, cantidad
+    )
+
+    return "", 204
+
+
+# 8. DELETE /reservas/{id_reserva}/servicios/{id_servicio}
+@servicios_bp.route(
+    "/reservas/<int:reserva_id>/servicios/<int:servicio_reserva_id>",
+    methods=["DELETE"]
+)
+@requiere_token(("cliente",))
+def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
+
+    error = verificar_servicio_reservado(
+        reserva_id, servicio_reserva_id, g.usuario
+    )
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
     return "", 204
