@@ -5,7 +5,7 @@ from routes.roles import esta_logueado
 
 users_bp = Blueprint("users", __name__)
 
-API_URL = 'http://127.0.0.1:5001' # completar con la URL que pongan en el backend
+API_URL = 'http://127.0.0.1:5001/api' # completar con la URL que pongan en el backend
 
 
 def llamar_api(metodo, endpoint, datos=None):
