@@ -36,6 +36,15 @@ def insertar_butaca(sala_id, fila, numero):
     )
 
 
+# Actualiza los datos identificatorios de una butaca.
+def actualizar_butaca(butaca_id, datos):
+    campos = ", ".join(f"{campo} = %s" for campo in datos)
+    ejecutar_escritura(
+        f"UPDATE butacas SET {campos} WHERE id = %s",
+        (*datos.values(), butaca_id),
+    )
+
+
 # Elimina una butaca.
 def eliminar_butaca(butaca_id):
     ejecutar_escritura("DELETE FROM butacas WHERE id = %s", (butaca_id,),)

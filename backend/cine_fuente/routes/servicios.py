@@ -217,5 +217,4 @@ def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
         return jsonify(error[0]), error[1]
 
     eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
-
     return "", 204

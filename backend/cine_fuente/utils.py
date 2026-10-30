@@ -207,6 +207,8 @@ def requiere_token(roles: tuple[str, ...] | None = None):
     roles_permitidos = tuple(roles or ())
 
     def decorador(funcion):
+        from functools import wraps
+        @wraps(funcion)
         def envoltura(*args, **kwargs):
             cabecera = request.headers.get("Authorization", "")
             partes = cabecera.split(None, 1)
