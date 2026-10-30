@@ -52,6 +52,7 @@ paths:
       parameters:
       - $ref: '#/components/parameters/UsuarioRolFilter'
       - $ref: '#/components/parameters/NombreFilter'
+      - $ref: '#/components/parameters/EmailFilter'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
       responses:
@@ -2453,6 +2454,14 @@ components:
       schema:
         type: string
       example: Lucía
+    EmailFilter:
+      name: email
+      in: query
+      description: Búsqueda parcial e insensible a mayúsculas por email
+      schema:
+        type: string
+        maxLength: 150
+      example: lucia@
     TituloFilter:
       name: titulo
       in: query

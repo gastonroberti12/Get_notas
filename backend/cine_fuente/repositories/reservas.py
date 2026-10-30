@@ -31,7 +31,7 @@ def escribir(sql, parametros=None):
 def clausula_in(valores, prefijo):
     """Genera parámetros individuales para las butacas de POST /reservas."""
     nombres = [f"{prefijo}_{indice}" for indice in range(len(valores))]
-    marcadores_parametros = ", ".join(f":{nombre}" for nombre in nombres)
+    marcadores_parametros = ", ".join(f"%({nombre})s" for nombre in nombres)
     parametros = {nombre: valor for nombre, valor in zip(nombres, valores)}
     return marcadores_parametros, parametros
 
@@ -43,17 +43,17 @@ def _construir_filtros(filtros, usuario_propio_id=None):
     for campo in ("usuario_id", "funcion_id", "estado"):
         valor = filtros.get(campo)
         if valor is not None:
-            condiciones.append(f"r.{campo} = :{campo}")
+            condiciones.append(f"r.{campo} = %({campo})s")
             parametros[campo] = valor
 
     if usuario_propio_id is not None:
-        condiciones.append("r.usuario_id = :usuario_propio_id")
+        condiciones.append("r.usuario_id = %(usuario_propio_id)s")
         parametros["usuario_propio_id"] = usuario_propio_id
 
     for campo, operador in (("fecha_desde", ">="), ("fecha_hasta", "<=")):
         valor = filtros.get(campo)
         if valor is not None:
-            condiciones.append(f"DATE(r.fecha_compra) {operador} :{campo}")
+            condiciones.append(f"DATE(r.fecha_compra) {operador} %({campo})s")
             parametros[campo] = valor
 
     where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
@@ -74,7 +74,7 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
         INNER JOIN funcion AS f ON f.id = r.funcion_id
         {where}
         ORDER BY r.fecha_compra DESC, r.id DESC
-        LIMIT :limit OFFSET :offset
+        LIMIT %(limit)s OFFSET %(offset)s
     """
     return consultar(sql, parametros)
 
@@ -95,7 +95,7 @@ def obtener_reserva_por_id(reserva_id):
                    r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
             FROM reservas AS r
             INNER JOIN funcion AS f ON f.id = r.funcion_id
-            WHERE r.id = :reserva_id
+            WHERE r.id = %(reserva_id)s
         ) AS reserva_calculada
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
@@ -107,9 +107,9 @@ def listar_entradas_reserva(reserva_id, limit, offset):
     sql = """
         SELECT id, reserva_id, butaca_id, codigo_qr, fecha_uso
         FROM entrada
-        WHERE reserva_id = :reserva_id
+        WHERE reserva_id = %(reserva_id)s
         ORDER BY id ASC
-        LIMIT :limit OFFSET :offset
+        LIMIT %(limit)s OFFSET %(offset)s
     """
     return consultar(sql, {"reserva_id": reserva_id, "limit": limit, "offset": offset})
 
@@ -117,7 +117,7 @@ def listar_entradas_reserva(reserva_id, limit, offset):
 def contar_entradas_reserva(reserva_id):
     """GET /reservas/{id}/entradas: cuenta entradas para construir los enlaces de paginación."""
     filas = consultar(
-        "SELECT COUNT(*) AS total FROM entrada WHERE reserva_id = :reserva_id",
+        "SELECT COUNT(*) AS total FROM entrada WHERE reserva_id = %(reserva_id)s",
         {"reserva_id": reserva_id},
     )
     return int(filas[0]["total"]) if filas else 0
@@ -136,7 +136,7 @@ def obtener_butacas_ocupadas(funcion_id, butaca_ids):
         SELECT e.butaca_id
         FROM entrada AS e
         INNER JOIN reservas AS r ON e.reserva_id = r.id
-        WHERE r.funcion_id = :funcion_id
+        WHERE r.funcion_id = %(funcion_id)s
         AND r.estado IN ('pendiente', 'confirmada', 'finalizada')
         AND e.butaca_id IN ({placeholders})
     """
@@ -153,7 +153,7 @@ def insertar_reserva(datos):
         INSERT INTO reservas
             (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion)
         VALUES
-            (:usuario_id, :funcion_id, :fecha_compra, :estado, NULL)
+            (%(usuario_id)s, %(funcion_id)s, %(fecha_compra)s, %(estado)s, NULL)
     """
     return escribir(sql, datos)
 
@@ -162,14 +162,14 @@ def insertar_entrada(reserva_id, butaca_id):
     """Inserta una entrada por butaca con código QR nulo."""
     sql = """
         INSERT INTO entrada (reserva_id, butaca_id, codigo_qr, fecha_uso)
-        VALUES (:reserva_id, :butaca_id, NULL, NULL)
+        VALUES (%(reserva_id)s, %(butaca_id)s, NULL, NULL)
     """
     return escribir(sql, {"reserva_id": reserva_id, "butaca_id": butaca_id})
 
 
 def eliminar_reserva_incompleta(reserva_id):
     """Elimina la fila recién creada si falló la creación de sus entradas."""
-    return escribir("DELETE FROM reservas WHERE id = :reserva_id", {"reserva_id": reserva_id})
+    return escribir("DELETE FROM reservas WHERE id = %(reserva_id)s", {"reserva_id": reserva_id})
 
 
 def obtener_entradas_para_pago(reserva_id):
@@ -177,7 +177,7 @@ def obtener_entradas_para_pago(reserva_id):
     sql = """
         SELECT id, reserva_id, butaca_id, codigo_qr, fecha_uso
         FROM entrada
-        WHERE reserva_id = :reserva_id
+        WHERE reserva_id = %(reserva_id)s
         ORDER BY id ASC
     """
     return consultar(sql, {"reserva_id": reserva_id})
@@ -187,8 +187,8 @@ def actualizar_entrada_qr(entrada_id, codigo_qr):
     """Asigna un QR."""
     sql = """
         UPDATE entrada
-        SET codigo_qr = :codigo_qr
-        WHERE id = :entrada_id
+        SET codigo_qr = %(codigo_qr)s
+        WHERE id = %(entrada_id)s
     """
     return escribir(sql, {"codigo_qr": codigo_qr, "entrada_id": entrada_id})
 
@@ -198,7 +198,7 @@ def restaurar_entrada_pendiente(entrada_id):
     sql = """
         UPDATE entrada
         SET codigo_qr = NULL
-        WHERE id = :entrada_id
+        WHERE id = %(entrada_id)s
     """
     return escribir(sql, {"entrada_id": entrada_id})
 
@@ -212,7 +212,7 @@ def obtener_datos_notificacion(reserva_id):
         FROM reservas AS r
         INNER JOIN usuarios AS u ON u.id = r.usuario_id
         INNER JOIN funcion AS f ON f.id = r.funcion_id
-        WHERE r.id = :reserva_id
+        WHERE r.id = %(reserva_id)s
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     if not filas:
@@ -220,7 +220,7 @@ def obtener_datos_notificacion(reserva_id):
 
     datos = filas[0]
     datos["entradas"] = consultar(
-        "SELECT id, butaca_id, codigo_qr FROM entrada WHERE reserva_id = :reserva_id ORDER BY id",
+        "SELECT id, butaca_id, codigo_qr FROM entrada WHERE reserva_id = %(reserva_id)s ORDER BY id",
         {"reserva_id": reserva_id},
     )
     return datos
@@ -234,7 +234,7 @@ def obtener_fecha_funcion_de_reserva(reserva_id):
         SELECT f.fecha_hora
         FROM reservas AS r
         INNER JOIN funcion AS f ON f.id = r.funcion_id
-        WHERE r.id = :reserva_id
+        WHERE r.id = %(reserva_id)s
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     return filas[0]["fecha_hora"] if filas else None
@@ -255,12 +255,12 @@ def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None, estado
     if estado == "cancelada":
         sql = """
             UPDATE reservas
-            SET estado = :estado, fecha_cancelacion = :fecha_cancelacion
-            WHERE id = :reserva_id
+            SET estado = %(estado)s, fecha_cancelacion = %(fecha_cancelacion)s
+            WHERE id = %(reserva_id)s
         """
         parametros["fecha_cancelacion"] = fecha_cancelacion
     else:
-        sql = "UPDATE reservas SET estado = :estado WHERE id = :reserva_id"
+        sql = "UPDATE reservas SET estado = %(estado)s WHERE id = %(reserva_id)s"
     sql = sql.rstrip() + condicion_estado
     return escribir(sql, parametros)
 
@@ -269,8 +269,8 @@ def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
     """Compensa una escritura parcial ante un error."""
     sql = """
         UPDATE reservas
-        SET estado = :estado, fecha_cancelacion = :fecha_cancelacion
-        WHERE id = :reserva_id
+        SET estado = %(estado)s, fecha_cancelacion = %(fecha_cancelacion)s
+        WHERE id = %(reserva_id)s
     """
     return escribir(sql, {
         "estado": estado,
@@ -281,7 +281,7 @@ def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
 
 def eliminar_entradas_reserva(reserva_id):
     """Elimina entradas de una reserva incompleta durante una compensación."""
-    return escribir("DELETE FROM entrada WHERE reserva_id = :reserva_id", {"reserva_id": reserva_id})
+    return escribir("DELETE FROM entrada WHERE reserva_id = %(reserva_id)s", {"reserva_id": reserva_id})
 
 
 # Expiración
@@ -293,6 +293,6 @@ def procesar_reservas_vencidas(ahora):
     sql = """
         UPDATE reservas
         SET estado = 'expirada'
-        WHERE estado = 'pendiente' AND fecha_compra <= :fecha_limite
+        WHERE estado = 'pendiente' AND fecha_compra <= %(fecha_limite)s
     """
     return escribir(sql, {"fecha_limite": fecha_limite})

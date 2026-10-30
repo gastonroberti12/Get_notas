@@ -44,6 +44,9 @@ else
     echo "  virtualenv ya está instalado"
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/backend"
+
 # Crear el ambiente virtual
 echo "Creando ambiente virtual..."
 if [ ! -d ".venv" ]; then
