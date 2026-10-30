@@ -3,7 +3,7 @@ from cine_fuente.validators.reservas import error_validacion, validar_entero_pos
 
 ROLES_VALIDOS = ("cliente", "administrador")
 # Longitudes máximas según las columnas de la tabla usuarios.
-LONGITUDES_MAXIMAS = {"nombre": 80, "email": 150}
+LONGITUDES_MAXIMAS = {"nombre": 80, "apellido": 80, "email": 150}
 CAMPOS_REGISTRO = ("nombre", "apellido", "email", "contrasenia")
 CAMPOS_EDITABLES = ("nombre", "apellido", "email", "contrasenia", "rol")
 
