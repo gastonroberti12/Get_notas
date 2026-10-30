@@ -3,8 +3,14 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).with_name('.env'), override=False)
 
-from flask import Flask, jsonify
-from cine_fuente.utils import construir_error_api
+from flask import Flask
+from werkzeug.exceptions import HTTPException
+from cine_fuente.utils import (
+    construir_error_api,
+    respuesta_error_api,
+    respuesta_error_excepcion,
+    respuesta_error_interno,
+)
 from cine_fuente.routes.funciones import funciones_bp
 from cine_fuente.routes.butacas import butacas_bp
 from cine_fuente.routes.servicios import servicios_bp
@@ -28,20 +34,30 @@ def crear_app():
 
     @app.errorhandler(404)
     def manejar_ruta_no_encontrada(error):
-        return jsonify(construir_error_api('resource.not.found', 'Recurso no encontrado', 'La URL solicitada no existe.')), 404
+        return respuesta_error_api(construir_error_api(
+            'resource.not.found', 'Recurso no encontrado', 'La URL solicitada no existe.'
+        ), 404)
 
     @app.errorhandler(405)
     def manejar_metodo_no_permitido(error):
-        return jsonify(construir_error_api('method.not.allowed', 'Método no permitido', 'El método HTTP usado no está soportado por esta URL.')), 405
+        return respuesta_error_api(construir_error_api(
+            'method.not.allowed', 'Método no permitido',
+            'El método HTTP usado no está soportado por esta URL.'
+        ), 405)
+
+    @app.errorhandler(HTTPException)
+    def manejar_error_http(error):
+        return respuesta_error_api(construir_error_api(
+            f"http.{error.code}", error.name, error.description
+        ), error.code)
 
     @app.errorhandler(ValueError)
     def manejar_error_validacion(error):
-        respuesta = error.args[0] if error.args else construir_error_api('invalid.body', 'Datos inválidos', 'Los datos enviados no son válidos.')
-        return jsonify(respuesta), 400
+        return respuesta_error_excepcion(error)
 
     @app.errorhandler(500)
     def manejar_error_interno(error):
-        return jsonify(construir_error_api('internal.error', 'Error interno del servidor', 'No se pudo completar la operación.')), 500
+        return respuesta_error_interno(error)
 
     return app
 

@@ -4,12 +4,15 @@ Trabajo final de la cátedra Lanzillotta.
 
 ## Integrantes
 
-- Gastón Roberti
-- Leandro Piccicacco
-- Cristian Nahuel Daglio
-- Tiago Elias Melilli
-- Juan Francisco Skanata
-- Alexis Martin Blazek
+- Gastón Roberti - 116174
+- Leandro Piccicacco - 116059
+- Cristian Nahuel Daglio - 116017
+- Tiago Elias Melilli - 116111
+- Juan Francisco Skanata - 116128
+- Alexis Martin Blazek - 115977
+- Lucía Hernández Tamagno 116281
+- Baltazar Marani - 115983
+- Agustín Perata - 115580
 
 ## Requisitos previos
 

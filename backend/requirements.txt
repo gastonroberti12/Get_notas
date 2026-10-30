@@ -3,6 +3,4 @@ requests
 python-dotenv
 PyMySQL
 PyJWT
-SQLAlchemy
-mysql-connector-python
 qrcode[pil]

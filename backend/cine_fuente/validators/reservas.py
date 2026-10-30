@@ -1,6 +1,7 @@
 from datetime import datetime
+import re
 
-from cine_fuente.utils import construir_error_api
+from cine_fuente.utils import construir_error_api, ahora_gmt3
 
 
 def error_validacion(mensaje: str, detalle: str):
@@ -110,3 +111,94 @@ def validar_estado_propio(args) -> str | None:
     if estado is not None and estado not in estados_validos:
         error_validacion("Estado inválido", f"'estado' debe ser uno de: {', '.join(estados_validos)}.")
     return estado
+
+
+def validar_luhn(numero: str) -> bool:
+    """Comprueba el dígito verificador; no demuestra que la tarjeta exista o tenga fondos."""
+    suma = 0
+    # La paridad determina qué dígitos se duplican al recorrer el número desde la derecha.
+    paridad = len(numero) % 2
+    for indice, caracter in enumerate(numero):
+        digito = int(caracter)
+        if indice % 2 == paridad:
+            digito *= 2
+            if digito > 9:
+                digito -= 9
+        suma += digito
+    # Un número supera Luhn cuando la suma total es múltiplo de diez.
+    return suma % 10 == 0
+
+
+def validar_body_pago(body) -> None:
+    """Valida los datos de tarjeta para el pago simulado sin almacenarlos."""
+    # Se exige un objeto JSON con exactamente los cinco campos definidos.
+    if not isinstance(body, dict):
+        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
+    campos = {"titular", "numero_tarjeta", "mes_vencimiento", "anio_vencimiento", "cvv"}
+
+    desconocidos = set(body) - campos
+    faltantes = campos - set(body)
+
+    if desconocidos:
+        error_validacion("Campos desconocidos", f"No se admiten estos campos: {', '.join(sorted(desconocidos))}.")
+    if faltantes:
+        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(sorted(faltantes))}.")
+
+    # El titular admite letras, acentos y espacios.
+    titular = body["titular"]
+
+    if not isinstance(titular, str) or not re.fullmatch(
+    r"[^\W\d_]+(?: [^\W\d_]+)+",
+    titular.strip(),
+    flags=re.UNICODE
+    ):
+        error_validacion(
+            "Titular inválido",
+            "'titular' debe contener nombre y apellido, utilizando solamente letras y espacios."
+    )
+
+    # El número debe ser texto de 13 a 19 dígitos ASCII y superar el control Luhn.
+    numero = body["numero_tarjeta"]
+
+    if not isinstance(numero, str) or not numero.isascii() or not numero.isdigit() or not 13 <= len(numero) <= 19:
+        error_validacion(
+            "Número de tarjeta inválido",
+            "'numero_tarjeta' debe contener entre 13 y 19 dígitos, sin espacios ni guiones."
+        )
+
+    if not validar_luhn(numero):
+        error_validacion(
+            "Número de tarjeta inválido",
+            "El número de tarjeta no supera la comprobación de dígito verificador."
+        )
+
+    # Se valida mes y año como cadenas para mantener el formato y los ceros iniciales.
+    mes = body["mes_vencimiento"]
+    anio = body["anio_vencimiento"]
+
+    if not isinstance(mes, str) or not re.fullmatch(r"(?:0[1-9]|1[0-2])", mes):
+        error_validacion("Vencimiento inválido", "'mes_vencimiento' debe ser un texto entre '01' y '12'.")
+
+    if not isinstance(anio, str) or not anio.isascii() or not re.fullmatch(r"\d{4}", anio):
+        error_validacion("Vencimiento inválido", "'anio_vencimiento' debe contener cuatro dígitos.")
+
+    # Una tarjeta es válida hasta el último día de su mes de vencimiento.
+    ahora = ahora_gmt3()
+
+    if (int(anio), int(mes)) < (ahora.year, ahora.month):
+        error_validacion(
+            "Tarjeta vencida",
+            "La tarjeta debe estar vigente al momento de realizar el pago."
+        )
+
+    # El CVV se trata como texto porque puede comenzar con cero.
+    cvv = body["cvv"]
+
+    if not isinstance(cvv, str) or not cvv.isascii() or not cvv.isdigit() or len(cvv) not in (3, 4):
+        error_validacion(
+            "Código de seguridad inválido",
+            "'cvv' debe contener 3 o 4 dígitos."
+        )
+
+    # No se persisten los datos de tarjeta ni se devuelven en la respuesta.
+    return None
