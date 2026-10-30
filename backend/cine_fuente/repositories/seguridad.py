@@ -10,7 +10,7 @@ def obtener_usuario_por_token(token: str) -> dict | None:
     sql = """
         SELECT id, nombre, apellido, email, rol
         FROM usuarios
-        WHERE token = :token
+        WHERE token = %(token)s
         LIMIT 1
     """
     filas = ejecutar_consulta(sql, {"token": token})
