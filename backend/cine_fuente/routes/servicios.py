@@ -1,3 +1,4 @@
+
 from flask import Blueprint, jsonify, request, g
 
 from cine_fuente.repositories.servicios import (
@@ -5,15 +6,18 @@ from cine_fuente.repositories.servicios import (
     contar_servicios,
     consultar_servicio_por_id,
     insertar_servicio,
-    existe_servicio,
     actualizar_servicio,
     servicio_tiene_reservas,
     eliminar_servicio,
     consultar_servicios_reserva,
-    consultar_reserva_para_servicios,
-    existe_servicio_en_reserva,
     actualizar_cantidad_servicio_reserva,
     eliminar_servicio_reserva
+)
+
+from cine_fuente.services.servicios import (
+    verificar_servicio,
+    verificar_reserva,
+    verificar_servicio_reservado
 )
 
 from cine_fuente.validators.servicios import (
@@ -38,69 +42,6 @@ def error_servicio(codigo, mensaje, estado, descripcion=None):
     return jsonify(
         construir_error_api(codigo, mensaje, descripcion or mensaje)
     ), estado
-
-
-# AUXILIAR - Validar ID y existencia de servicio del catálogo
-def verificar_servicio(servicio_id):
-
-    if servicio_id <= 0:
-        return error_servicio(
-            "ERROR_VALIDACION", "ID inválido", 400
-        )
-
-    if not existe_servicio(servicio_id):
-        return error_servicio(
-            "SERVICIO_NO_ENCONTRADO", "Servicio no encontrado", 404
-        )
-
-    return None
-
-
-# AUXILIAR - Comprobar quién puede acceder a los servicios de una reserva.
-def verificar_reserva(reserva_id, modificar=False):
-    if reserva_id <= 0:
-        return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
-
-    reserva = consultar_reserva_para_servicios(reserva_id)
-
-    if reserva is None:
-        return error_servicio(
-            "RESERVA_NO_ENCONTRADA", "Reserva no encontrada", 404
-        )
-
-    es_propietario = reserva["usuario_id"] == g.usuario["id"]
-    es_administrador = g.usuario["rol"] == "administrador"
-
-    # El administrador puede consultar reservas ajenas, pero solo el dueño
-    # puede modificar sus servicios.
-    if not es_propietario and (modificar or not es_administrador):
-        return error_servicio("ACCESO_DENEGADO", "Acceso denegado", 403)
-
-    if modificar and (reserva["estado"] != "pendiente" or not reserva["vigente"]):
-        return error_servicio(
-            "RESERVA_NO_MODIFICABLE",
-            "Solo se pueden modificar reservas pendientes dentro de los 10 minutos",
-            409
-        )
-
-    return None
-
-
-# AUXILIAR - Comprobaciones compartidas por PATCH y DELETE de un servicio reservado.
-def verificar_servicio_reservado(reserva_id, servicio_reserva_id):
-    if servicio_reserva_id <= 0:
-        return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
-
-    error = verificar_reserva(reserva_id, modificar=True)
-    if error is not None:
-        return error
-
-    if not existe_servicio_en_reserva(reserva_id, servicio_reserva_id):
-        return error_servicio(
-            "SERVICIO_NO_ENCONTRADO", "El servicio no pertenece a la reserva", 404
-        )
-
-    return None
 
 
 # 1. GET /servicios
@@ -140,6 +81,7 @@ def obtener_servicio_por_id(servicio_id):
         return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
 
     servicio = consultar_servicio_por_id(servicio_id)
+
     if servicio is None:
         return error_servicio(
             "SERVICIO_NO_ENCONTRADO", "Servicio no encontrado", 404
@@ -161,7 +103,10 @@ def crear_servicio():
         )
 
     id_creado = insertar_servicio(
-        campos["nombre"], campos["descripcion"], campos["precio"], campos["activo"]
+        campos["nombre"],
+        campos["descripcion"],
+        campos["precio"],
+        campos["activo"]
     )
 
     return jsonify({"id": id_creado}), 201, {
@@ -176,7 +121,7 @@ def modificar_servicio(servicio_id):
 
     error = verificar_servicio(servicio_id)
     if error is not None:
-        return error
+        return jsonify(error[0]), error[1]
 
     try:
         campos = validar_campos_servicio(request.get_json(silent=True))
@@ -186,6 +131,7 @@ def modificar_servicio(servicio_id):
         )
 
     actualizar_servicio(servicio_id, campos)
+
     return "", 204
 
 
@@ -196,7 +142,7 @@ def eliminar_servicio_endpoint(servicio_id):
 
     error = verificar_servicio(servicio_id)
     if error is not None:
-        return error
+        return jsonify(error[0]), error[1]
 
     if servicio_tiene_reservas(servicio_id):
         return error_servicio(
@@ -206,6 +152,7 @@ def eliminar_servicio_endpoint(servicio_id):
         )
 
     eliminar_servicio(servicio_id)
+
     return "", 204
 
 
@@ -214,9 +161,9 @@ def eliminar_servicio_endpoint(servicio_id):
 @requiere_token(("cliente", "administrador"))
 def listar_servicios_reserva(reserva_id):
 
-    error = verificar_reserva(reserva_id)
+    error = verificar_reserva(reserva_id, g.usuario)
     if error is not None:
-        return error
+        return jsonify(error[0]), error[1]
 
     servicios = consultar_servicios_reserva(reserva_id)
 
@@ -234,12 +181,16 @@ def listar_servicios_reserva(reserva_id):
 @requiere_token(("cliente",))
 def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
 
-    error = verificar_servicio_reservado(reserva_id, servicio_reserva_id)
+    error = verificar_servicio_reservado(
+        reserva_id, servicio_reserva_id, g.usuario
+    )
     if error is not None:
-        return error
+        return jsonify(error[0]), error[1]
 
     try:
-        cantidad = validar_modificacion_servicio_reserva(request.get_json(silent=True))
+        cantidad = validar_modificacion_servicio_reserva(
+            request.get_json(silent=True)
+        )
     except ValueError as error:
         return error_servicio(
             "ERROR_VALIDACION", str(error), 400
@@ -260,9 +211,11 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
 @requiere_token(("cliente",))
 def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
 
-    error = verificar_servicio_reservado(reserva_id, servicio_reserva_id)
+    error = verificar_servicio_reservado(
+        reserva_id, servicio_reserva_id, g.usuario
+    )
     if error is not None:
-        return error
+        return jsonify(error[0]), error[1]
 
     eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
 
