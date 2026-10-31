@@ -1,18 +1,7 @@
 
 from flask import Blueprint, jsonify, request, g
-
-from cine_fuente.repositories.servicios import (
-    consultar_servicios,
-    contar_servicios,
-    consultar_servicio_por_id,
-    insertar_servicio,
-    actualizar_servicio,
-    servicio_tiene_reservas,
-    eliminar_servicio,
-    consultar_servicios_reserva,
-    actualizar_cantidad_servicio_reserva,
-    eliminar_servicio_reserva
-)
+from cine_fuente.repositories import servicios as servicios_repo
+from cine_fuente.services.seguridad import requiere_rol
 
 from cine_fuente.services.servicios import (
     verificar_servicio,
@@ -27,7 +16,6 @@ from cine_fuente.validators.servicios import (
 )
 
 from cine_fuente.utils import (
-    requiere_token,
     construir_error_api,
     validar_paginacion,
     respuesta_paginada
@@ -65,8 +53,8 @@ def listar_servicios():
             "ERROR_VALIDACION", "Filtro activo inválido", 400
         )
 
-    total = contar_servicios(nombre, activo)
-    servicios = consultar_servicios(nombre, activo, limit, offset)
+    total = servicios_repo.contar_servicios(nombre, activo)
+    servicios = servicios_repo.consultar_servicios(nombre, activo, limit, offset)
 
     return respuesta_paginada(
         "servicios", servicios, total, limit, offset
@@ -80,7 +68,7 @@ def obtener_servicio_por_id(servicio_id):
     if servicio_id <= 0:
         return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
 
-    servicio = consultar_servicio_por_id(servicio_id)
+    servicio = servicios_repo.consultar_servicio_por_id(servicio_id)
 
     if servicio is None:
         return error_servicio(
@@ -92,7 +80,7 @@ def obtener_servicio_por_id(servicio_id):
 
 # 3. POST /servicios
 @servicios_bp.route("/servicios", methods=["POST"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 def crear_servicio():
 
     try:
@@ -102,7 +90,7 @@ def crear_servicio():
             "ERROR_VALIDACION", str(error), 400
         )
 
-    id_creado = insertar_servicio(
+    id_creado = servicios_repo.insertar_servicio(
         campos["nombre"],
         campos["descripcion"],
         campos["precio"],
@@ -115,7 +103,7 @@ def crear_servicio():
 
 # 4. PATCH /servicios/{id}
 @servicios_bp.route("/servicios/<int:servicio_id>", methods=["PATCH"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 def modificar_servicio(servicio_id):
 
     error = verificar_servicio(servicio_id)
@@ -129,42 +117,42 @@ def modificar_servicio(servicio_id):
             "ERROR_VALIDACION", str(error), 400
         )
 
-    actualizar_servicio(servicio_id, campos)
+    servicios_repo.actualizar_servicio(servicio_id, campos)
 
     return "", 204
 
 
 # 5. DELETE /servicios/{id}
 @servicios_bp.route("/servicios/<int:servicio_id>", methods=["DELETE"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 def eliminar_servicio_endpoint(servicio_id):
 
     error = verificar_servicio(servicio_id)
     if error is not None:
         return jsonify(error[0]), error[1]
 
-    if servicio_tiene_reservas(servicio_id):
+    if servicios_repo.servicio_tiene_reservas(servicio_id):
         return error_servicio(
             "SERVICIO_CON_RESERVAS",
             "El servicio tiene reservas asociadas",
             409
         )
 
-    eliminar_servicio(servicio_id)
+    servicios_repo.eliminar_servicio(servicio_id)
 
     return "", 204
 
 
 # 6. GET /reservas/{id}/servicios
 @servicios_bp.route("/reservas/<int:reserva_id>/servicios", methods=["GET"])
-@requiere_token(("cliente", "administrador"))
+@requiere_rol("cliente", "administrador")
 def listar_servicios_reserva(reserva_id):
 
     error = verificar_reserva(reserva_id, g.usuario)
     if error is not None:
         return jsonify(error[0]), error[1]
 
-    servicios = consultar_servicios_reserva(reserva_id)
+    servicios = servicios_repo.consultar_servicios_reserva(reserva_id)
 
     if not servicios:
         return "", 204
@@ -173,11 +161,8 @@ def listar_servicios_reserva(reserva_id):
 
 
 # 7. PATCH /reservas/{id_reserva}/servicios/{id_servicio}
-@servicios_bp.route(
-    "/reservas/<int:reserva_id>/servicios/<int:servicio_reserva_id>",
-    methods=["PATCH"]
-)
-@requiere_token(("cliente",))
+@servicios_bp.route("/reservas/<int:reserva_id>/servicios/<int:servicio_reserva_id>", methods=["PATCH"])
+@requiere_rol("cliente")
 def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
 
     error = verificar_servicio_reservado(
@@ -195,7 +180,7 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
             "ERROR_VALIDACION", str(error), 400
         )
 
-    actualizar_cantidad_servicio_reserva(
+    servicios_repo.actualizar_cantidad_servicio_reserva(
         reserva_id, servicio_reserva_id, cantidad
     )
 
@@ -207,7 +192,7 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
     "/reservas/<int:reserva_id>/servicios/<int:servicio_reserva_id>",
     methods=["DELETE"]
 )
-@requiere_token(("cliente",))
+@requiere_rol("cliente")
 def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
 
     error = verificar_servicio_reservado(
@@ -216,5 +201,5 @@ def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
     if error is not None:
         return jsonify(error[0]), error[1]
 
-    eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
+    servicios_repo.eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
     return "", 204
