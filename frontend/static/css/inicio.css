@@ -1,0 +1,355 @@
+/* ===================================
+   PÁGINA PRINCIPAL - CINE PARADISO
+=================================== */
+
+
+/* ---------- Carrusel ---------- */
+
+.home-carousel {
+    margin-bottom: 48px;
+}
+
+.home-carousel h1 {
+    font-family: var(--font-title);
+    font-size: 32px;
+    margin-bottom: 24px;
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    min-height: 350px;
+
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    overflow: hidden;
+}
+
+
+/* ---------- Filtros por género ---------- */
+
+.home-filtros {
+    margin-bottom: 48px;
+}
+
+.home-filtros h2 {
+    font-family: var(--font-title);
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.filtros-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+
+/* ---------- Cartelera ---------- */
+
+.home-cartelera {
+    margin-bottom: 48px;
+}
+
+.home-cartelera h2 {
+    font-family: var(--font-title);
+    font-size: 28px;
+    margin-bottom: 24px;
+}
+
+.peliculas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 992px) {
+    .peliculas-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .peliculas-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .carousel-container {
+        min-height: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .peliculas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Películas del carrusel ---------- */
+
+.carousel-slide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 40px 80px;
+    min-height: 350px;
+
+    background: linear-gradient(
+        110deg,
+        var(--surface-dark),
+        var(--card)
+    );
+}
+
+.carousel-slide[hidden] {
+    display: none !important;
+}
+
+.carousel-slide img {
+    width: 230px;
+    height: 330px;
+    object-fit: cover;
+    border-radius: 12px;
+    order: 2;
+}
+
+.carousel-info {
+    flex: 1;
+    max-width: 600px;
+}
+
+.carousel-info h2 {
+    font-family: var(--font-title);
+    font-size: 42px;
+    color: var(--gold);
+    margin-bottom: 20px;
+}
+
+.carousel-info p {
+    color: var(--text-soft);
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+/* ---------- Navegación ---------- */
+
+.carousel-prev,
+.carousel-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+
+    width: 40px;
+    height: 40px;
+}
+
+.carousel-prev {
+    left: 15px;
+}
+
+.carousel-next {
+    right: 15px;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+    background: var(--gold);
+    color: var(--bg);
+}
+
+/* ---------- Indicadores ---------- */
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    gap: 10px;
+}
+
+.carousel-indicador {
+    width: 10px;
+    height: 10px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: var(--text-muted);
+    cursor: pointer;
+}
+
+.carousel-indicador.activo {
+    background: var(--gold);
+}
+
+/* ---------- Estado vacío ---------- */
+
+.carousel-empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+
+    .carousel-slide {
+        flex-direction: column;
+        padding: 40px 50px 60px;
+        text-align: center;
+    }
+
+    .carousel-slide img {
+        order: 0;
+        width: 180px;
+        height: 260px;
+    }
+
+    .carousel-info h2 {
+        font-size: 30px;
+    }
+}
+
+/* ---------- Tarjetas de películas ---------- */
+
+.pelicula-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+
+    transition: transform 0.25s ease;
+}
+
+.pelicula-card:hover {
+    transform: translateY(-5px);
+}
+
+.pelicula-card img,
+.poster-sin-imagen {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+}
+
+.poster-sin-imagen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-dark);
+    color: var(--text-muted);
+}
+
+.pelicula-card-info {
+    padding: 18px;
+}
+
+.pelicula-card-info h3 {
+    font-family: var(--font-title);
+    color: var(--text);
+    font-size: 21px;
+    margin: 0 0 10px;
+}
+
+.pelicula-card-info p {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ===================================
+   FILTROS POR GÉNERO
+=================================== */
+
+.filtro-btn {
+    padding: 10px 22px;
+
+    background: var(--card);
+    color: var(--text-soft);
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.filtro-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.filtro-btn.activo {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+}
+
+/* Ocultar películas filtradas */
+
+.pelicula-card[hidden] {
+    display: none;
+}
+
+/* ===================================
+   TRANSICIONES DEL CARRUSEL
+=================================== */
+
+.carousel-container {
+    position: relative;
+    height: 440px;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.carousel-slide[hidden] {
+    display: none !important;
+}
+
+/* Flechas e indicadores por encima de las películas */
+
+.carousel-prev,
+.carousel-next,
+.carousel-indicators {
+    z-index: 3;
+}
+
+/* Adaptación para dispositivos móviles */
+
+@media (max-width: 768px) {
+    .carousel-container {
+        height: 660px;
+    }
+}
