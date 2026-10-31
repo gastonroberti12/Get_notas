@@ -57,3 +57,33 @@ def obtener_entrada_por_id(entrada_id):
     """
     filas = ejecutar_consulta(sql, {"entrada_id": entrada_id})
     return filas[0] if filas else None
+
+def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
+    """Solo registra un uso si la entrada sigue siendo válida al escribir."""
+    sql = """
+        UPDATE entrada AS e
+        INNER JOIN reservas AS r ON r.id = e.reserva_id
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
+        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+        SET e.fecha_uso = %(fecha_uso)s
+        WHERE e.id = %(entrada_id)s
+          AND BINARY e.codigo_qr = BINARY %(codigo_qr)s
+          AND e.fecha_uso IS NULL
+          AND r.estado = 'confirmada'
+          AND p.duracion_min > 0
+          AND f.fecha_hora <= %(fecha_uso)s
+          AND %(fecha_uso)s < DATE_ADD(f.fecha_hora, INTERVAL p.duracion_min MINUTE)
+    """
+    parametros = {
+        "entrada_id": entrada_id,
+        "codigo_qr": codigo_qr,
+        "fecha_uso": fecha_uso,
+    }
+
+    # ejecutar_escritura devuelve lastrowid, no las filas modificadas.
+    # Aquí necesitamos rowcount para saber si este escaneo registró el uso.
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql, parametros)
+        registrada = cursor.rowcount == 1
+        conexion.commit()
+    return registrada

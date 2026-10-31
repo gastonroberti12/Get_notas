@@ -16,3 +16,24 @@ def validar_filtros_listado(parametros):
         "reserva_id": reserva_id,
         "estado": validar_estado_propio(parametros),
     }
+
+def validar_body(datos):
+    if not isinstance(datos, dict):
+        raise ValueError(construir_error_api(
+            "ERROR_VALIDACION", "Cuerpo inválido", "Se debe enviar un objeto JSON."
+        ), 400)
+
+    if "codigo_qr" not in datos or len(datos) != 1:
+        raise ValueError(construir_error_api(
+            "ERROR_VALIDACION", "Cuerpo inválido",
+            "Se debe enviar únicamente el campo codigo_qr."
+        ), 400)
+
+    codigo = datos["codigo_qr"]
+    if not isinstance(codigo, str) or not codigo.strip() or len(codigo) > 64:
+        raise ValueError(construir_error_api(
+            "ERROR_VALIDACION", "Código QR inválido",
+            "codigo_qr debe ser un texto no vacío de hasta 64 caracteres."
+        ), 400)
+
+    return codigo.strip()
