@@ -1,0 +1,117 @@
+-----> SERVICIOS Y SERVICIOS ASOCIADOS A RESERVAS <-----
+
+-- GET /servicios
+
+Caso 1 - Listar catálogo:
+GET /servicios?_limit=10&_offset=0
+Esperado: 200 (el seed carga Pochoclo, Gaseosa, Combo pareja y Estacionamiento).
+
+Caso 2 - Buscar por nombre y activos:
+GET /servicios?nombre=Pochoclo&activo=true
+Esperado: 200 o 204.
+
+Caso 3 - Activo inválido:
+GET /servicios?activo=si
+Esperado: 400.
+
+Caso 4 - Obtener servicio del seed:
+GET /servicios/1
+Esperado: 200.
+
+Caso 5 - Servicio inexistente:
+GET /servicios/999999
+Esperado: 404.
+
+-- POST /servicios (administrador)
+
+Caso 6 - Crear servicio:
+POST /servicios
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Producto Postman QA",
+  "descripcion": "Servicio de prueba",
+  "precio": 12500,
+  "activo": true
+}
+Esperado: 201 con id.
+
+Caso 7 - Precio cero:
+POST /servicios
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Servicio inválido",
+  "precio": 0
+}
+Esperado: 400.
+
+-- PATCH /servicios/{id}
+
+Caso 8 - Actualizar precio/activo:
+PATCH /servicios/{{servicioPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "precio": 13000,
+  "activo": false
+}
+Esperado: 204.
+
+Caso 9 - Body vacío:
+PATCH /servicios/{{servicioPruebaId}}
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+-- DELETE /servicios/{id}
+
+Caso 10 - Eliminar servicio QA sin reservas asociadas:
+DELETE /servicios/{{servicioPruebaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 204 (borrado físico en el repositorio actual).
+
+Caso 11 - Servicio inexistente:
+DELETE /servicios/999999
+Authorization: Bearer {{adminToken}}
+Esperado: 404.
+
+-- GET /reservas/{id}/servicios
+
+Caso 12 - Consultar servicios de reserva propia:
+GET /reservas/{{reservaServiciosId}}/servicios
+Authorization: Bearer {{clienteToken}}
+Esperado: 204 si no hay servicios agregados; 200 si existen.
+
+-- POST /reservas/{id}/servicios
+
+Caso 13 - Agregar servicio a una reserva pendiente:
+POST /reservas/{{reservaServiciosId}}/servicios
+Authorization: Bearer {{clienteToken}}
+{
+  "servicio_id": 1,
+  "cantidad": 2
+}
+Esperado actual: 405 Method Not Allowed. Aunque figura en Swagger, no hay
+controlador POST para esta ruta en routes/servicios.py.
+
+-- PATCH /reservas/{id_reserva}/servicios/{id_servicio}
+
+Caso 14 - Modificar cantidad de un servicio ya asociado:
+PATCH /reservas/{{reservaServiciosId}}/servicios/999999
+Authorization: Bearer {{clienteToken}}
+{
+  "cantidad": 3
+}
+Esperado con reserva pendiente y dentro de 10 minutos: 404 porque el servicio
+reservado no existe. Si la reserva ya venció/dejó de estar pendiente: 409.
+Para probar un 204 real se necesita que exista previamente una fila en
+reserva_servicios; no se puede crear desde la API actual porque falta el POST.
+
+-- DELETE /reservas/{id_reserva}/servicios/{id_servicio}
+
+Caso 15 - Eliminar un servicio asociado inexistente:
+DELETE /reservas/{{reservaServiciosId}}/servicios/999999
+Authorization: Bearer {{clienteToken}}
+Esperado con reserva pendiente y vigente: 404. Si venció: 409.
+
+Caso 16 - Reserva ajena:
+Intentar consultar/modificar servicios de una reserva de otro cliente.
+Esperado: 403.
