@@ -222,6 +222,13 @@ PATCH  /api/funciones/{id}
 DELETE /api/funciones/{id}
 ```
 
+Para consultar las funciones activas de una sucursal, el frontend puede filtrar
+por `sucursal_id` y `activa`:
+
+```text
+GET /api/funciones?sucursal_id=1&activa=true
+```
+
 Ejemplo para reservar o consultar una función:
 
 ```text

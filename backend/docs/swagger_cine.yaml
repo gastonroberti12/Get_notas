@@ -365,6 +365,7 @@ paths:
       - $ref: '#/components/parameters/PeliculaIdFilter'
       - $ref: '#/components/parameters/SucursalIdFilter'
       - $ref: '#/components/parameters/SalaIdFilter'
+      - $ref: '#/components/parameters/ActivaFilter'
       - $ref: '#/components/parameters/FechaFilter'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
@@ -2572,6 +2573,13 @@ components:
       schema:
         type: integer
       example: 1
+    ActivaFilter:
+      name: activa
+      in: query
+      description: Filtrar por funciones activas o inactivas
+      schema:
+        type: boolean
+      example: true
     SalaIdFilter:
       name: sala_id
       in: query

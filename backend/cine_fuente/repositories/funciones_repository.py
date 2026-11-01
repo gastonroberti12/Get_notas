@@ -2,7 +2,7 @@
 
 
 # Consulta las funciones registradas.
-def consultar_funciones(pelicula_id=None, sala_id=None, activa=None):
+def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id=None):
     sql = (
         "SELECT f.id, f.pelicula_id, p.titulo AS pelicula, f.sala_id, s.nombre AS sala, "
         "f.fecha_hora, f.precio, f.activa "
@@ -16,6 +16,9 @@ def consultar_funciones(pelicula_id=None, sala_id=None, activa=None):
     if sala_id is not None:
         sql += " AND f.sala_id = %s"
         params.append(sala_id)
+    if sucursal_id is not None:
+        sql += " AND s.sucursal_id = %s"
+        params.append(sucursal_id)
     if activa is not None:
         sql += " AND f.activa = %s"
         params.append(activa)

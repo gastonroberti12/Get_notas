@@ -11,7 +11,12 @@ from cine_fuente.utils import construir_error_api
 
 # Obtiene el listado de funciones según los filtros.
 def obtener_funciones(filtros, limit, offset):
-    funciones = consultar_funciones(filtros["pelicula_id"], filtros["sala_id"], filtros["activa"])
+    funciones = consultar_funciones(
+        pelicula_id=filtros["pelicula_id"],
+        sala_id=filtros["sala_id"],
+        sucursal_id=filtros["sucursal_id"],
+        activa=filtros["activa"],
+    )
     return funciones[offset:offset + limit], len(funciones)
 
 
