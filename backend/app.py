@@ -16,6 +16,7 @@ from cine_fuente.routes.butacas import butacas_bp
 from cine_fuente.routes.servicios import servicios_bp
 from cine_fuente.routes.peliculas import peliculas_bp
 from cine_fuente.routes.reservas import reservas_bp
+from cine_fuente.routes.auth import auth_bp
 from cine_fuente.routes.usuarios import usuarios_bp
 from cine_fuente.routes.salas import salas_bp
 from cine_fuente.routes.sucursales import sucursales_bp
@@ -25,6 +26,7 @@ def crear_app():
     app = Flask(__name__)
     app.register_blueprint(peliculas_bp)
     app.register_blueprint(reservas_bp)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(usuarios_bp)
     app.register_blueprint(funciones_bp)
     app.register_blueprint(sucursales_bp)

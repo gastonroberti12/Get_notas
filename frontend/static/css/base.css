@@ -57,7 +57,52 @@
   background: var(--gold);
   color: var(--bg);
 }
- 
+
+.nav-dropdown {
+  position: relative;
+}
+
+.boton-cines {
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.boton-cines:hover {
+  color: var(--gold);
+}
+
+.nav-submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  background: var(--surface-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.nav-dropdown:hover .nav-submenu,
+.nav-dropdown.abierto .nav-submenu {
+  display: block;
+}
+
+.nav-submenu a {
+  display: block;
+  padding: 8px 16px;
+}
+
+.nav-submenu a.activa {
+  color: var(--gold);
+}
+
 /* ---------- Contenido principal ---------- */
 main {
   max-width: 1200px;

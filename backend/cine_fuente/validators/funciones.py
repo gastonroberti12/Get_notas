@@ -36,6 +36,7 @@ def validar_filtros(parametros):
     return {
         "pelicula_id": parametros.get("pelicula_id", type=int),
         "sala_id": parametros.get("sala_id", type=int),
+        "sucursal_id": parametros.get("sucursal_id", type=int),
         "activa": activa,
     }
 

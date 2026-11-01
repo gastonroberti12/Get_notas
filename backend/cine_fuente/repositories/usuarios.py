@@ -92,13 +92,24 @@ def crear_usuario(nombre, apellido, email, contrasenia):
         INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
         VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
     """
-    return ejecutar_escritura(sql, {
+    return _escribir_usuario(sql, {
         "nombre": nombre,
         "apellido": apellido,
         "email": email,
         "contrasena": contrasenia,
     })
 
+
+def obtener_usuario_por_email(email):
+    """Devuelve la fila del usuario con su hash de contrasena (solo para el login) o None."""
+    sql = """
+        SELECT id, nombre, apellido, email, contrasena, rol, fecha_registro
+        FROM usuarios
+        WHERE email = %(email)s
+        LIMIT 1
+    """
+    filas = ejecutar_consulta(sql, {"email": email})
+    return filas[0] if filas else None
 
 def obtener_usuario_por_id(id_usuario):
     """Devuelve la fila del usuario o None. Nunca expone contrasena ni token."""
