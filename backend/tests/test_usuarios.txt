@@ -1,0 +1,141 @@
+-----> USUARIOS <-----
+
+-- GET /usuarios
+
+Caso 1 - Listado como administrador:
+GET /usuarios?_limit=10&_offset=0
+Authorization: Bearer {{adminToken}}
+Esperado: 200 con usuarios y _links.
+
+Caso 2 - Filtrar por rol cliente:
+GET /usuarios?rol=cliente
+Authorization: Bearer {{adminToken}}
+Esperado: 200 (o 204 si no hay coincidencias).
+
+Caso 3 - Filtrar por nombre y email:
+GET /usuarios?nombre=Cliente&email=cliente@cineparadiso.com
+Authorization: Bearer {{adminToken}}
+Esperado: 200 (o 204).
+
+Caso 4 - Rol no permitido:
+GET /usuarios?rol=personal_control
+Authorization: Bearer {{adminToken}}
+Esperado: 400. El validador actual solo admite cliente y administrador.
+
+Caso 5 - Paginación inválida:
+GET /usuarios?_limit=101
+Authorization: Bearer {{adminToken}}
+Esperado: 400.
+
+Caso 6 - Cliente intenta listar todos:
+GET /usuarios
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+-- POST /usuarios
+
+Caso 7 - Registro correcto:
+POST /usuarios
+{
+  "nombre": "Usuario",
+  "apellido": "Postman",
+  "email": "correo-unico-de-prueba@example.com",
+  "contrasenia": "ClavePrueba123"
+}
+Esperado: 201 y Location /usuarios/{id}. El rol asignado es cliente.
+En la colección el email se genera dinámicamente.
+
+Caso 8 - Email duplicado:
+POST /usuarios
+{
+  "nombre": "Cliente",
+  "apellido": "Prueba",
+  "email": "cliente@cineparadiso.com",
+  "contrasenia": "ClavePrueba123"
+}
+Esperado: 409.
+
+Caso 9 - Falta campo obligatorio:
+POST /usuarios
+{
+  "nombre": "Usuario",
+  "apellido": "Postman",
+  "email": "nuevo@example.com"
+}
+Esperado: 400.
+
+-- GET /usuarios/{id}
+
+Caso 10 - Cliente consulta su propio usuario:
+GET /usuarios/2
+Authorization: Bearer {{clienteToken}}
+Esperado: 200.
+
+Caso 11 - Cliente consulta otro usuario:
+GET /usuarios/1
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Caso 12 - Administrador consulta cualquier usuario:
+GET /usuarios/2
+Authorization: Bearer {{adminToken}}
+Esperado: 200.
+
+Caso 13 - Usuario inexistente:
+GET /usuarios/999999
+Authorization: Bearer {{adminToken}}
+Esperado: 404.
+
+Caso 14 - ID inválido:
+GET /usuarios/0
+Authorization: Bearer {{adminToken}}
+Esperado: 400.
+
+-- PATCH /usuarios/{id}
+
+Caso 15 - Administrador actualiza datos del usuario QA:
+PATCH /usuarios/{{usuarioNuevoId}}
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Usuario Modificado"
+}
+Esperado: 204.
+
+Caso 16 - Cliente intenta cambiar su rol:
+PATCH /usuarios/2
+Authorization: Bearer {{clienteToken}}
+{
+  "rol": "administrador"
+}
+Esperado: 403.
+
+Caso 17 - Body vacío:
+PATCH /usuarios/2
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+-- GET /usuarios/me
+
+Caso 18 - Consultar perfil propio:
+GET /usuarios/me
+Authorization: Bearer {{clienteToken}}
+Esperado contractual: 200 con objeto usuario. El test de Postman comprueba
+que exista la propiedad id. ATENCIÓN: en el código actual,
+services/usuarios.py -> obtener_perfil() no retorna usuario_api(fila), por lo
+que la respuesta puede ser null y el test de estructura fallará.
+
+-- GET /usuarios/me/reservas
+
+Caso 19 - Reservas propias:
+GET /usuarios/me/reservas?estado=pendiente&_limit=10&_offset=0
+Authorization: Bearer {{clienteToken}}
+Esperado: 200 con reservas o 204 si no hay coincidencias.
+
+Caso 20 - Estado inválido:
+GET /usuarios/me/reservas?estado=otro
+Authorization: Bearer {{clienteToken}}
+Esperado: 400.
+
+No existe DELETE /usuarios/{id} en el código actual.
+GET /usuarios/me/entradas solo figura en Swagger; ver test_no_implementados_swagger.txt.
