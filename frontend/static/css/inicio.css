@@ -353,3 +353,269 @@
         height: 660px;
     }
 }
+
+/* ===================================
+   CARTELERA - DISEÑO EN INICIO
+=================================== */
+
+/* Desplazamiento desde la navbar */
+
+html {
+    scroll-behavior: smooth;
+}
+
+.home-cartelera {
+    scroll-margin-top: 100px;
+}
+
+
+/* Botones de fechas */
+
+.cartelera-fechas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.fecha-boton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 65px;
+    height: 65px;
+
+    background: var(--card);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    transition: 0.2s ease;
+}
+
+.fecha-boton span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.fecha-boton strong {
+    font-size: 22px;
+}
+
+.fecha-boton:hover {
+    border-color: var(--gold);
+}
+
+.fecha-boton.activa {
+    background: var(--gold);
+    color: var(--bg);
+}
+
+.fecha-boton.activa span {
+    color: var(--bg);
+}
+
+
+/* Filtros */
+
+.home-cartelera .home-filtros {
+    margin-bottom: 30px;
+}
+
+
+/* Grilla de cinco películas */
+
+.home-cartelera .peliculas-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 22px;
+}
+
+
+/* Tarjetas */
+
+.home-cartelera .pelicula-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+}
+
+.home-cartelera .pelicula-poster {
+    position: relative;
+    height: 300px;
+
+    border-radius: 10px;
+    overflow: hidden;
+
+    background: var(--card);
+}
+
+.home-cartelera .pelicula-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* Póster alternativo */
+
+.home-cartelera .poster-sin-imagen {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 16px;
+    box-sizing: border-box;
+
+    background: repeating-linear-gradient(
+        135deg,
+        var(--card),
+        var(--card) 14px,
+        var(--surface-dark) 14px,
+        var(--surface-dark) 28px
+    );
+}
+
+.poster-sin-imagen span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.poster-sin-imagen strong {
+    font-family: var(--font-title);
+    font-size: 23px;
+    color: var(--text);
+}
+
+
+/* Clasificación */
+
+.pelicula-clasificacion {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    padding: 4px 8px;
+
+    background: var(--surface-dark);
+    color: var(--gold);
+
+    border: 1px solid var(--gold);
+    border-radius: 5px;
+
+    font-size: 12px;
+}
+
+
+/* Información de películas */
+
+.home-cartelera .pelicula-card-info {
+    padding: 12px 0;
+}
+
+.home-cartelera .pelicula-card-info h3 {
+    font-family: var(--font-body);
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.home-cartelera .pelicula-card-info p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+
+/* Botón de funciones */
+
+.boton-funciones {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+
+    background: transparent;
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-family: var(--font-body);
+    font-weight: 600;
+}
+
+.boton-funciones:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+/* Estado vacío */
+
+.cartelera-vacia {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+
+    .home-cartelera .peliculas-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .home-cartelera .peliculas-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .home-cartelera .peliculas-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-cartelera .pelicula-poster {
+        height: 250px;
+    }
+
+}
+
+@media (max-width: 400px) {
+
+    .home-cartelera .peliculas-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* Encabezado de cartelera debajo del carrusel */
+
+.cartelera-encabezado {
+    display: inline-block;
+
+    padding: 12px 35px;
+    margin-bottom: 30px;
+
+    background-color: var(--gold);
+    color: var(--bg);
+
+    border-radius: 6px;
+
+    font-family: var(--font-title);
+    font-size: 26px;
+}

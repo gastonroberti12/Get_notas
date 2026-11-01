@@ -1,0 +1,261 @@
+/* =====================================
+   CARTELERA - CINE PARADISO
+===================================== */
+
+.cartelera {
+    padding: 45px 0 80px;
+}
+
+/* Encabezado */
+
+.cartelera-header {
+    margin-bottom: 55px;
+}
+
+.cartelera-etiqueta {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.cartelera-header h1 {
+    color: var(--text);
+    font-family: var(--font-title);
+    font-size: clamp(36px, 5vw, 54px);
+    margin: 15px 0;
+}
+
+.cartelera-header p {
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+/* Filtros */
+
+.cartelera-filtros {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 45px;
+}
+
+.cartelera-buscador {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.cartelera-buscador label {
+    color: var(--text-soft);
+    font-weight: 600;
+}
+
+.cartelera-buscador input {
+    background: var(--surface-dark);
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cartelera-buscador input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.cartelera-generos h2 {
+    font-size: 17px;
+    color: var(--text);
+    margin-bottom: 15px;
+}
+
+#filtros-genero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filtro-genero {
+    padding: 9px 18px;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background: var(--surface-dark);
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.filtro-genero:hover {
+    border-color: var(--gold);
+}
+
+.filtro-genero.activo {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg);
+}
+
+/* Listado */
+
+.cartelera-listado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.cartelera-listado-header h2 {
+    font-family: var(--font-title);
+    color: var(--text);
+    font-size: 30px;
+}
+
+#cantidad-peliculas {
+    color: var(--text-muted);
+}
+
+.cartelera-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 25px;
+}
+
+/* Tarjetas */
+
+.cartelera-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.cartelera-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold);
+}
+
+.cartelera-card[hidden],
+.cartelera-vacia[hidden] {
+    display: none !important;
+}
+
+.cartelera-poster {
+    aspect-ratio: 2 / 3;
+    background: var(--surface-dark);
+}
+
+.cartelera-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cartelera-sin-poster {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+    background: linear-gradient(145deg, var(--card), var(--surface-dark));
+}
+
+.cartelera-sin-poster span {
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-size: 11px;
+}
+
+.cartelera-sin-poster strong {
+    color: var(--text);
+    font-family: var(--font-title);
+    font-size: 26px;
+}
+
+.cartelera-card-info {
+    padding: 20px;
+}
+
+.cartelera-card-info h3 {
+    color: var(--text);
+    font-family: var(--font-title);
+    font-size: 23px;
+    margin-bottom: 10px;
+}
+
+.cartelera-genero {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.cartelera-metadatos {
+    display: flex;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--text-soft);
+    font-size: 13px;
+}
+
+/* Botón */
+
+.cartelera-boton {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    border-radius: 7px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cartelera-boton:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.cartelera-vacia {
+    color: var(--text-muted);
+    padding: 30px 0;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+    .cartelera-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .cartelera-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cartelera {
+        padding-top: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cartelera-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cartelera-filtros {
+        padding: 20px;
+    }
+}

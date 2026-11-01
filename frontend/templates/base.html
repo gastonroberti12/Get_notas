@@ -15,7 +15,8 @@
             <img class="logo-img" src="{{ url_for('static', filename='images/logo_cine_paradiso_navbar.png') }}" alt="Logo Cine Paradiso">
             Cine Paradiso</a>
         <nav>
-            <a href="{{ url_for('peliculas.cartelera') }}">Películas</a>
+            <a href="{{ url_for('peliculas.listado_peliculas') }}">Películas</a>
+
             <div class="nav-dropdown">
                 <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
                 <ul class="nav-submenu">
