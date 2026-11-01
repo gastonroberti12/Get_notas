@@ -1,0 +1,128 @@
+-----> FUNCIONES <-----
+
+-- GET /funciones
+
+Caso 1 - Listar funciones:
+GET /funciones?_limit=10&_offset=0
+Esperado: 200 con funciones y _links.
+
+Caso 2 - Filtrar por película:
+GET /funciones?pelicula_id=1
+Esperado: 200 o 204.
+
+Caso 3 - Filtrar por sala y sucursal:
+GET /funciones?sala_id=7&sucursal_id=3&activa=true
+Esperado: 200 o 204.
+
+Caso 4 - Filtro activa inválido:
+GET /funciones?activa=si
+Esperado: 400.
+
+Caso 5 - Paginación inválida:
+GET /funciones?_limit=0
+Esperado: 400.
+
+-- GET /funciones/{id}
+
+Caso 6 - Obtener función del seed:
+GET /funciones/1
+Esperado: 200.
+
+Caso 7 - Función inexistente:
+GET /funciones/999999
+Esperado: 404.
+
+-- GET /funciones/{id}/butacas
+
+Caso 8 - Consultar butacas de función existente:
+GET /funciones/1/butacas
+Esperado: 200 con array de butacas libres.
+
+Caso 9 - Función inexistente:
+GET /funciones/999999/butacas
+Esperado: 404.
+
+-- POST /funciones (administrador)
+
+Caso 10 - Crear función de prueba:
+POST /funciones
+Authorization: Bearer {{adminToken}}
+{
+  "pelicula_id": 1,
+  "sala_id": 7,
+  "fecha_hora": "<fecha futura ISO-8601>",
+  "precio": 850000
+}
+Esperado: 201. Precio expresado en centavos. La colección genera la fecha +10 días
+y guarda funcionPruebaId.
+
+Caso 11 - Mismo horario y sala:
+Repetir exactamente película, sala y fecha_hora del Caso 10.
+Esperado: 409 por superposición/clave única de sala y fecha.
+
+Caso 12 - Precio cero:
+POST /funciones
+Authorization: Bearer {{adminToken}}
+{
+  "pelicula_id": 1,
+  "sala_id": 7,
+  "fecha_hora": "2030-01-01T18:00:00",
+  "precio": 0
+}
+Esperado: 400.
+
+Caso 13 - Película inexistente:
+POST /funciones
+Authorization: Bearer {{adminToken}}
+{
+  "pelicula_id": 999999,
+  "sala_id": 7,
+  "fecha_hora": "2030-01-02T18:00:00",
+  "precio": 850000
+}
+Esperado: 404.
+
+-- PATCH /funciones/{id}
+
+Caso 14 - Actualizar precio:
+PATCH /funciones/{{funcionPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "precio": 900000
+}
+Esperado: 204.
+
+Caso 15 - Body vacío:
+PATCH /funciones/{{funcionPruebaId}}
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+Caso 16 - Nueva sala inexistente:
+PATCH /funciones/{{funcionPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "sala_id": 999999
+}
+Esperado: 404.
+
+-- DELETE /funciones/{id}
+
+Caso 17 - Baja lógica:
+DELETE /funciones/{{funcionPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fisica": false
+}
+Esperado: 204. Ejecutar después de las pruebas de reserva y entrada.
+
+Caso 18 - Baja física con reservas relacionadas:
+DELETE /funciones/{{funcionPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fisica": true
+}
+Esperado: 409 si ya se crearon reservas/entradas para la función.
+
+La ruta DELETE usa baja lógica por defecto. La opción fisica=true intenta borrar
+el registro y puede fallar si tiene información relacionada.
