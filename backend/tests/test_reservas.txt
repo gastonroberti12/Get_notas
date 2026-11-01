@@ -1,0 +1,170 @@
+-----> RESERVAS Y PAGOS <-----
+
+-- GET /reservas (solo administrador)
+
+Caso 1 - Listado general:
+GET /reservas?_limit=10&_offset=0
+Authorization: Bearer {{adminToken}}
+Esperado: 200 o 204 si no hay reservas.
+
+Caso 2 - Filtrar por usuario, función y estado:
+GET /reservas?usuario_id=2&funcion_id=1&estado=confirmada
+Authorization: Bearer {{adminToken}}
+Esperado: 200 o 204.
+
+Caso 3 - Filtrar fechas:
+GET /reservas?fecha_desde=2026-11-01&fecha_hasta=2026-11-30
+Authorization: Bearer {{adminToken}}
+Esperado: 200 o 204.
+
+Caso 4 - Rango invertido:
+GET /reservas?fecha_desde=2026-11-30&fecha_hasta=2026-11-01
+Authorization: Bearer {{adminToken}}
+Esperado: 400.
+
+Caso 5 - Estado inválido:
+GET /reservas?estado=otro
+Authorization: Bearer {{adminToken}}
+Esperado: 400.
+
+Caso 6 - Cliente intenta listar todas:
+GET /reservas
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+-- GET /usuarios/me/reservas (cliente)
+
+Caso 7 - Listar reservas propias:
+GET /usuarios/me/reservas?estado=pendiente&_limit=10&_offset=0
+Authorization: Bearer {{clienteToken}}
+Esperado: 200 o 204.
+
+-- POST /reservas (cliente)
+
+Body válido:
+{
+  "funcion_id": {{funcionPruebaId}},
+  "butaca_ids": [{{butacaReserva1Id}}]
+}
+Esperado: 201 con id. La reserva comienza en estado pendiente y bloquea la butaca
+por 10 minutos.
+
+Caso 8 - Body vacío:
+POST /reservas
+Authorization: Bearer {{clienteToken}}
+{}
+Esperado: 400.
+
+Caso 9 - Butaca duplicada dentro del body:
+{
+  "funcion_id": {{funcionPruebaId}},
+  "butaca_ids": [{{butacaReserva1Id}}, {{butacaReserva1Id}}]
+}
+Esperado: 400.
+
+Caso 10 - Función inexistente:
+{
+  "funcion_id": 999999,
+  "butaca_ids": [1]
+}
+Esperado: 404.
+
+Caso 11 - Butaca ocupada:
+Después de crear una reserva con una butaca, repetir otra reserva para la misma
+función y butaca.
+Esperado: 409.
+
+Caso 12 - Butaca de otra sala:
+Enviar un ID de butaca que exista pero no pertenezca a la sala de la función.
+Esperado: 409.
+
+-- GET /reservas/{id}
+
+Caso 13 - Consultar reserva propia:
+GET /reservas/{{reservaPagoId}}
+Authorization: Bearer {{clienteToken}}
+Esperado: 200.
+
+Caso 14 - Reserva inexistente:
+GET /reservas/999999
+Authorization: Bearer {{clienteToken}}
+Esperado: 404.
+
+Caso 15 - Usuario no titular:
+Consultar una reserva creada por otro usuario con token cliente.
+Esperado: 403.
+
+-- POST /reservas/{id}/pago (cliente titular)
+
+Caso 16 - Pago inválido:
+POST /reservas/{{reservaPagoId}}/pago
+Authorization: Bearer {{clienteToken}}
+{
+  "titular": "Juan Perez",
+  "numero_tarjeta": "123",
+  "mes_vencimiento": "12",
+  "anio_vencimiento": "2030",
+  "cvv": "123"
+}
+Esperado: 400.
+
+Caso 17 - Pago simulado válido:
+POST /reservas/{{reservaPagoId}}/pago
+Authorization: Bearer {{clienteToken}}
+{
+  "titular": "Juan Perez",
+  "numero_tarjeta": "4111111111111111",
+  "mes_vencimiento": "12",
+  "anio_vencimiento": "2030",
+  "cvv": "123"
+}
+Esperado: 200. La reserva pasa a confirmada y se asignan QR a las entradas.
+
+Caso 18 - Intentar pagar dos veces:
+Repetir el pago después de que la reserva esté confirmada.
+Esperado: 409.
+
+Caso 19 - Tarjeta vencida:
+Usar un año/mes anterior al actual.
+Esperado: 400.
+
+-- PATCH /reservas/{id} (cancelación)
+
+Caso 20 - Cancelar reserva pendiente con más de una hora de anticipación:
+PATCH /reservas/{{reservaCancelarId}}
+Authorization: Bearer {{clienteToken}}
+{
+  "estado": "cancelada"
+}
+Esperado: 204. Se liberan las entradas/butacas según la lógica del servicio.
+
+Caso 21 - Intentar cambiar a confirmada:
+PATCH /reservas/{{reservaPagoId}}
+Authorization: Bearer {{clienteToken}}
+{
+  "estado": "confirmada"
+}
+Esperado: 400. PATCH solo admite estado=cancelada.
+
+Caso 22 - Reserva ya cancelada:
+Repetir la cancelación del Caso 20.
+Esperado: 409 (estado no cancelable).
+
+Caso 23 - Cancelar con menos de una hora antes de la función:
+Esperado: 409 PLAZO_CANCELACION_VENCIDO.
+
+-- GET /reservas/{id}/entradas
+
+Caso 24 - Entradas de reserva propia confirmada:
+GET /reservas/{{reservaPagoId}}/entradas?_limit=10&_offset=0
+Authorization: Bearer {{clienteToken}}
+Esperado: 200; Postman guarda entradaPruebaId y codigoQrPrueba.
+
+Caso 25 - Reserva inexistente:
+GET /reservas/999999/entradas
+Authorization: Bearer {{clienteToken}}
+Esperado: 404.
+
+La colección crea una reserva para pago, otra para cancelar y una tercera
+pendiente para probar las operaciones de servicios asociados. La reserva
+pendiente vence automáticamente luego de 10 minutos.
