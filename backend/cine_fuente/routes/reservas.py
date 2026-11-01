@@ -4,8 +4,8 @@ from flask import Blueprint, g, jsonify, make_response, request
 
 from cine_fuente.services import reservas as compras_service
 from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
+from cine_fuente.services.seguridad import requiere_rol as requiere_token
 from cine_fuente.utils import (
-    requiere_token,
     respuesta_paginada,
     respuesta_error_excepcion,
     respuesta_error_interno,
