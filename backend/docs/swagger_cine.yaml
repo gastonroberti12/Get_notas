@@ -357,8 +357,8 @@ paths:
   /funciones:
     get:
       summary: Listar funciones disponibles
-      description: Devuelve solo funciones que todavía no comenzaron. **Rol 
-        autorizado:** Público general.
+      description: Permite filtrar las funciones por película, sucursal, sala y
+        estado de actividad. **Rol autorizado:** Público general.
       tags:
       - Funciones
       parameters:
