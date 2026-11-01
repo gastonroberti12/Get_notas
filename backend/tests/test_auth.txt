@@ -1,0 +1,78 @@
+-----> AUTENTICACIÓN Y AUTORIZACIÓN <-----
+Base URL: {{baseUrl}} = http://localhost:5001
+
+-- POST /auth/login
+
+Caso 1 - Login administrador (seed):
+POST /auth/login
+{
+  "email": "admin@cineparadiso.com",
+  "contrasenia": "Admin1234"
+}
+Esperado: 200. Respuesta con token y usuario. Postman guarda adminToken.
+
+Caso 2 - Login cliente (seed):
+POST /auth/login
+{
+  "email": "cliente@cineparadiso.com",
+  "contrasenia": "Admin1234"
+}
+Esperado: 200. Postman guarda clienteToken.
+
+Caso 3 - Credenciales incorrectas:
+POST /auth/login
+{
+  "email": "cliente@cineparadiso.com",
+  "contrasenia": "ClaveIncorrecta123"
+}
+Esperado: 401.
+
+Caso 4 - Campo faltante:
+POST /auth/login
+{
+  "email": "cliente@cineparadiso.com"
+}
+Esperado: 400.
+
+Caso 5 - Campo desconocido:
+POST /auth/login
+{
+  "email": "cliente@cineparadiso.com",
+  "contrasenia": "Admin1234",
+  "rol": "administrador"
+}
+Esperado: 400.
+
+-- AUTORIZACIÓN / TOKEN
+
+Caso 6 - Endpoint protegido sin Authorization:
+GET /usuarios/me
+Esperado: 401.
+
+Caso 7 - Token inválido:
+GET /usuarios/me
+Authorization: Bearer token_invalido
+Esperado: 401.
+
+Caso 8 - Cliente intentando endpoint exclusivo de administrador:
+GET /usuarios
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Caso 9 - Cliente intentando crear sucursal:
+POST /sucursales
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Caso 10 - Cliente intentando listar todas las reservas:
+GET /reservas
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Caso 11 - Cliente intentando listar todas las entradas:
+GET /entradas
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Nota: POST /auth/logout aparece en Swagger, pero no tiene ruta implementada.
+Está incluido en el archivo test_no_implementados_swagger.txt.
