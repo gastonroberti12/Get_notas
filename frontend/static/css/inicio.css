@@ -368,57 +368,6 @@ html {
     scroll-margin-top: 100px;
 }
 
-
-/* Botones de fechas */
-
-.cartelera-fechas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 25px;
-}
-
-.fecha-boton {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    width: 65px;
-    height: 65px;
-
-    background: var(--card);
-    color: var(--text);
-
-    border: 1px solid var(--border);
-    border-radius: 12px;
-
-    transition: 0.2s ease;
-}
-
-.fecha-boton span {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.fecha-boton strong {
-    font-size: 22px;
-}
-
-.fecha-boton:hover {
-    border-color: var(--gold);
-}
-
-.fecha-boton.activa {
-    background: var(--gold);
-    color: var(--bg);
-}
-
-.fecha-boton.activa span {
-    color: var(--bg);
-}
-
-
 /* Filtros */
 
 .home-cartelera .home-filtros {
