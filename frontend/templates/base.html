@@ -16,7 +16,14 @@
             Cine Paradiso</a>
         <nav>
             <a href="{{ url_for('peliculas.cartelera') }}">Películas</a>
-            <a href="{{ url_for('cines.listado') }}">Cines</a>
+            <div class="nav-dropdown">
+                <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
+                <ul class="nav-submenu">
+                    {% for s in sucursales %}
+                        <li><a href="{{ url_for('cines.elegir_sucursal', sucursal_id=s.id) }}"{% if sucursal_actual and s.id == sucursal_actual.id %} class="activa"{% endif %}>{{ s.nombre }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
             {% if es_admin() %}
                 <a href="{{ url_for('backoffice.panel') }}">Backoffice</a>
             {% endif %}
@@ -37,6 +44,7 @@
         <span>Mail: cineparadiso@gmail.com</span>
     </footer>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
