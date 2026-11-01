@@ -20,10 +20,6 @@ CONDICIONES_BUSQUEDA = {
 }
 
 
-class EmailDuplicadoError(Exception):
-    """El email ya pertenece a otro usuario (violación del UNIQUE de la tabla)."""
-
-
 def _escribir_usuario(sql, parametros):
     """Ejecuta una escritura sobre usuarios y traduce el error de email duplicado de MySQL."""
     try:
