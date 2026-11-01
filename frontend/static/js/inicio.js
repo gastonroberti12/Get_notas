@@ -256,3 +256,4 @@ document.addEventListener("DOMContentLoaded", function () {
     filtrarPeliculas("Todas");
 
 });
+

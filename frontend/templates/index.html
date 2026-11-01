@@ -6,83 +6,37 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}">
 {% endblock %}
 
+
 {% block content %}
 
-<!-- CARRUSEL -->
-<section class="home-carousel"
-         aria-label="Películas destacadas">
+
+<!--CARRUSEL DE PELÍCULAS DESTACADAS-->
+
+<section class="home-carousel" aria-label="Películas destacadas">
 
     <h1>Destacados</h1>
 
     <div class="carousel-container">
 
-    {% for pelicula in peliculas_destacadas %}
+        {% for pelicula in peliculas_destacadas %}
 
-    <article class="carousel-slide">
-
-        <img src="{{ pelicula.poster_url }}" alt="Póster de {{ pelicula.titulo }}">
-
-        <div class="carousel-info">
-            <h2>{{ pelicula.titulo }}</h2>
-            <p>{{ pelicula.sinopsis | truncate(180) }}</p>
-        </div>
-
-    </article>
-    {% else %}
-    <p class="carousel-empty">No hay películas destacadas disponibles.</p>
-    {% endfor %}
-
-    <button type="button" class="carousel-prev" aria-label="Película anterior">&#10094;</button>
-
-    <button type="button" class="carousel-next" aria-label="Película siguiente">&#10095;</button>
-
-    <div class="carousel-indicators"></div>
-</div>
-
-</section>
-
-<!-- FILTROS -->
-<section class="home-filtros">
-
-    <h2>Explorá por género</h2>
-
-    <div class="filtros-container">
-        <!-- Acá incorporaremos los filtros -->
-    </div>
-
-</section>
-
-<!-- CARTELERA -->
-<section class="home-cartelera">
-
-    <h2>En cartelera</h2>
-
-    <div class="peliculas-grid">
-
-        {% for pelicula in peliculas %}
-
-        <article class="pelicula-card" data-generos="{{ pelicula.genero or '' }}">
+        <article class="carousel-slide">
 
             {% if pelicula.poster_url %}
 
-            <img src="{{ pelicula.poster_url }}" alt="Póster de {{ pelicula.titulo }}" loading="lazy">
-
-            {% else %}
-
-            <div class="poster-sin-imagen">Sin póster disponible</div>
+            <img
+                src="{{ pelicula.poster_url }}"
+                alt="Póster de {{ pelicula.titulo }}"
+            >
 
             {% endif %}
 
-            <div class="pelicula-card-info">
+            <div class="carousel-info">
 
-                <h3>{{ pelicula.titulo }}</h3>
-
-                <p>{{ pelicula.genero or "Género no disponible" }}</p>
+                <h2>{{ pelicula.titulo }}</h2>
 
                 <p>
-                    {% if pelicula.duracion_min %}
-                        {{ pelicula.duracion_min }} min
-                    {% endif %}
+                    {{ pelicula.sinopsis | default('', true) | truncate(180) }}
                 </p>
 
             </div>
@@ -91,15 +45,202 @@
 
         {% else %}
 
-        <p>No hay películas disponibles en cartelera.</p>
+        <p class="carousel-empty">
+            No hay películas destacadas disponibles.
+        </p>
 
         {% endfor %}
+
+
+        <!-- Botones del carrusel -->
+
+        <button
+            type="button"
+            class="carousel-prev"
+            aria-label="Película anterior"
+        >
+            &#10094;
+        </button>
+
+        <button
+            type="button"
+            class="carousel-next"
+            aria-label="Película siguiente"
+        >
+            &#10095;
+        </button>
+
+
+        <!-- Indicadores -->
+
+        <div class="carousel-indicators"></div>
 
     </div>
 
 </section>
 
+
+
+<!--CARTELERA POR FECHAS-->
+
+<section id="cartelera" class="home-cartelera">
+
+    <h2 class="cartelera-encabezado">Cartelera</h2>
+
+
+    <!-- Selección de fechas -->
+
+    <nav class="cartelera-fechas" aria-label="Seleccionar día">
+
+        {% for dia in dias %}
+
+        <a
+            href="{{ url_for('peliculas.inicio',
+                            fecha=dia.fecha,
+                            _anchor='cartelera') }}"
+            class="fecha-boton {% if dia.fecha == fecha_seleccionada %}activa{% endif %}"
+        >
+
+            <span>{{ dia.nombre }}</span>
+
+            <strong>{{ dia.numero }}</strong>
+
+        </a>
+
+        {% endfor %}
+
+    </nav>
+
+
+    <!-- Filtros por género -->
+
+    <div class="home-filtros">
+
+        <div class="filtros-container">
+
+            <!--
+                Los botones de géneros se generan
+                dinámicamente desde inicio.js
+            -->
+
+        </div>
+
+    </div>
+
+
+    <!-- Películas disponibles en la fecha seleccionada -->
+
+    {% if error_cartelera %}
+
+        <p class="cartelera-vacia">
+            {{ error_cartelera }}
+        </p>
+
+    {% elif peliculas %}
+
+        <div class="peliculas-grid">
+
+            {% for pelicula in peliculas %}
+
+            <article
+                class="pelicula-card"
+                data-generos="{{ pelicula.genero or '' }}"
+            >
+
+                <!-- Póster -->
+
+                <div class="pelicula-poster">
+
+                    {% if pelicula.poster_url %}
+
+                    <img
+                        src="{{ pelicula.poster_url }}"
+                        alt="Póster de {{ pelicula.titulo }}"
+                        loading="lazy"
+                    >
+
+                    {% else %}
+
+                    <div class="poster-sin-imagen">
+
+                        <span>PÓSTER</span>
+
+                        <strong>{{ pelicula.titulo }}</strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- Clasificación -->
+
+                    {% if pelicula.clasificacion %}
+
+                    <span class="pelicula-clasificacion">
+                        {{ pelicula.clasificacion }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Información de la película -->
+
+                <div class="pelicula-card-info">
+
+                    <h3>{{ pelicula.titulo }}</h3>
+
+                    <p>
+
+                        {{ pelicula.genero or "Género no disponible" }}
+
+                        {% if pelicula.duracion_min %}
+                            · {{ pelicula.duracion_min }} min
+                        {% endif %}
+
+                    </p>
+
+
+                    <!-- Se habilitará al desarrollar el detalle -->
+
+                    <button
+                        type="button"
+                        class="boton-funciones"
+                        disabled
+                    >
+                        Ver funciones
+                    </button>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p class="cartelera-vacia">
+
+            No hay películas con funciones disponibles
+            para el día seleccionado.
+
+        </p>
+
+    {% endif %}
+
+</section>
+
 {% endblock %}
+
+
+
+<!--JAVASCRIPT-->
+
 {% block scripts %}
+
 <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+
 {% endblock %}
