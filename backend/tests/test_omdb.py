@@ -72,27 +72,27 @@ class OmdbIntegrationTests(unittest.TestCase):
         }
         solicitud_mock.return_value = response
 
-        result = self.client.get("/api/peliculas/buscar?q=NoExiste")
+        result = self.client.get("/peliculas/buscar?q=NoExiste")
 
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.get_json()["resultados"], [])
         self.assertEqual(result.get_json()["total_resultados"], 0)
 
     def test_busqueda_requiere_consulta(self):
-        response = self.client.get("/api/peliculas/buscar")
+        response = self.client.get("/peliculas/buscar")
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
 
     def test_busqueda_informa_clave_api_ausente(self):
         with patch.dict(os.environ, {}, clear=True):
-            response = self.client.get("/api/peliculas/buscar?q=Batman")
+            response = self.client.get("/peliculas/buscar?q=Batman")
 
         self.assertEqual(response.status_code, 503)
         self.assertIn("OMDB_API_KEY", response.get_json()["error"])
 
     def test_detalle_rechaza_id_imdb_invalido(self):
-        response = self.client.get("/api/peliculas/invalid")
+        response = self.client.get("/peliculas/invalid")
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())

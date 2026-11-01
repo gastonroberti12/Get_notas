@@ -14,7 +14,7 @@ from cine_fuente.utils import (
     validar_paginacion,
 )
 
-funciones_bp = Blueprint('funciones', __name__, url_prefix='/api/funciones')
+funciones_bp = Blueprint('funciones', __name__, url_prefix='/funciones')
 
 
 @funciones_bp.route('', methods=['GET'])

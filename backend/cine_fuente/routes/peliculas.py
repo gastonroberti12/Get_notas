@@ -24,7 +24,7 @@ from cine_fuente.services.omdb_service import (
 )
 
 
-peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/api/peliculas")
+peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/peliculas")
 
 
 @peliculas_bp.route("", methods=["GET"])

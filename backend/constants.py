@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuración general
-BASE_URL = "/api"
+BASE_URL = "/"
 
 # Configuración de MySQL
 DB_HOST = os.getenv("DB_HOST", "localhost")

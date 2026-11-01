@@ -12,7 +12,7 @@ from cine_fuente.utils import (
     validar_paginacion,
 )
 
-salas_bp = Blueprint("salas", __name__, url_prefix="/api/salas")
+salas_bp = Blueprint("salas", __name__, url_prefix="/salas")
 
 
 def error(codigo, mensaje, descripcion, estado):

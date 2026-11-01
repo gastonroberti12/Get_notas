@@ -20,7 +20,7 @@ from cine_fuente.utils import (
     validar_paginacion,
 )
 
-butacas_bp = Blueprint("butacas", __name__, url_prefix="/api")
+butacas_bp = Blueprint("butacas", __name__)
 
 
 def error(codigo, mensaje, descripcion, estado):

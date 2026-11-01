@@ -11,7 +11,7 @@ from cine_fuente.utils import (
     validar_paginacion,
 )
 
-sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/api/sucursales")
+sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/sucursales")
 
 
 def error(codigo, mensaje, descripcion, estado):

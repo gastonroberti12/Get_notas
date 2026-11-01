@@ -190,8 +190,8 @@ La clave de OMDb debe estar configurada como `OMDB_API_KEY` en `backend/.env`.
 Endpoints externos disponibles:
 
 ```text
-GET /api/peliculas/buscar?q=batman&pagina=1
-GET /api/peliculas/tt0372784
+GET /peliculas/buscar?q=batman&pagina=1
+GET /peliculas/tt0372784
 ```
 
 Las películas consultadas también pueden almacenarse localmente y sus pósters se guardan en `frontend/static/images`.
@@ -203,79 +203,79 @@ Las películas consultadas también pueden almacenarse localmente y sus pósters
 ### Películas
 
 ```text
-GET    /api/peliculas
-GET    /api/peliculas/{id}
-GET    /api/peliculas/buscar?q=batman&pagina=1
-GET    /api/peliculas/{imdb_id}
-POST   /api/peliculas
-PATCH  /api/peliculas/{id}
-DELETE /api/peliculas/{id}
+GET    /peliculas
+GET    /peliculas/{id}
+GET    /peliculas/buscar?q=batman&pagina=1
+GET    /peliculas/{imdb_id}
+POST   /peliculas
+PATCH  /peliculas/{id}
+DELETE /peliculas/{id}
 ```
 
 ### Funciones
 
 ```text
-GET    /api/funciones
-GET    /api/funciones/{id}
-POST   /api/funciones
-PATCH  /api/funciones/{id}
-DELETE /api/funciones/{id}
+GET    /funciones
+GET    /funciones/{id}
+POST   /funciones
+PATCH  /funciones/{id}
+DELETE /funciones/{id}
 ```
 
 Para consultar las funciones activas de una sucursal, el frontend puede filtrar
 por `sucursal_id` y `activa`:
 
 ```text
-GET /api/funciones?sucursal_id=1&activa=true
+GET /funciones?sucursal_id=1&activa=true
 ```
 
 Ejemplo para reservar o consultar una función:
 
 ```text
-GET http://localhost:5001/api/funciones/1
+GET http://localhost:5001/funciones/1
 ```
 
 ### Sucursales y salas
 
 ```text
-GET    /api/sucursales
-GET    /api/sucursales/{id}
-POST   /api/sucursales
-PATCH  /api/sucursales/{id}
-DELETE /api/sucursales/{id}
+GET    /sucursales
+GET    /sucursales/{id}
+POST   /sucursales
+PATCH  /sucursales/{id}
+DELETE /sucursales/{id}
 
-GET    /api/salas
-GET    /api/salas/{id}
-POST   /api/salas
-PATCH  /api/salas/{id}
-DELETE /api/salas/{id}
+GET    /salas
+GET    /salas/{id}
+POST   /salas
+PATCH  /salas/{id}
+DELETE /salas/{id}
 ```
 
 ### Butacas
 
 ```text
-GET    /api/salas/{sala_id}/butacas
-POST   /api/salas/{sala_id}/butacas/generar
-POST   /api/butacas
-DELETE /api/butacas/{id}
-DELETE /api/salas/{sala_id}/butacas
+GET    /salas/{sala_id}/butacas
+POST   /salas/{sala_id}/butacas/generar
+POST   /butacas
+DELETE /butacas/{id}
+DELETE /salas/{sala_id}/butacas
 ```
 
 ### Servicios
 
 ```text
-GET    /api/servicios
-GET    /api/servicios/{id}
-POST   /api/servicios
-PATCH  /api/servicios/{id}
-DELETE /api/servicios/{id}
+GET    /servicios
+GET    /servicios/{id}
+POST   /servicios
+PATCH  /servicios/{id}
+DELETE /servicios/{id}
 ```
 
 Los listados admiten paginación con `_limit` y `_offset`:
 
 ```text
-GET /api/funciones?_limit=10&_offset=0
-GET /api/salas?_limit=10&_offset=0
+GET /funciones?_limit=10&_offset=0
+GET /salas?_limit=10&_offset=0
 ```
 
 ---
