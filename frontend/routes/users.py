@@ -5,11 +5,10 @@ from routes.roles import esta_logueado
 
 users_bp = Blueprint("users", __name__)
 
-API_URL = 'http://127.0.0.1:5001' # completar con la URL que pongan en el backend
+API_URL = 'http://127.0.0.1:5001'
 
 
 def llamar_api(metodo, endpoint, datos=None):
-    # Llama al back y devuelve (status_http, json). Si no hay conexion, status es None.
     # Si hay sesion, manda el token en Authorization: Bearer.
     headers = {}
     if 'token' in session:
@@ -72,4 +71,4 @@ def logout():
 def profile():
     if not esta_logueado():
         return redirect(url_for('users.login'))
-    return render_template("usuario.html")
+    return render_template("perfil.html")
