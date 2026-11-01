@@ -96,7 +96,6 @@
                         </div>
                         {% for entrada in reserva.entradas %}
                         <div class="visor_entrada">
-                            {# e.qr: URL o data URI de la imagen PNG que entregue el py #}
                             {% if entrada.qr %}<img class="visor_qr" src="{{ entrada.qr }}" alt="Código QR">
                             {% else %}<p class="visor_sin_qr">Código QR</p>{% endif %}
                             <p class="entrada_codigo">{{ entrada.codigo_qr }}</p>

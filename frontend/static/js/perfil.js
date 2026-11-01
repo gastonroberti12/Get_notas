@@ -12,7 +12,7 @@ function mostrarSoloElElemento(botones, elementos, posicionAMostrar) {
 // Activa o desactiva el modo edicion del formulario de datos personales.
 function cambiarModoEdicion(formularioPerfil, valoresOriginales, quiereEditar) {
   const campos = formularioPerfil.getElementsByTagName('input');
-  const avisoDeError = formularioPerfil.getElaementsByClassName('formulario_alerta')[0];
+  const avisoDeError = formularioPerfil.getElementsByClassName('formulario_alerta')[0];
 
   formularioPerfil.classList.toggle('editando', quiereEditar);
   avisoDeError.classList.add('oculto');
