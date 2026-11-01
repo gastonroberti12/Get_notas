@@ -27,7 +27,7 @@ from cine_fuente.services.omdb_service import (
 peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/api/peliculas")
 
 
-@peliculas_bp.get("")
+@peliculas_bp.route("", methods=["GET"])
 # Lista las películas locales disponibles.
 def listar_peliculas():
     limit, offset = validar_paginacion(request.args)
@@ -35,7 +35,7 @@ def listar_peliculas():
     return respuesta_paginada("peliculas", peliculas[offset:offset + limit], len(peliculas), limit, offset)
 
 
-@peliculas_bp.post("")
+@peliculas_bp.route("", methods=["POST"])
 @requiere_token(("administrador",))
 # Permite al administrador cargar una película manualmente.
 def crear_pelicula():
@@ -74,7 +74,7 @@ def crear_pelicula():
     return jsonify(obtener_pelicula(pelicula_id)), 201
 
 
-@peliculas_bp.patch("/<int:pelicula_id>")
+@peliculas_bp.route("/<int:pelicula_id>", methods=["PATCH"])
 @requiere_token(("administrador",))
 # Actualiza los datos editables de una película.
 def modificar_pelicula(pelicula_id):
@@ -98,7 +98,7 @@ def modificar_pelicula(pelicula_id):
     return "", 204
 
 
-@peliculas_bp.delete("/<int:pelicula_id>")
+@peliculas_bp.route("/<int:pelicula_id>", methods=["DELETE"])
 @requiere_token(("administrador",))
 # Da de baja una película sin eliminarla.
 def borrar_pelicula(pelicula_id):
@@ -111,7 +111,7 @@ def borrar_pelicula(pelicula_id):
     return "", 204
 
 
-@peliculas_bp.get("/<int:pelicula_id>")
+@peliculas_bp.route("/<int:pelicula_id>", methods=["GET"])
 # Obtiene una película por su identificador.
 def consultar_pelicula(pelicula_id):
     pelicula = obtener_pelicula(pelicula_id)
@@ -123,7 +123,7 @@ def consultar_pelicula(pelicula_id):
     return jsonify(pelicula), 200
 
 
-@peliculas_bp.get("/buscar")
+@peliculas_bp.route("/buscar", methods=["GET"])
 # Busca películas mediante OMDb.
 def buscar_peliculas():
     query = request.args.get("q", "").strip()
@@ -169,7 +169,7 @@ def buscar_peliculas():
     return jsonify({"pagina": page, **result}), 200
 
 
-@peliculas_bp.get("/<imdb_id>")
+@peliculas_bp.route("/<imdb_id>", methods=["GET"])
 # Obtiene el detalle de una película externa.
 def detalle_pelicula(imdb_id):
     try:

@@ -28,7 +28,7 @@ def validar_texto(datos, campo, maximo):
     return valor
 
 
-@sucursales_bp.get("")
+@sucursales_bp.route("", methods=["GET"])
 # Lista las sucursales disponibles.
 def listar_sucursales():
     try:
@@ -39,7 +39,7 @@ def listar_sucursales():
     return respuesta_paginada("sucursales", sucursales[offset:offset + limit], len(sucursales), limit, offset)
 
 
-@sucursales_bp.get("/<int:sucursal_id>")
+@sucursales_bp.route("/<int:sucursal_id>", methods=["GET"])
 # Obtiene una sucursal por su identificador.
 def obtener_sucursal(sucursal_id):
     sucursal = consultar_sucursal_por_id(sucursal_id)
@@ -48,7 +48,7 @@ def obtener_sucursal(sucursal_id):
     return jsonify(sucursal), 200
 
 
-@sucursales_bp.post("")
+@sucursales_bp.route("", methods=["POST"])
 @requiere_token(("administrador",))
 # Registra una nueva sucursal.
 def crear_sucursal():
@@ -65,7 +65,7 @@ def crear_sucursal():
     return jsonify(consultar_sucursal_por_id(sucursal_id)), 201
 
 
-@sucursales_bp.patch("/<int:sucursal_id>")
+@sucursales_bp.route("/<int:sucursal_id>", methods=["PATCH"])
 @requiere_token(("administrador",))
 # Actualiza los datos de una sucursal.
 def modificar_sucursal(sucursal_id):
@@ -87,7 +87,7 @@ def modificar_sucursal(sucursal_id):
     return "", 204
 
 
-@sucursales_bp.delete("/<int:sucursal_id>")
+@sucursales_bp.route("/<int:sucursal_id>", methods=["DELETE"])
 @requiere_token(("administrador",))
 # Elimina una sucursal existente.
 def borrar_sucursal(sucursal_id):

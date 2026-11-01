@@ -41,7 +41,6 @@ def listar_butacas_sala(sala_id):
 
 
 @butacas_bp.route("/salas/<int:sala_id>/butacas/generar", methods=["POST"])
-@butacas_bp.post("/salas/<int:sala_id>/butacas/generar")
 @requiere_token(("administrador",))
 # Genera las butacas de una sala.
 def generar_butacas(sala_id):
@@ -63,7 +62,6 @@ def generar_butacas(sala_id):
 
 
 @butacas_bp.route("/butacas", methods=["POST"])
-@butacas_bp.post("/butacas")
 @requiere_token(("administrador",))
 # Registra una nueva butaca.
 def crear_butaca():
@@ -89,7 +87,7 @@ def crear_butaca():
     return jsonify(consultar_butaca_por_id(butaca_id)), 201
 
 
-@butacas_bp.patch("/butacas/<int:butaca_id>")
+@butacas_bp.route("/butacas/<int:butaca_id>", methods=["PATCH"])
 @requiere_token(("administrador",))
 # Modifica los datos de una butaca.
 def modificar_butaca(butaca_id):
@@ -119,7 +117,7 @@ def modificar_butaca(butaca_id):
     return "", 204
 
 
-@butacas_bp.delete("/butacas/<int:butaca_id>")
+@butacas_bp.route("/butacas/<int:butaca_id>", methods=["DELETE"])
 @requiere_token(("administrador",))
 # Elimina una butaca.
 def borrar_butaca(butaca_id):
@@ -132,7 +130,7 @@ def borrar_butaca(butaca_id):
     return "", 204
 
 
-@butacas_bp.delete("/salas/<int:sala_id>/butacas")
+@butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["DELETE"])
 @requiere_token(("administrador",))
 # Elimina las butacas de una sala.
 def borrar_butacas_sala(sala_id):

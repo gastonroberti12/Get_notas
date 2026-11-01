@@ -19,7 +19,7 @@ def error(codigo, mensaje, descripcion, estado):
     return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
-@salas_bp.get("")
+@salas_bp.route("", methods=["GET"])
 # Lista las salas disponibles.
 def listar_salas():
     try:
@@ -30,7 +30,7 @@ def listar_salas():
     return respuesta_paginada("salas", salas[offset:offset + limit], len(salas), limit, offset)
 
 
-@salas_bp.get("/<int:sala_id>")
+@salas_bp.route("/<int:sala_id>", methods=["GET"])
 # Obtiene una sala por su identificador.
 def obtener_sala(sala_id):
     sala = consultar_sala_por_id(sala_id)
@@ -39,7 +39,7 @@ def obtener_sala(sala_id):
     return jsonify(sala), 200
 
 
-@salas_bp.post("")
+@salas_bp.route("", methods=["POST"])
 @requiere_token(("administrador",))
 # Registra una nueva sala.
 def crear_sala():
@@ -66,7 +66,7 @@ def crear_sala():
     return jsonify(consultar_sala_por_id(sala_id)), 201
 
 
-@salas_bp.patch("/<int:sala_id>")
+@salas_bp.route("/<int:sala_id>", methods=["PATCH"])
 @requiere_token(("administrador",))
 # Actualiza los datos de una sala.
 def modificar_sala(sala_id):
@@ -104,7 +104,7 @@ def modificar_sala(sala_id):
     return "", 204
 
 
-@salas_bp.delete("/<int:sala_id>")
+@salas_bp.route("/<int:sala_id>", methods=["DELETE"])
 @requiere_token(("administrador",))
 # Elimina una sala existente.
 def borrar_sala(sala_id):
