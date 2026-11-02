@@ -58,3 +58,38 @@ def consultar_ocupacion_general(filtros):
     """
     filas = consulta(sql, parametros)
     return filas[0] if filas else {"entradas_vendidas": 0, "capacidad_total": 0}
+
+
+# GET /admin/estadisticas/ocupacion/salas: calcula entradas y capacidad agrupadas por sala.
+def consultar_ocupacion_salas(filtros):
+    rango, parametros = filtro_fechas("f.fecha_hora", filtros)
+    sql = f"""
+        SELECT
+            s.id AS sala_id,
+            s.nombre AS sala_nombre,
+            COALESCE(SUM(funciones.entradas_vendidas), 0) AS entradas_vendidas,
+            COALESCE(SUM(funciones.capacidad_total), 0) AS capacidad_total
+        FROM (
+            SELECT
+                f.id,
+                f.sala_id,
+                COALESCE(capacidad.cantidad, 0) AS capacidad_total,
+                COUNT(e.id) AS entradas_vendidas
+            FROM funcion AS f
+            LEFT JOIN (
+                SELECT sala_id, COUNT(*) AS cantidad
+                FROM butacas
+                GROUP BY sala_id
+            ) AS capacidad ON capacidad.sala_id = f.sala_id
+            LEFT JOIN reservas AS r
+                ON r.funcion_id = f.id
+                AND r.estado IN ({ESTADOS_VENTA})
+            LEFT JOIN entrada AS e ON e.reserva_id = r.id
+            WHERE 1 = 1{rango}
+            GROUP BY f.id, f.sala_id, capacidad.cantidad
+        ) AS funciones
+        INNER JOIN salas AS s ON s.id = funciones.sala_id
+        GROUP BY s.id, s.nombre
+        ORDER BY s.id ASC
+    """
+    return consulta(sql, parametros)
