@@ -60,3 +60,15 @@ def obtener_ventas_total(filtros):
         "monto_servicios": monto_servicios,
         "monto_total": monto_entradas + monto_servicios,
     }
+
+
+# GET /admin/estadisticas/ventas/generos: normaliza los importes y cantidades por género.
+def obtener_ventas_generos(filtros):
+    return {"generos": [
+        {
+            "genero": fila["genero"],
+            "entradas_vendidas": entero(fila.get("entradas_vendidas")),
+            "monto_total": entero(fila.get("monto_total")),
+        }
+        for fila in estadisticas_repo.consultar_ventas_generos(filtros)
+    ]}
