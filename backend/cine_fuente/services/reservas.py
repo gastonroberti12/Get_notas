@@ -155,48 +155,19 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
                 409,
             )
 
-    ocupadas = compras_repo.obtener_butacas_ocupadas(funcion_id, butaca_ids)
-
-    if ocupadas:
-        error(
-            "BUTACA_OCUPADA",
-            "Hay butacas ocupadas",
-            f"Las butacas no disponibles son: {sorted(set(ocupadas))}.",
-            409,
-        )
-
     if funcion["precio"] <= 0:
-        error(
-            "PRECIO_FUNCION_INVALIDO",
-            "Precio de función inválido",
-            "La función no tiene un precio válido para calcular la reserva.",
-            409,
-        )
+        error("PRECIO_FUNCION_INVALIDO", "Precio de función inválido",
+              "La función no tiene un precio válido para calcular la reserva.", 409)
 
-    reserva_id = None
-    try:
-        reserva_id = compras_repo.insertar_reserva({
-                "usuario_id": usuario_id,
-                "funcion_id": funcion_id,
-                "fecha_compra": ahora_db,
-                "estado": "pendiente",
-            })
-
-        if not reserva_id:
-            raise RuntimeError("La base de datos no devolvió el ID de la reserva creada.")
-
-        for butaca_id in butaca_ids:
-            compras_repo.insertar_entrada(reserva_id, butaca_id)
-
-        return int(reserva_id)
-    except Exception:
-        if reserva_id is not None:
-            try:
-                compras_repo.eliminar_entradas_reserva(reserva_id)
-                compras_repo.eliminar_reserva_incompleta(reserva_id)
-            except Exception:
-                logger.exception("No se pudo limpiar la reserva incompleta %s", reserva_id)
-        raise
+    reserva_id, ocupadas = compras_repo.crear_reserva_con_entradas(
+        {"usuario_id": usuario_id, "funcion_id": funcion_id,
+         "fecha_compra": ahora_db, "estado": "pendiente"},
+        butaca_ids,
+    )
+    if ocupadas:
+        error("BUTACA_OCUPADA", "Hay butacas ocupadas",
+              f"Las butacas no disponibles son: {ocupadas}.", 409)
+    return reserva_id
 
 
 def confirmar_pago(reserva_id, usuario):
