@@ -131,3 +131,10 @@ def actualizar_usuario(id_usuario, cambios):
         f"UPDATE usuarios SET {asignaciones} WHERE id = %(id)s",
         {**cambios, "id": id_usuario},
     )
+
+def actualizar_fecha_logout(id_usuario):
+    """Actualiza la fecha del último logout usando UTC explícito en MySQL."""
+    sql = "UPDATE usuarios SET fecha_ultimo_logout = UTC_TIMESTAMP() WHERE id = %(id)s"
+    ejecutar_escritura(sql, {"id": id_usuario})
+
+    

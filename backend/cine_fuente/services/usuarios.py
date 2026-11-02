@@ -97,3 +97,5 @@ def actualizar_usuario(id_usuario, cambios):
         raise _error_email_duplicado()
 
     _guardar_sin_duplicar_email(lambda: usuarios_repo.actualizar_usuario(id_usuario, cambios))
+
+
