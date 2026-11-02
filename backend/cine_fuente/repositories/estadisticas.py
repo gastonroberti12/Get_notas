@@ -145,3 +145,23 @@ def consultar_ventas_total(filtros):
         **(entradas[0] if entradas else {}),
         **(servicios[0] if servicios else {}),
     }
+
+
+# GET /admin/estadisticas/ventas/generos: agrupa cantidad e importe de entradas por género.
+def consultar_ventas_generos(filtros):
+    rango, parametros = filtro_fechas("r.fecha_compra", filtros)
+    sql = f"""
+        SELECT
+            COALESCE(NULLIF(TRIM(p.genero), ''), 'Sin especificar') AS genero,
+            COUNT(e.id) AS entradas_vendidas,
+            CAST(ROUND(COALESCE(SUM(f.precio * 100), 0), 0) AS SIGNED)
+                AS monto_total
+        FROM reservas AS r
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
+        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+        INNER JOIN entrada AS e ON e.reserva_id = r.id
+        WHERE r.estado IN ({ESTADOS_VENTA}){rango}
+        GROUP BY COALESCE(NULLIF(TRIM(p.genero), ''), 'Sin especificar')
+        ORDER BY monto_total DESC, genero ASC
+    """
+    return consulta(sql, parametros)
