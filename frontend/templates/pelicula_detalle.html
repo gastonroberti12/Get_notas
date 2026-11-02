@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{# Título de la pestaña: nombre de la película #}
+{% block title %}{{ pelicula.titulo }}{% endblock %}
+
+{# Hoja de estilos propia de esta página #}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pelicula_detalle.css') }}">
+{% endblock %}
+
+{% block content %}
+
+
+<a class="volver" href="{{ url_for('peliculas.listado_peliculas') }}">← Películas</a>
+
+
+<!-- PÓSTER + INFORMACIÓN -->
+
+<section class="detalle">
+
+    <!-- PÓSTER -->
+
+    <div class="detalle-poster">
+        {% if pelicula.poster_url %}
+            <img src="{{ pelicula.poster_url }}" alt="Póster de {{ pelicula.titulo }}">
+        {% else %}
+            <div class="detalle-sin-poster">Sin póster disponible</div>
+        {% endif %}
+    </div>
+
+
+    <!-- INFORMACIÓN -->
+
+    <div class="detalle-info">
+
+        <!-- Título -->
+        <h1>{{ pelicula.titulo }}</h1>
+
+        <!-- Chips: duración, clasificación y género (solo si existen) -->
+        <div class="detalle-datos">
+            {% if pelicula.duracion_min %}
+                <span>Duración: {{ pelicula.duracion_min }} min</span>
+            {% endif %}
+
+            {% if pelicula.clasificacion %}
+                <span>Clasificación: {{ pelicula.clasificacion }}</span>
+            {% endif %}
+
+            {% if pelicula.genero %}
+                <span>Género: {{ pelicula.genero }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Sinopsis -->
+        <p class="detalle-sinopsis">{{ pelicula.sinopsis or 'Sinopsis no disponible.' }}</p>
+
+    </div>
+
+</section>
+
+
+<!-- FUNCIONES DISPONIBLES -->
+
+<section class="funciones">
+
+    <h2>Funciones disponibles</h2>
+
+    {% if funciones %}
+
+    <!-- Una tarjeta por función: hora, día · sala y precio. Lleva a la selección de butacas -->
+    <div class="funciones-lista">
+        {% for f in funciones %}
+        <a class="funcion" href="{{ url_for('purchases.seleccion_butacas', funcion_id=f.id) }}">
+            <span class="funcion-hora">{{ f.hora }}</span>
+            <span class="funcion-sala">{{ f.dia }} · {{ f.sala }}</span>
+            <span class="funcion-precio">$ {{ f.precio }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+
+    
+    <p class="detalle-mensaje">No hay funciones disponibles por el momento.</p>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}
