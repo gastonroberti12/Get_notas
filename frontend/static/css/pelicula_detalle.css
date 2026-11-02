@@ -1,0 +1,205 @@
+/* ---------- Link para volver ---------- */
+
+.volver {
+    display: inline-block;
+    margin-bottom: 20px;
+
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.volver:hover {
+    color: var(--gold);
+}
+
+
+/* ---------- póster + información ---------- */
+
+.detalle {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+
+/* Póster */
+
+.detalle-poster {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.detalle-poster img {
+    display: block;
+    width: 100%;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.detalle-sin-poster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 440px;
+    padding: 10px;
+
+    background: var(--surface-dark);
+    color: var(--text-muted);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+}
+
+
+/* Información */
+
+.detalle-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.detalle-info h1 {
+    margin-bottom: 20px;
+
+    font-family: var(--font-title);
+    font-weight: 400;
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.1;
+    color: var(--gold);
+}
+
+
+/* Chips: duración, clasificación y género */
+
+.detalle-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-bottom: 24px;
+}
+
+.detalle-datos span {
+    padding: 6px 14px;
+
+    background: var(--surface-dark);
+    color: var(--gold);
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* Sinopsis */
+
+.detalle-sinopsis {
+    padding: 22px;
+
+    background: var(--card);
+    color: var(--text-soft);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    line-height: 1.8;
+}
+
+
+/* ---------- Funciones disponibles ---------- */
+
+.funciones {
+    margin-top: 48px;
+}
+
+
+.funciones h2 {
+    margin-bottom: 20px;
+    padding: 12px;
+
+    background: var(--red);
+    border-radius: 8px;
+
+    text-align: center;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.funciones-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+
+/* Tarjeta de cada función */
+
+.funcion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    min-width: 160px;
+    padding: 14px 22px;
+
+    background: var(--card);
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+
+    transition:
+        border-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.funcion:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+}
+
+.funcion-hora {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.funcion-sala {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.funcion-precio {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--gold);
+}
+
+
+.detalle-mensaje {
+    padding: 35px;
+
+    color: var(--text-muted);
+    text-align: center;
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 700px) {
+
+    .detalle {
+        flex-direction: column;
+    }
+
+    .detalle-poster {
+        width: 200px;
+    }
+
+}

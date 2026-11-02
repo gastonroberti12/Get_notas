@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, abort
 from api_cliente import llamar_api, mensaje_error
+from datos_perfil import parsear_fecha
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
@@ -59,3 +60,23 @@ def listado_peliculas():
         peliculas=peliculas,
         error_peliculas=error_peliculas
     )
+    
+# Detalle de una película con sus funciones disponibles
+@peliculas_bp.route("/peliculas/<int:pelicula_id>")
+def detalle_pelicula(pelicula_id):
+    status, pelicula = llamar_api("GET", f"/peliculas/{pelicula_id}")
+    if status == 404:
+        abort(404)
+    if status is None:
+        abort(503)  # el backend no responde
+    if status != 200:
+        abort(500)
+
+    status, datos = llamar_api("GET", f"/funciones?pelicula_id={pelicula_id}&activa=true")
+    funciones = datos.get("funciones", []) if status == 200 else []
+    for f in funciones:
+        fecha = parsear_fecha(f.get("fecha_hora"))
+        f["dia"] = fecha.strftime("%d/%m") if fecha else ""
+        f["hora"] = fecha.strftime("%H:%M") if fecha else ""
+
+    return render_template("pelicula_detalle.html", pelicula=pelicula, funciones=funciones)
