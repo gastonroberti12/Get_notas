@@ -47,3 +47,16 @@ def obtener_franjas_horarias(filtros):
         }
         for fila in estadisticas_repo.consultar_franjas_horarias(filtros)
     ]}
+
+
+# GET /admin/estadisticas/ventas/total: combina los importes de entradas y servicios.
+def obtener_ventas_total(filtros):
+    datos = estadisticas_repo.consultar_ventas_total(filtros)
+    monto_entradas = entero(datos.get("monto_entradas"))
+    monto_servicios = entero(datos.get("monto_servicios"))
+    return {
+        "entradas_vendidas": entero(datos.get("entradas_vendidas")),
+        "monto_entradas": monto_entradas,
+        "monto_servicios": monto_servicios,
+        "monto_total": monto_entradas + monto_servicios,
+    }
