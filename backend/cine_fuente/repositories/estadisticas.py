@@ -165,3 +165,24 @@ def consultar_ventas_generos(filtros):
         ORDER BY monto_total DESC, genero ASC
     """
     return consulta(sql, parametros)
+
+
+# GET /admin/estadisticas/ventas/peliculas: agrupa cantidad e importe de entradas por película.
+def consultar_ventas_peliculas(filtros):
+    rango, parametros = filtro_fechas("r.fecha_compra", filtros)
+    sql = f"""
+        SELECT
+            p.id AS pelicula_id,
+            p.titulo,
+            COUNT(e.id) AS entradas_vendidas,
+            CAST(ROUND(COALESCE(SUM(f.precio * 100), 0), 0) AS SIGNED)
+                AS monto_total
+        FROM reservas AS r
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
+        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+        INNER JOIN entrada AS e ON e.reserva_id = r.id
+        WHERE r.estado IN ({ESTADOS_VENTA}){rango}
+        GROUP BY p.id, p.titulo
+        ORDER BY monto_total DESC, p.titulo ASC
+    """
+    return consulta(sql, parametros)
