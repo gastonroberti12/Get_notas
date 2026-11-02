@@ -10,13 +10,18 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+
+    <!-- BARRA DE NAVEGACIÓN -->
     <header class="navbar">
+
+        <!-- Logo: lleva a la página de inicio -->
         <a class="logo" href="{{ url_for('peliculas.inicio') }}">
             <img class="logo-img" src="{{ url_for('static', filename='images/logo_cine_paradiso_navbar.png') }}" alt="Logo Cine Paradiso">
             Cine Paradiso</a>
         <nav>
             <a href="{{ url_for('peliculas.listado_peliculas') }}">Películas</a>
 
+            <!-- Desplegable de sucursales: muestra la sucursal elegida -->
             <div class="nav-dropdown">
                 <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
                 <ul class="nav-submenu">
@@ -25,6 +30,8 @@
                     {% endfor %}
                 </ul>
             </div>
+            
+            <!-- Enlace por rol -->
             {% if es_admin() %}
                 <a href="{{ url_for('backoffice.panel') }}">Backoffice</a>
             {% endif %}
@@ -40,6 +47,7 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- PIE DE PÁGINA -->
     <footer class="footer">
         <span>Teléfono: 11-7676-7676</span>
         <span>Mail: cineparadiso@gmail.com</span>
