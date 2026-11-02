@@ -65,7 +65,7 @@ def test_busqueda_sin_resultados_devuelve_lista_vacia(solicitud_mock):
     response = Mock()
     response.json.return_value = {
         "Response": "False",
-        "Error": "Pelicula no encontrada! ",
+        "Error": "Pelicula no encontrada!",
     }
     solicitud_mock.return_value = response
 
