@@ -11,10 +11,12 @@
     <h1>Crear cuenta</h1>
     <p class="formulario_intro">Registrate para comprar entradas y ver tus compras.</p>
 
+    <!-- Mensaje de error del backend -->
     {% if error %}
     <div class="formulario_alerta" role="alert">{{ error }}</div>
     {% endif %}
 
+    <!-- Formulario -->
     <form method="post" action="{{ url_for('users.registro') }}" class="formulario-registro">
         <div class="formulario_fila">
             <label class="formulario_campo">
