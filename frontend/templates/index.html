@@ -166,13 +166,12 @@
                         {% endif %}
                     </p>
 
-                    <button
-                        type="button"
+                    <a
                         class="boton-funciones"
-                        disabled
+                        href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=pelicula.id) }}"
                     >
                         Ver funciones
-                    </button>
+                    </a>
 
                 </div>
 

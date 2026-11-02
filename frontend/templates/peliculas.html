@@ -44,7 +44,7 @@
 
             {% for pelicula in peliculas %}
 
-            <article class="catalogo-item">
+            <a class="catalogo-item" href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=pelicula.id) }}">
 
                 <!-- PÓSTER -->
 
@@ -122,7 +122,7 @@
 
                 </div>
 
-            </article>
+            </a>
 
             {% endfor %}
 
