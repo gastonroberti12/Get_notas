@@ -43,3 +43,24 @@ def get_ocupacion_salas():
 @requiere_rol("administrador")
 def get_franjas_horarias():
     return ejecutar(estadisticas_service.obtener_franjas_horarias)
+
+
+# GET /admin/estadisticas/ventas/total: resume entradas y servicios vendidos.
+@estadisticas_bp.route("/admin/estadisticas/ventas/total", methods=["GET"])
+@requiere_rol("administrador")
+def get_ventas_total():
+    return ejecutar(estadisticas_service.obtener_ventas_total)
+
+
+# GET /admin/estadisticas/ventas/generos: agrupa ventas según género de película.
+@estadisticas_bp.route("/admin/estadisticas/ventas/generos", methods=["GET"])
+@requiere_rol("administrador")
+def get_ventas_generos():
+    return ejecutar(estadisticas_service.obtener_ventas_generos)
+
+
+# GET /admin/estadisticas/ventas/peliculas: agrupa ventas por película.
+@estadisticas_bp.route("/admin/estadisticas/ventas/peliculas", methods=["GET"])
+@requiere_rol("administrador")
+def get_ventas_peliculas():
+    return ejecutar(estadisticas_service.obtener_ventas_peliculas)
