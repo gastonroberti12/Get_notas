@@ -36,3 +36,14 @@ def obtener_ocupacion_salas(filtros):
             "porcentaje_ocupacion": porcentaje(entradas, capacidad),
         })
     return {"salas": salas}
+
+
+# GET /admin/estadisticas/ocupacion/franjas_horarias: normaliza los resultados agrupados por hora.
+def obtener_franjas_horarias(filtros):
+    return {"franjas": [
+        {
+            "hora": int(fila["hora"]),
+            "entradas_vendidas": entero(fila.get("entradas_vendidas")),
+        }
+        for fila in estadisticas_repo.consultar_franjas_horarias(filtros)
+    ]}
