@@ -26,7 +26,7 @@ reservas_bp = Blueprint("reservas", __name__)
 
 # Endpoint GET /reservas
 @reservas_bp.route("/reservas", methods=["GET"])
-@requiere_rol("administrador",)
+@requiere_rol("administrador")
 def get_reservas():
     try:
         filtros = validar_filtros_listado(request.args)
@@ -41,7 +41,7 @@ def get_reservas():
 
 # Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
 @reservas_bp.route("/usuarios/me/reservas", methods=["GET"])
-@requiere_rol("cliente",)
+@requiere_rol("cliente")
 def get_mis_reservas():
     try:
         estado = validar_estado_propio(request.args)
@@ -88,7 +88,7 @@ def get_entradas_reserva(id_reserva):
 
 # Endpoint POST /reservas: el cliente crea una reserva pendiente y bloquea temporalmente sus butacas.
 @reservas_bp.route("/reservas", methods=["POST"])
-@requiere_rol("cliente",)
+@requiere_rol("cliente")
 def post_reserva():
     try:
         body = request.get_json(silent=True)
@@ -107,7 +107,7 @@ def post_reserva():
 
 # Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
 @reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
-@requiere_rol("cliente",)
+@requiere_rol("cliente")
 def post_pago_reserva(id_reserva):
     try:
         id_valido = validar_id_reserva(id_reserva)
