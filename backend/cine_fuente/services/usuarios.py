@@ -99,9 +99,3 @@ def actualizar_usuario(id_usuario, cambios):
     _guardar_sin_duplicar_email(lambda: usuarios_repo.actualizar_usuario(id_usuario, cambios))
 
 
-def actualizar_fecha_logout(id_usuario):
-    """Actualiza la fecha del último logout usando UTC explícito en MySQL."""
-    sql = "UPDATE usuarios SET fecha_ultimo_logout = UTC_TIMESTAMP() WHERE id = %(id)s"
-    ejecutar_escritura(sql, {"id": id_usuario})
-
-    
