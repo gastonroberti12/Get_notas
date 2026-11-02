@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+{% endblock %}
+
+{% block content %}
+
+{# Datos de muestra: más adelante los reemplaza el backend (película, función, butacas, servicios y precios). #}
+{% set entradas = entradas or 2 %}
+{% set precio_entrada = precio_entrada or 9500 %}
+{% set servicios = servicios or [
+    {'id': 1, 'nombre': 'Pochoclo grande', 'precio': 4500},
+    {'id': 2, 'nombre': 'Bebida', 'precio': 3000},
+    {'id': 3, 'nombre': 'Estacionamiento', 'precio': 2500},
+    {'id': 4, 'nombre': 'Acceso VIP', 'precio': 6000}
+] %}
+
+<div class="checkout">
+
+    <!-- cantidad de entradas y precio de cada una -->
+    <input type="hidden" id="entradas" value="{{ entradas }}">
+    <input type="hidden" id="precio-entrada" value="{{ precio_entrada }}">
+
+
+    <!-- SERVICIOS ADICIONALES -->
+
+    <section class="checkout-servicios">
+
+        <h2 class="checkout-titulo">Servicios adicionales</h2>
+
+        <!-- Una fila por servicio -->
+        {% for s in servicios %}
+        <div class="servicio">
+
+            <!-- Nombre y precio unitario -->
+            <div class="servicio-nombre">
+                <span class="nombre">{{ s.nombre }}</span>
+                <small>$ {{ '{:,}'.format(s.precio).replace(',', '.') }}</small>
+            </div>
+
+            <!-- Contador − / cantidad / + -->
+            <div class="contador">
+                <button type="button" class="menos">−</button>
+                <input type="text" class="cantidad" name="servicio_{{ s.id }}" form="form-checkout" value="0" readonly>
+                <button type="button" class="mas">+</button>
+            </div>
+
+            <!-- Precio unitario para el JS -->
+            <input type="hidden" class="precio" value="{{ s.precio }}">
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- RESUMEN Y PAGO -->
+
+    <section class="checkout-pago">
+
+        <h2 class="checkout-titulo">Resumen y pago</h2>
+
+        <!-- Resumen (los arma el JS) -->
+        <div class="resumen">
+            <p class="resumen-pelicula">Película · Sala · Fecha y hora</p>
+
+            <div class="resumen-linea">
+                <span id="resumen-entradas">Entradas x{{ entradas }}</span>
+                <span id="resumen-entradas-monto"></span>
+            </div>
+
+            <div id="resumen-servicios"></div>
+
+            <div class="resumen-linea resumen-total">
+                <span>TOTAL</span>
+                <strong id="resumen-total"></strong>
+            </div>
+        </div>
+
+        <!-- FORMULARIO -->
+        <form id="form-checkout" method="post" novalidate>
+
+        <!-- Datos de la tarjeta -->
+        <label class="campo">Titular de la tarjeta
+            <input type="text" name="titular" placeholder="Nombre y apellido">
+        </label>
+
+        <label class="campo">Número de tarjeta
+            <input type="text" class="solo-numeros" name="numero_tarjeta" inputmode="numeric" maxlength="19" placeholder="Entre 13 y 19 dígitos">
+        </label>
+
+        <div class="campo-doble">
+            <label class="campo">Mes de vencimiento
+                <input type="text" class="solo-numeros" name="mes_vencimiento" inputmode="numeric" maxlength="2" placeholder="MM">
+            </label>
+            <label class="campo">Año de vencimiento
+                <input type="text" class="solo-numeros" name="anio_vencimiento" inputmode="numeric" maxlength="4" placeholder="AAAA">
+            </label>
+        </div>
+
+        <label class="campo">CVV
+            <input type="password" class="solo-numeros" name="cvv" inputmode="numeric" maxlength="4" placeholder="3 o 4 dígitos">
+        </label>
+
+        <!-- Mensaje de error de formato (lo muestra el JS) -->
+        <p class="checkout-error" id="checkout-error" hidden></p>
+
+        <!-- Confirmar -->
+        <button type="submit" class="btn-confirmar">Confirmar compra</button>
+
+        </form>
+
+        <a class="checkout-volver" href="javascript:history.back()">← Volver a butacas</a>
+
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+{% endblock %}
