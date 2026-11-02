@@ -25,10 +25,10 @@ def listar_usuarios(filtros, limit, offset):
 
 
 def obtener_perfil(usuario_id):
-    fila = usuarios_repo.obtener_por_id(usuario_id)
+    fila = usuarios_repo.obtener_usuario_por_id(usuario_id)
     if fila is None:
-        raise ValueError(construir_error_api(
-            "USUARIO_NO_ENCONTRADO", "No encontrado", "El usuario no existe."), 404)
+        raise _error_usuario_no_encontrado()
+    return usuario_api(fila)
 
 
 def _error_email_duplicado():
@@ -44,12 +44,11 @@ def _error_usuario_no_encontrado():
 
 
 def _guardar_sin_duplicar_email(accion):
-    """Ejecuta una escritura y traduce la violación del UNIQUE de email a un 409."""
-    try:
-        return accion()
-    except usuarios_repo.EmailDuplicadoError:
-        # Cubre la carrera entre dos requests: el UNIQUE de la BD es la garantía final.
+    """Ejecuta una escritura y traduce un email duplicado a un 409."""
+    resultado = accion()
+    if resultado is None:
         raise _error_email_duplicado()
+    return resultado
 
 
 def crear_usuario(datos):
