@@ -35,19 +35,6 @@ def validar_filtros_usuarios(args) -> dict:
     }
 
 
-def validar_filtros_usuarios(args) -> dict:
-    """Valida los filtros admitidos por GET /usuarios: rol, nombre y email."""
-    rol = args.get("rol")
-    if rol is not None and rol not in ROLES_VALIDOS:
-        error_validacion("Rol inválido", f"'rol' debe ser uno de: {', '.join(ROLES_VALIDOS)}.")
-
-    return {
-        "rol": rol,
-        "nombre": _validar_texto_busqueda(args, "nombre"),
-        "email": _validar_texto_busqueda(args, "email"),
-    }
-
-
 def _validar_texto_obligatorio(valor, campo):
     """Texto no vacío, sin espacios laterales y dentro del largo de su columna."""
     if not isinstance(valor, str) or not valor.strip():
