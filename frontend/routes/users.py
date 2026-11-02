@@ -1,29 +1,9 @@
-import requests
 from flask import Blueprint, render_template, request, redirect, url_for, session
+from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado
 
 
 users_bp = Blueprint("users", __name__)
-
-API_URL = 'http://127.0.0.1:5001'
-
-
-def llamar_api(metodo, endpoint, datos=None):
-    # Si hay sesion, manda el token en Authorization: Bearer.
-    headers = {}
-    if 'token' in session:
-        headers['Authorization'] = f"Bearer {session['token']}"
-    try:
-        r = requests.request(metodo, f'{API_URL}{endpoint}', json=datos, headers=headers, timeout=5)
-        return r.status_code, (r.json() if r.content else {})
-    except (requests.RequestException, ValueError):
-        return None, {}
-    
-def mensaje_error(status, cuerpo, por_defecto):
-    if status is None:
-        return 'No se pudo conectar con el servidor.'
-    errores = cuerpo.get('errors') or [{}]
-    return errores[0].get('message', por_defecto)
 
 @users_bp.route("/login", methods=['GET', 'POST'])
 def login():
