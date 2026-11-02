@@ -97,3 +97,8 @@ def actualizar_usuario(id_usuario, cambios):
         raise _error_email_duplicado()
 
     _guardar_sin_duplicar_email(lambda: usuarios_repo.actualizar_usuario(id_usuario, cambios))
+
+
+def actualizar_fecha_logout(id_usuario):
+    sql = "UPDATE usuarios SET fecha_ultimo_logout = NOW() WHERE id = %(id)s"
+    ejecutar_escritura(sql, {"id": id_usuario})
