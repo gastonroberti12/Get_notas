@@ -23,16 +23,16 @@ def validar_filtros_estadisticas(parametros):
         valor = parametros.get(campo)
         if valor is None:
             filtros[campo] = None
-            continue
 
-        try:
-            fecha = datetime.strptime(valor, "%Y-%m-%d").date()
-        except (TypeError, ValueError):
-            error_fecha(campo)
+        else:
+            try:
+                fecha = datetime.strptime(valor, "%Y-%m-%d").date()
+            except (TypeError, ValueError):
+                error_fecha(campo)
 
-        if fecha.isoformat() != valor:
-            error_fecha(campo)
-        filtros[campo] = fecha.isoformat()
+            if fecha.isoformat() != valor:
+                error_fecha(campo)
+            filtros[campo] = fecha.isoformat()
 
     desde = filtros["fecha_desde"]
     hasta = filtros["fecha_hasta"]
