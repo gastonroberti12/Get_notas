@@ -85,3 +85,19 @@ def obtener_ventas_peliculas(filtros):
         }
         for fila in estadisticas_repo.consultar_ventas_peliculas(filtros)
     ]}
+
+
+# GET /admin/estadisticas/cancelaciones: prepara totales y porcentaje de cancelación.
+def obtener_cancelaciones(filtros):
+    datos = estadisticas_repo.consultar_cancelaciones(filtros)
+    total = entero(datos.get("reservas_totales"))
+    canceladas = entero(datos.get("reservas_canceladas"))
+    porcentaje_calculado = datos.get("porcentaje_cancelacion")
+    return {
+        "reservas_canceladas": canceladas,
+        "reservas_totales": total,
+        "porcentaje_cancelacion": (
+            round(float(porcentaje_calculado), 1) if porcentaje_calculado is not None
+            else porcentaje(canceladas, total)
+        ),
+    }
