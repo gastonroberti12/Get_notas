@@ -5,6 +5,7 @@ from routes.products import peliculas_bp
 from routes.cines import cines_bp
 from routes.users import users_bp
 from routes.backoffice import backoffice_bp
+from routes.purchases import purchases_bp
 from routes.roles import esta_logueado, es_admin, es_cliente
 from manejo_errorers import registrar_error_handlers
 
@@ -19,6 +20,8 @@ def create_app():
     app.register_blueprint(cines_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(backoffice_bp)
+    app.register_blueprint(purchases_bp)
+
 
     registrar_error_handlers(app)
 

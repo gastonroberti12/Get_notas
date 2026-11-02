@@ -79,7 +79,7 @@ def patch_usuario(id_usuario):
     
 # Endpoint GET /usuarios/me: devuelve el perfil del usuario autenticado.
 @usuarios_bp.route("/usuarios/me", methods=["GET"])
-@requiere_rol("cliente", "admistrador")
+@requiere_rol("cliente", "administrador")
 def get_mi_perfil():
     try:
         return jsonify(usuarios_service.obtener_perfil(int(g.usuario["id"]))), 200
