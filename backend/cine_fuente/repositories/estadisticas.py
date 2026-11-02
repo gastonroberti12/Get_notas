@@ -112,3 +112,36 @@ def consultar_franjas_horarias(filtros):
         ORDER BY hora ASC
     """
     return consulta(sql, parametros)
+
+
+# GET /admin/estadisticas/ventas/total: calcula importes de entradas y servicios para reservas confirmadas/finalizadas.
+def consultar_ventas_total(filtros):
+    rango, parametros = filtro_fechas("r.fecha_compra", filtros)
+    sql_entradas = f"""
+        SELECT
+            COUNT(e.id) AS entradas_vendidas,
+            CAST(ROUND(COALESCE(SUM(f.precio * 100), 0), 0) AS SIGNED)
+                AS monto_entradas
+        FROM reservas AS r
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
+        INNER JOIN entrada AS e ON e.reserva_id = r.id
+        WHERE r.estado IN ({ESTADOS_VENTA}){rango}
+    """
+    entradas = consulta(sql_entradas, parametros)
+
+    sql_servicios = f"""
+        SELECT
+            CAST(ROUND(
+                COALESCE(SUM(rs.cantidad * rs.precio_unitario * 100), 0),
+                0
+            ) AS SIGNED) AS monto_servicios
+        FROM reservas AS r
+        INNER JOIN reserva_servicios AS rs ON rs.reserva_id = r.id
+        WHERE r.estado IN ({ESTADOS_VENTA}){rango}
+    """
+    servicios = consulta(sql_servicios, parametros)
+
+    return {
+        **(entradas[0] if entradas else {}),
+        **(servicios[0] if servicios else {}),
+    }
