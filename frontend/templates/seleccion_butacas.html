@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Elegí tus butacas | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion_butacas.css') }}">
+{% endblock %}
+
+{% block content %}
+
+{# Datos de muestra: más adelante los reemplaza el backend (filas, columnas, ocupadas, precio y datos de la función). #}
+{% set filas = filas or ['A', 'B', 'C', 'D', 'E', 'F'] %}
+{% set columnas = columnas or 10 %}
+{% set ocupadas = ocupadas or ['A3', 'A4', 'B5', 'C2', 'C7', 'D6', 'E1', 'F5', 'F6'] %}
+{% set precio = precio or 9500 %}
+
+<div class="butacas-layout">
+
+    <!-- SALA -->
+
+    <section class="butacas-sala">
+
+        <!-- título y datos de la función -->
+        <h1>Elegí tus butacas</h1>
+        <p class="butacas-funcion">Película · Sala · Fecha y hora de la función</p>
+
+        <div class="sala-scroll">
+            <!-- butacas ya vendidas y precio de la entrada -->
+            <input type="hidden" id="ocupadas" value="{{ ocupadas | join(',') }}">
+            <input type="hidden" id="precio" value="{{ precio }}">
+
+            <div class="sala">
+
+                <div class="pantalla">PANTALLA</div>
+
+                <!-- Grilla de butacas -->
+                <div class="filas">
+                    {% for fila in filas %}
+                    <div class="fila">
+
+                        <span class="fila-letra">{{ fila }}</span>
+
+                        {% for n in range(1, columnas + 1) %}
+
+                            {% if n == columnas // 2 + 1 %}<span class="pasillo"></span>{% endif %}
+
+                            <!-- Butaca -->
+                            <button type="button" class="butaca" id="{{ fila }}{{ n }}" title="{{ fila }}{{ n }}">{{ n }}</button>
+
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <div class="leyenda">
+            <span><i class="butaca-mini"></i>Disponible</span>
+            <span><i class="butaca-mini sel"></i>Seleccionada</span>
+            <span><i class="butaca-mini ocu">×</i>Ocupada</span>
+        </div>
+
+    </section>
+
+
+    <!-- RESUMEN DE LA SELECCIÓN  -->
+
+    <div class="seleccion">
+
+        <h2>Tu selección</h2>
+
+        <form method="get" action="{{ url_for('purchases.checkout') }}">
+
+            <!-- Butacas elegidas (lo completa el JS) -->
+            <input type="hidden" name="butacas" id="butacas-input">
+
+            <!-- Lista de butacas elegidas con su precio (la arma el JS) -->
+            <ul id="seleccion-lista"></ul>
+            <p id="seleccion-vacia">Seleccioná hasta 8 butacas.</p>
+
+            <!-- Cantidad de entradas y total -->
+            <div class="seleccion-total">
+                <span id="seleccion-cantidad">0 entrada(s)</span>
+                <strong id="seleccion-monto">$ 0</strong>
+            </div>
+
+            <!-- Botón: deshabilitado hasta elegir al menos una butaca -->
+            <button type="submit" class="btn-continuar" id="btn-continuar" disabled>Continuar al pago</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/seleccion_butacas.js') }}"></script>
+{% endblock %}

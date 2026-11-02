@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint, redirect, url_for, render_template
 from api_cliente import llamar_api
 from routes.roles import esta_logueado
 
@@ -12,3 +12,13 @@ def cancelar_reserva(reserva_id):
     # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
     llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
     return redirect(url_for('users.profile'))
+
+# Solo maqueta visual: todavía sin datos del backend.
+@purchases_bp.route("/funciones/<int:funcion_id>/butacas")
+def seleccion_butacas(funcion_id):
+    return render_template("seleccion_butacas.html", funcion_id=funcion_id)
+
+
+@purchases_bp.route("/checkout")
+def checkout():
+    return render_template("checkout.html")
