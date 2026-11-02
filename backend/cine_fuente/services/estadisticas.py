@@ -72,3 +72,16 @@ def obtener_ventas_generos(filtros):
         }
         for fila in estadisticas_repo.consultar_ventas_generos(filtros)
     ]}
+
+
+# GET /admin/estadisticas/ventas/peliculas: normaliza los importes y cantidades por película.
+def obtener_ventas_peliculas(filtros):
+    return {"peliculas": [
+        {
+            "pelicula_id": int(fila["pelicula_id"]),
+            "titulo": fila["titulo"],
+            "entradas_vendidas": entero(fila.get("entradas_vendidas")),
+            "monto_total": entero(fila.get("monto_total")),
+        }
+        for fila in estadisticas_repo.consultar_ventas_peliculas(filtros)
+    ]}
