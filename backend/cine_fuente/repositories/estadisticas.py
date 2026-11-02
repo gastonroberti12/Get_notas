@@ -93,3 +93,22 @@ def consultar_ocupacion_salas(filtros):
         ORDER BY s.id ASC
     """
     return consulta(sql, parametros)
+
+
+# GET /admin/estadisticas/ocupacion/franjas_horarias: cuenta entradas vendidas agrupadas por hora de inicio.
+def consultar_franjas_horarias(filtros):
+    rango, parametros = filtro_fechas("f.fecha_hora", filtros)
+    sql = f"""
+        SELECT
+            HOUR(f.fecha_hora) AS hora,
+            COUNT(e.id) AS entradas_vendidas
+        FROM funcion AS f
+        INNER JOIN reservas AS r
+            ON r.funcion_id = f.id
+            AND r.estado IN ({ESTADOS_VENTA})
+        INNER JOIN entrada AS e ON e.reserva_id = r.id
+        WHERE 1 = 1{rango}
+        GROUP BY HOUR(f.fecha_hora)
+        ORDER BY hora ASC
+    """
+    return consulta(sql, parametros)
