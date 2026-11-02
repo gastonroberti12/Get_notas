@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
-{# Título de la pestaña: nombre de la película #}
 {% block title %}{{ pelicula.titulo }}{% endblock %}
 
-{# Hoja de estilos propia de esta página #}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pelicula_detalle.css') }}">
 {% endblock %}
