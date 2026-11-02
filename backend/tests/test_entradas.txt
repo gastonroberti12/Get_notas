@@ -1,0 +1,76 @@
+-----> ENTRADAS Y VALIDACIÓN QR <-----
+
+-- GET /entradas (solo administrador)
+
+Caso 1 - Listado general:
+GET /entradas?_limit=10&_offset=0
+Authorization: Bearer {{adminToken}}
+Esperado: 200 o 204.
+
+Caso 2 - Filtrar por reserva y estado:
+GET /entradas?reserva_id={{reservaPagoId}}&estado=confirmada
+Authorization: Bearer {{adminToken}}
+Esperado: 200 o 204.
+
+Caso 3 - Cliente intenta listar todas las entradas:
+GET /entradas
+Authorization: Bearer {{clienteToken}}
+Esperado: 403.
+
+Caso 4 - Filtro estado inválido:
+GET /entradas?estado=incorrecto
+Authorization: Bearer {{adminToken}}
+Esperado: 400.
+
+-- GET /entradas/{id}
+
+Caso 5 - Obtener entrada propia:
+GET /entradas/{{entradaPruebaId}}
+Authorization: Bearer {{clienteToken}}
+Esperado: 200. La entrada debe pertenecer al usuario autenticado.
+
+Caso 6 - Entrada inexistente:
+GET /entradas/999999
+Authorization: Bearer {{clienteToken}}
+Esperado: 404.
+
+Caso 7 - Cliente consulta entrada ajena:
+Esperado: 403.
+
+-- POST /entradas/{id}/validacion (administrador)
+
+Caso 8 - QR incorrecto:
+POST /entradas/{{entradaPruebaId}}/validacion
+Authorization: Bearer {{adminToken}}
+{
+  "codigo_qr": "QR_INCORRECTO"
+}
+Esperado: 400.
+
+Caso 9 - QR correcto antes del horario de la función:
+POST /entradas/{{entradaPruebaId}}/validacion
+Authorization: Bearer {{adminToken}}
+{
+  "codigo_qr": "{{codigoQrPrueba}}"
+}
+Esperado: 409 FUNCION_FUERA_DE_HORARIO. La función de prueba se agenda a futuro.
+
+Caso 10 - QR correcto dentro del horario de la función:
+Repetir el Caso 9 durante el intervalo desde fecha_hora inclusive hasta
+fecha_hora + duracion_min. Esperado: 200 y fecha_uso informado.
+
+Caso 11 - Reutilizar entrada ya validada:
+Repetir el QR después de una validación exitosa.
+Esperado: 409 ENTRADA_YA_UTILIZADA.
+
+Caso 12 - Intentar validar con rol cliente:
+POST /entradas/{{entradaPruebaId}}/validacion
+Authorization: Bearer {{clienteToken}}
+Esperado: 403. El controlador actual exige administrador.
+
+Caso 13 - Body con campos adicionales o sin codigo_qr:
+Esperado: 400.
+
+La validación del QR es atómica y el código se compara con el QR generado
+por el pago. Para obtener el código, primero pagar la reserva y luego llamar
+GET /reservas/{id}/entradas.

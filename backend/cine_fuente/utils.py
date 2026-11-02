@@ -56,6 +56,11 @@ def respuesta_error_interno(error: Exception | None = None):
     ), 500)
 
 
+def mensaje_validacion(error: ValueError) -> str:
+    detalle = error.args[0]
+    return detalle["errors"][0]["mensaje"] if isinstance(detalle, dict) else str(detalle)
+
+
 def formatear_fecha_hora(valor):
     if valor is None:
         return None
@@ -201,59 +206,10 @@ def construir_links_paginacion(total: int, limit: int, offset: int) -> dict:
         offset
     )
 
-
-def requiere_token(roles: tuple[str, ...] | None = None):
-    """Protege cualquier endpoint de la API comprobando el token almacenado en usuarios."""
-    roles_permitidos = tuple(roles or ())
-
-    def decorador(funcion):
-        from functools import wraps
-        @wraps(funcion)
-        def envoltura(*args, **kwargs):
-            cabecera = request.headers.get("Authorization", "")
-            partes = cabecera.split(None, 1)
-
-            if (
-                len(partes) != 2
-                or partes[0].lower() != "bearer"
-                or not partes[1].strip()
-            ):
-                return respuesta_error_api(construir_error_api(
-                    "TOKEN_REQUERIDO",
-                    "Autenticación requerida",
-                    "Envíe un token válido mediante Authorization: Bearer <token>.",
-                ), 401)
-
-            try:
-                usuario = obtener_usuario_por_token(partes[1].strip())
-            except Exception:
-                return respuesta_error_api(construir_error_api(
-                    "ERROR_INTERNO",
-                    "Error interno del servidor",
-                    "No se pudo validar la autenticación."
-                ), 500)
-
-            if usuario is None:
-                return respuesta_error_api(construir_error_api(
-                    "TOKEN_INVALIDO",
-                    "Token inválido",
-                    "El token no corresponde a una sesión de usuario válida.",
-                ), 401)
-
-            if roles_permitidos and usuario.get("rol") not in roles_permitidos:
-                return respuesta_error_api(construir_error_api(
-                    "ROL_NO_AUTORIZADO",
-                    "Acceso denegado",
-                    f"El endpoint requiere uno de estos roles: {', '.join(roles_permitidos)}.",
-                ), 403)
-
-            g.usuario = usuario
-            return funcion(*args, **kwargs)
-
-        # Flask usa el nombre de la función para identificar cada endpoint.
-        envoltura.__name__ = funcion.__name__
-        envoltura.__doc__ = funcion.__doc__
-
-        return envoltura
-
-    return decorador
+def validar_precio(valor, minimo=1):
+    """Precio en pesos enteros; rechaza decimales, strings y booleanos."""
+    if isinstance(valor, bool) or not isinstance(valor, int) or valor < minimo:
+        raise ValueError(construir_error_api(
+            "invalid.precio.value", "Precio inválido",
+            f"precio debe ser un entero mayor o igual a {minimo}."), 400)
+    return valor

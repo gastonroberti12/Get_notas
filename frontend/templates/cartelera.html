@@ -1,5 +1,135 @@
 {% extends "base.html" %}
 
+{% block title %}Películas | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/cartelera.css') }}">
+{% endblock %}
+
 {% block content %}
-<h1>Cartelera</h1>
+
+<section class="cartelera">
+
+    <!-- ENCABEZADO -->
+    <header class="cartelera-header">
+        <span class="cartelera-etiqueta">CINE PARADISO</span>
+
+        <h1>Películas en cartelera</h1>
+
+        <p>
+            Descubrí nuestras películas, explorá sus historias
+            y elegí tu próxima experiencia de cine.
+        </p>
+    </header>
+
+    <!-- FILTROS -->
+    <section class="cartelera-filtros" aria-label="Filtros de películas">
+
+        <div class="cartelera-buscador">
+            <label for="buscar-pelicula">Buscar película</label>
+
+            <input
+                type="search"
+                id="buscar-pelicula"
+                placeholder="Buscar por título..."
+            >
+        </div>
+
+        <div class="cartelera-generos">
+            <h2>Explorar por género</h2>
+            <div id="filtros-genero"></div>
+        </div>
+
+    </section>
+
+    <!-- LISTADO DE PELÍCULAS -->
+    <section class="cartelera-listado">
+
+        <div class="cartelera-listado-header">
+            <h2>En pantalla</h2>
+            <span id="cantidad-peliculas"></span>
+        </div>
+
+        <div class="cartelera-grid">
+
+            {% for pelicula in peliculas %}
+
+            <article
+                class="cartelera-card"
+                data-titulo="{{ pelicula.titulo }}"
+                data-generos="{{ pelicula.genero or '' }}"
+            >
+
+                <div class="cartelera-poster">
+
+                    {% if pelicula.poster_url %}
+
+                    <img
+                        src="{{ pelicula.poster_url }}"
+                        alt="Póster de {{ pelicula.titulo }}"
+                        loading="lazy"
+                    >
+
+                    {% else %}
+
+                    <div class="cartelera-sin-poster">
+                        <span>CINE PARADISO</span>
+                        <strong>{{ pelicula.titulo }}</strong>
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                <div class="cartelera-card-info">
+
+                    <h3>{{ pelicula.titulo }}</h3>
+
+                    <p class="cartelera-genero">
+                        {{ pelicula.genero or "Género no disponible" }}
+                    </p>
+
+                    <div class="cartelera-metadatos">
+
+                        {% if pelicula.duracion_min %}
+                        <span>{{ pelicula.duracion_min }} min</span>
+                        {% endif %}
+
+                        {% if pelicula.clasificacion %}
+                        <span>{{ pelicula.clasificacion }}</span>
+                        {% endif %}
+
+                    </div>
+
+                    <button class="cartelera-boton" type="button" disabled>
+                        Ver detalles
+                    </button>
+
+                </div>
+
+            </article>
+
+            {% else %}
+
+            <p class="cartelera-vacia">
+                No hay películas disponibles en cartelera.
+            </p>
+
+            {% endfor %}
+
+        </div>
+
+        <p id="sin-resultados" class="cartelera-vacia" hidden>
+            No encontramos películas con esos filtros.
+        </p>
+
+    </section>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cartelera.js') }}"></script>
 {% endblock %}

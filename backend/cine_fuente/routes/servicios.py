@@ -17,10 +17,10 @@ from cine_fuente.validators.servicios import (
 
 from cine_fuente.utils import (
     construir_error_api,
+    mensaje_validacion,
     validar_paginacion,
     respuesta_paginada
 )
-
 
 servicios_bp = Blueprint("servicios", __name__)
 
@@ -87,7 +87,7 @@ def crear_servicio():
         campos = validar_creacion_servicio(request.get_json(silent=True))
     except ValueError as error:
         return error_servicio(
-            "ERROR_VALIDACION", str(error), 400
+            "ERROR_VALIDACION", mensaje_validacion(error), 400
         )
 
     id_creado = servicios_repo.insertar_servicio(
@@ -114,7 +114,7 @@ def modificar_servicio(servicio_id):
         campos = validar_campos_servicio(request.get_json(silent=True))
     except ValueError as error:
         return error_servicio(
-            "ERROR_VALIDACION", str(error), 400
+            "ERROR_VALIDACION", mensaje_validacion(error), 400
         )
 
     servicios_repo.actualizar_servicio(servicio_id, campos)
@@ -177,7 +177,7 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
         )
     except ValueError as error:
         return error_servicio(
-            "ERROR_VALIDACION", str(error), 400
+            "ERROR_VALIDACION", mensaje_validacion(error), 400
         )
 
     servicios_repo.actualizar_cantidad_servicio_reserva(

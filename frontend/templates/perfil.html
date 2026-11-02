@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Mi perfil{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="perfil">
+    <div class="perfil_datos">
+
+        <!-- Avatar con las iniciales, nombre completo y año de alta -->
+        <div class="perfil_avatar">{{ perfil.nombre[0] }}{{ perfil.apellido[0] }}</div>
+        <h1 class="perfil_nombre">{{ perfil.nombre }} {{ perfil.apellido }}</h1>
+        <p class="perfil_desde">Cliente desde {{ perfil.anio_registro }}</p>
+
+        <!-- Formulario de edición de perfil -->
+        <form class="formulario-perfil" method="post" action="{{ url_for('users.actualizar_perfil') }}">
+            <label class="formulario_campo">
+                <span>Nombre</span>
+                <input type="text" name="nombre" value="{{ perfil.nombre }}" required maxlength="80" disabled>
+            </label>
+            <label class="formulario_campo">
+                <span>Apellido</span>
+                <input type="text" name="apellido" value="{{ perfil.apellido }}" required maxlength="80" disabled>
+            </label>
+            <label class="formulario_campo">
+                <span>Email</span>
+                <input type="email" name="email" value="{{ perfil.email }}" required disabled>
+            </label>
+            <label class="formulario_campo solo-edicion">
+                <span>Nueva contraseña <small>(opcional)</small></span>
+                <input type="password" name="password" minlength="8" disabled>
+            </label>
+
+            <p class="formulario_alerta oculto"></p>
+
+            <div class="perfil_acciones">
+                <button type="button" class="perfil_editar">Editar datos</button>
+                <button type="submit" class="boton solo-edicion">Guardar</button>
+                <button type="button" class="perfil_cancelar solo-edicion">Cancelar</button>
+            </div>
+        </form>
+
+        <!-- Cerrar sesión -->
+        <form method="post" action="{{ url_for('users.logout') }}">
+            <button type="submit" class="perfil_logout">Cerrar sesión</button>
+        </form>
+    </div>
+
+    <!-- RESERVAS -->
+    <div class="perfil_reservas">
+
+        <!-- Pestañas -->
+        <div class="tabs">
+            <button type="button" class="tab">Próximas</button>
+            <button type="button" class="tab">Historial</button>
+        </div>
+
+        <!-- Se genera un panel por pestaña, cada uno con su lista de reservas -->
+        {% for reservas, mensaje_vacio in [
+            (reservas_proximas, 'No tenés reservas próximas.'),
+            (reservas_historial, 'Todavía no tenés historial de compras.')] %}
+        <div class="panel-tab">
+
+            <!-- Una tarjeta por reserva -->
+            {% for reserva in reservas %}
+            <article class="reserva">
+                <div class="reserva_poster">{% if reserva.poster %}<img src="{{ reserva.poster }}" alt="Póster de {{ reserva.pelicula }}">{% endif %}</div>
+
+                 <!-- Título y estado de la reserva -->
+                <div class="reserva_info">
+                    <div class="reserva_cabecera">
+                        <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
+                        {% if reserva.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
+                        {% elif reserva.estado == 'finalizada' %}<span class="estado estado_finalizada">finalizada</span>
+                        {% else %}<span class="estado estado_cancelada">cancelada</span>{% endif %}
+                    </div>
+
+                    <!-- Función y butacas -->
+                    <p class="reserva_detalle">{{ reserva.fecha_funcion }} · {{ reserva.hora_funcion }} hs</p>
+                    <p class="reserva_detalle">{{ reserva.sucursal }} · {{ reserva.sala }} · Butacas {{ reserva.butacas | join(', ') }}</p>
+                    
+                    <!-- Servicios adicionales contratados -->
+                    {% for servicio in reserva.servicios %}<p class="reserva_detalle reserva_servicio">{{ servicio }}</p>{% endfor %}
+
+                    <!-- Total y botones de acción -->
+                    <div class="reserva_pie">
+                        <strong class="reserva_total">${{ reserva.total }}</strong>
+                        <div class="reserva_botones">
+                            
+                            {% if reserva.entradas %}<button type="button" class="reserva_ver_entradas">Ver entradas</button>{% endif %}
+
+                            <!-- Cancelar reserva -->
+                            {% if reserva.cancelable %}
+                            <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
+                                <button type="submit" class="reserva_cancelar">Cancelar reserva</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- VISOR DE ENTRADAS -->
+                    {% if reserva.entradas %}
+                    <div class="visor oculto">
+                      <div class="visor_panel">
+                        <button type="button" class="visor_cerrar">X</button>
+                        <h3 class="visor_titulo">{{ reserva.pelicula }}</h3>
+
+                        <div class="visor_butacas">
+                            {% for entrada in reserva.entradas %}
+                            <button type="button" class="visor_butaca">Butaca {{ entrada.butaca }}</button>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Una entrada por butaca: QR, código y datos de la función -->
+                        {% for entrada in reserva.entradas %}
+                        <div class="visor_entrada">
+                            {% if entrada.qr %}<img class="visor_qr" src="{{ entrada.qr }}" alt="Código QR">
+                            {% else %}<p class="visor_sin_qr">Código QR</p>{% endif %}
+                            <p class="entrada_codigo">{{ entrada.codigo_qr }}</p>
+                            <div class="visor_datos">
+                                <div class="visor_dato"><span>Butaca</span><strong>{{ entrada.butaca }}</strong></div>
+                                <div class="visor_dato"><span>Sala</span><strong>{{ reserva.sala }}</strong></div>
+                                <div class="visor_dato"><span>Cine</span><strong>{{ reserva.sucursal }}</strong></div>
+                                <div class="visor_dato"><span>Función</span><strong>{{ reserva.fecha_funcion }} · {{ reserva.hora_funcion }} hs</strong></div>
+                            </div>
+                            <p class="entrada_estado">{% if entrada.fecha_uso %}Usada el {{ entrada.fecha_uso }}{% else %}Sin usar{% endif %}</p>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </article>
+            {% else %}
+            <p class="vacio">{{ mensaje_vacio }} <a href="{{ url_for('peliculas.cartelera') }}">Ver cartelera</a></p>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+<script src="{{ url_for('static', filename='js/perfil.js') }}"></script>
+{% endblock %}

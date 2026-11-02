@@ -1,0 +1,7089 @@
+{
+	"info": {
+		"_postman_id": "6d75f65a-4cd3-4868-9234-7af1fea5a5b2",
+		"name": "Cine Paradiso - Suite de pruebas API",
+		"description": "Colección generada a partir del código backend/Cine_fuente/routes y del Swagger adjunto. Importar y ejecutar con baseUrl http://localhost:5001. Las discrepancias con Swagger están aisladas en la carpeta 90.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "58477081",
+		"_collection_link": "https://cdaglio1806-5752715.postman.co/workspace/Cristian-N.-Daglio's-Workspace~017ba62b-dbe5-482b-855e-c58572737564/collection/58477081-6d75f65a-4cd3-4868-9234-7af1fea5a5b2?action=share&source=collection_link&creator=58477081"
+	},
+	"item": [
+		{
+			"name": "00 - Autenticación",
+			"item": [
+				{
+					"name": "POST - Login administrador",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"for (const k of [\"usuarioNuevoId\",\"peliculaPruebaId\",\"sucursalNuevaId\",\"salaNuevaId\",\"butacaGeneradaId\",\"butacaManualId\",\"funcionPruebaId\",\"fechaHoraFuncionPersistida\",\"butacaReserva1Id\",\"butacaReserva2Id\",\"butacaReserva3Id\",\"reservaPagoId\",\"reservaCancelarId\",\"reservaServiciosId\",\"entradaPruebaId\",\"codigoQrPrueba\",\"servicioPruebaId\"]) pm.collectionVariables.unset(k);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"const d = pm.response.json();",
+									"pm.expect(d).to.have.property(\"token\");",
+									"pm.expect(d).to.have.property(\"usuario\");",
+									"pm.collectionVariables.set(\"adminToken\", d.token);",
+									"pm.collectionVariables.set(\"adminId\", String(d.usuario.id));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"contrasenia\": \"{{adminPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Login cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"const d = pm.response.json();",
+									"pm.expect(d).to.have.property(\"token\");",
+									"pm.expect(d).to.have.property(\"usuario\");",
+									"pm.collectionVariables.set(\"clienteToken\", d.token);",
+									"pm.collectionVariables.set(\"clienteId\", String(d.usuario.id));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"contrasenia\": \"{{clientePassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Login credenciales inválidas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cliente@cineparadiso.com\",\n  \"contrasenia\": \"ClaveIncorrecta123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Perfil sin token (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Perfil con token inválido (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer token_invalido"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "01 - Usuarios",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar usuarios",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar usuarios por rol",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios?rol=cliente&_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									],
+									"query": [
+										{
+											"key": "rol",
+											"value": "cliente"
+										},
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar por nombre/email",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios?nombre=Cliente&email=cliente%40cineparadiso.com",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									],
+									"query": [
+										{
+											"key": "nombre",
+											"value": "Cliente"
+										},
+										{
+											"key": "email",
+											"value": "cliente%40cineparadiso.com"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Rol no soportado personal_control",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios?rol=personal_control",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									],
+									"query": [
+										{
+											"key": "rol",
+											"value": "personal_control"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Cliente no puede listar usuarios",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Obtener cliente propio",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/{{clienteId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"{{clienteId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Cliente consulta administrador ajeno",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/{{adminId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"{{adminId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Usuario inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - ID de usuario cero",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Perfil propio (detecta retorno faltante)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const d = pm.response.json();",
+											"pm.test(\"El perfil debe ser un objeto con id\", function () { pm.expect(d).to.be.an(\"object\"); pm.expect(d).to.have.property(\"id\"); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Mis reservas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/me/reservas?estado=pendiente&_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"me",
+										"reservas"
+									],
+									"query": [
+										{
+											"key": "estado",
+											"value": "pendiente"
+										},
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Registrar usuario QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.variables.set(\"emailUsuarioQA\", \"postman+\" + Date.now() + \"@example.com\");"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d = pm.response.json();",
+											"pm.expect(d).to.have.property(\"id\");",
+											"pm.collectionVariables.set(\"usuarioNuevoId\", String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Usuario\",\n  \"apellido\": \"Postman\",\n  \"email\": \"{{emailUsuarioQA}}\",\n  \"contrasenia\": \"ClavePrueba123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Email duplicado",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Cliente\",\n  \"apellido\": \"Prueba\",\n  \"email\": \"cliente@cineparadiso.com\",\n  \"contrasenia\": \"ClavePrueba123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Registro incompleto",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Usuario\",\n  \"apellido\": \"Postman\",\n  \"email\": \"nuevo@example.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Modificar usuario QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"usuarioNuevoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Usuario Modificado\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/{{usuarioNuevoId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"{{usuarioNuevoId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Cliente intenta cambiar rol",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rol\": \"administrador\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/{{clienteId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"{{clienteId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Body vacío",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/usuarios/{{clienteId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"usuarios",
+										"{{clienteId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02 - Películas",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Cartelera local",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Película del seed por ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/{{peliculaSemillaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"{{peliculaSemillaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Película inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Buscar en OMDb",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 502, 503]\", function () { pm.expect([200, 502, 503]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/buscar?q=batman&pagina=1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"buscar"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "batman"
+										},
+										{
+											"key": "pagina",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Búsqueda sin q",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/buscar",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"buscar"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Página OMDb fuera de rango",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/buscar?q=batman&pagina=101",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"buscar"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "batman"
+										},
+										{
+											"key": "pagina",
+											"value": "101"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Detalle OMDb por imdbID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 502, 503]\", function () { pm.expect([200, 502, 503]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/{{imdbIdPrueba}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"{{imdbIdPrueba}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - imdbID inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [404, 502, 503]\", function () { pm.expect([404, 502, 503]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/tt0000000",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"tt0000000"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Película duplicada del seed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id_externo\": \"tt0068646\",\n  \"fecha_inicio_cartelera\": \"2026-11-01\",\n  \"fecha_fin_cartelera\": \"2026-11-07\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Alta sin id_externo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear película OMDb de prueba",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"const now = new Date();",
+											"const fmt = (d) => new Intl.DateTimeFormat(\"en-CA\", {timeZone:\"America/Argentina/Buenos_Aires\",year:\"numeric\",month:\"2-digit\",day:\"2-digit\"}).format(d);",
+											"const end = new Date(now.getTime() + 6*24*60*60*1000);",
+											"pm.variables.set(\"fechaInicioCartelera\", fmt(now));",
+											"pm.variables.set(\"fechaFinCartelera\", fmt(end));"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [201, 502, 503]\", function () { pm.expect([201, 502, 503]).to.include(pm.response.code); });",
+											"if (pm.response.code === 201) { const d = pm.response.json(); pm.collectionVariables.set(\"peliculaPruebaId\", String(d.id)); }"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id_externo\": \"{{imdbIdPrueba}}\",\n  \"fecha_inicio_cartelera\": \"{{fechaInicioCartelera}}\",\n  \"fecha_fin_cartelera\": \"{{fechaFinCartelera}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Actualizar película QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"peliculaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sinopsis\": \"Descripción actualizada mediante Postman\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/{{peliculaPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"{{peliculaPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Body vacío",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Película inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"titulo\": \"No existe\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DELETE",
+					"item": [
+						{
+							"name": "DELETE - Baja lógica de película QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"peliculaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/{{peliculaPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"{{peliculaPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Película inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/peliculas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"peliculas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "03 - Sucursales",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar sucursales",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/sucursales?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Sucursal del seed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/sucursales/{{sucursalSemillaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales",
+										"{{sucursalSemillaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Sucursal inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/sucursales/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Crear sucursal QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.variables.set(\"nombreSucursalQA\", \"Sucursal Postman \" + Date.now());"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.expect(d).to.have.property(\"id\"); pm.collectionVariables.set(\"sucursalNuevaId\", String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"{{nombreSucursalQA}}\",\n  \"direccion\": \"Av. Pruebas 123\",\n  \"telefono\": \"1100000000\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Cliente no autorizado",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"No autorizada\",\n  \"direccion\": \"Calle 1\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Falta dirección",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Sucursal incompleta\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Actualizar sucursal QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"sucursalNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"telefono\": \"1199999999\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales/{{sucursalNuevaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales",
+										"{{sucursalNuevaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Body vacío",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"sucursalNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales/{{sucursalNuevaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales",
+										"{{sucursalNuevaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Sucursal inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"No existe\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/sucursales/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"sucursales",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "04 - Salas y Butacas",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar salas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar por sucursal",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas?sucursal_id={{sucursalSemillaId}}&_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas"
+									],
+									"query": [
+										{
+											"key": "sucursal_id",
+											"value": "{{sucursalSemillaId}}"
+										},
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Sala 7 del seed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaSemillaSinFuncionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaSemillaSinFuncionId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Sala inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Butacas de sala QA antes de generar",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}",
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Crear sala QA (capacidad 10)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"sucursalNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.expect(d).to.have.property(\"id\"); pm.collectionVariables.set(\"salaNuevaId\", String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sucursal_id\": \"{{sucursalNuevaId}}\",\n  \"nombre\": \"Sala Postman QA\",\n  \"capacidad\": 10\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/salas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Capacidad cero",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sucursal_id\": 1,\n  \"nombre\": \"Sala inválida\",\n  \"capacidad\": 0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/salas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Sucursal inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sucursal_id\": 999999,\n  \"nombre\": \"Sala sin sucursal\",\n  \"capacidad\": 10\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/salas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear butaca manual",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.expect(d).to.have.property(\"id\"); pm.collectionVariables.set(\"butacaManualId\", String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sala_id\": 7,\n  \"fila\": \"Z\",\n  \"numero\": 99\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Butaca manual duplicada",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sala_id\": 7,\n  \"fila\": \"Z\",\n  \"numero\": 99\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Número de butaca cero",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sala_id\": 7,\n  \"fila\": \"Z\",\n  \"numero\": 0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Flujo generación de butacas",
+					"item": [
+						{
+							"name": "POST - Generar butacas sala QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}/butacas/generar",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}",
+										"butacas",
+										"generar"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Butacas generadas sala QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const d=pm.response.json(); const a=d.butacas || []; pm.expect(a.length).to.eql(10);",
+											"if (a.length) pm.collectionVariables.set(\"butacaGeneradaId\", String(a[0].id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}/butacas?_limit=100&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}",
+										"butacas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "100"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Generar butacas por segunda vez",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}/butacas/generar",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}",
+										"butacas",
+										"generar"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Actualizar sala QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Sala Postman QA Modificada\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Capacidad inválida",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"capacidad\": -1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Actualizar butaca manual",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaManualId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fila\": \"Y\",\n  \"numero\": 99\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/butacas/{{butacaManualId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas",
+										"{{butacaManualId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Fila inválida",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaManualId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fila\": \"ZZ\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/butacas/{{butacaManualId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas",
+										"{{butacaManualId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DELETE",
+					"item": [
+						{
+							"name": "DELETE - Butaca manual",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaManualId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/butacas/{{butacaManualId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas",
+										"{{butacaManualId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Butaca inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/butacas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"butacas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Sala QA con butacas (conflicto)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"salaNuevaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/salas/{{salaNuevaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"salas",
+										"{{salaNuevaId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "05 - Funciones",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar funciones",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar por película",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones?pelicula_id=1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									],
+									"query": [
+										{
+											"key": "pelicula_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar por sala/sucursal/activa",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones?sala_id=7&sucursal_id=3&activa=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									],
+									"query": [
+										{
+											"key": "sala_id",
+											"value": "7"
+										},
+										{
+											"key": "sucursal_id",
+											"value": "3"
+										},
+										{
+											"key": "activa",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtro activa inválido",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones?activa=si",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									],
+									"query": [
+										{
+											"key": "activa",
+											"value": "si"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Función seed ID 1",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionSemillaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionSemillaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Función inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Butacas disponibles función QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const a=pm.response.json(); pm.expect(a).to.be.an(\"array\"); pm.expect(a.length).to.be.greaterThan(3);",
+											"if (a.length >= 3) { pm.collectionVariables.set(\"butacaReserva1Id\",String(a[0].id)); pm.collectionVariables.set(\"butacaReserva2Id\",String(a[1].id)); pm.collectionVariables.set(\"butacaReserva3Id\",String(a[2].id)); }"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionPruebaId}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionPruebaId}}",
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Butacas para función inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones/999999/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"999999",
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Crear función QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"const d = new Date(Date.now() + 10*24*60*60*1000);",
+											"const p = Object.fromEntries(new Intl.DateTimeFormat(\"en-CA\", {timeZone:\"America/Argentina/Buenos_Aires\",year:\"numeric\",month:\"2-digit\",day:\"2-digit\",hour:\"2-digit\",minute:\"2-digit\",second:\"2-digit\",hourCycle:\"h23\"}).formatToParts(d).map(x=>[x.type,x.value]));",
+											"pm.variables.set(\"fechaHoraFuncion\", `${p.year}-${p.month}-${p.day}T18:30:00`);"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.expect(d).to.have.property(\"id\"); pm.collectionVariables.set(\"funcionPruebaId\",String(d.id)); pm.collectionVariables.set(\"fechaHoraFuncionPersistida\",d.fecha_hora || \"\");"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pelicula_id\": 1,\n  \"sala_id\": 7,\n  \"fecha_hora\": \"{{fechaHoraFuncion}}\",\n  \"precio\": 850000\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear mismo horario (conflicto)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) pm.execution.skipRequest();",
+											"const v=pm.collectionVariables.get(\"fechaHoraFuncionPersistida\"); if (v) pm.variables.set(\"fechaHoraFuncion\",v);"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pelicula_id\": 1,\n  \"sala_id\": 7,\n  \"fecha_hora\": \"{{fechaHoraFuncion}}\",\n  \"precio\": 850000\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Precio cero",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pelicula_id\": 1,\n  \"sala_id\": 7,\n  \"fecha_hora\": \"2030-01-01T18:00:00\",\n  \"precio\": 0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Película inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pelicula_id\": 999999,\n  \"sala_id\": 7,\n  \"fecha_hora\": \"2030-01-02T18:00:00\",\n  \"precio\": 850000\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Actualizar precio función QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"precio\": 900000\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Body vacío",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Sala inexistente",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sala_id\": 999999\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "06 - Reservas",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar reservas admin",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar reservas confirmadas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas?usuario_id=2&funcion_id=1&estado=confirmada",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									],
+									"query": [
+										{
+											"key": "usuario_id",
+											"value": "2"
+										},
+										{
+											"key": "funcion_id",
+											"value": "1"
+										},
+										{
+											"key": "estado",
+											"value": "confirmada"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar por fechas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas?fecha_desde=2026-11-01&fecha_hasta=2026-11-30",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									],
+									"query": [
+										{
+											"key": "fecha_desde",
+											"value": "2026-11-01"
+										},
+										{
+											"key": "fecha_hasta",
+											"value": "2026-11-30"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Rango fecha invertido",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas?fecha_desde=2026-11-30&fecha_hasta=2026-11-01",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									],
+									"query": [
+										{
+											"key": "fecha_desde",
+											"value": "2026-11-30"
+										},
+										{
+											"key": "fecha_hasta",
+											"value": "2026-11-01"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Cliente sin permiso para listado general",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST - Validaciones y casos individuales",
+					"item": [
+						{
+							"name": "POST - Body vacío",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Función inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"funcion_id\": 999999,\n  \"butaca_ids\": [\n    1\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Flujo integral - ejecutar en orden",
+					"item": [
+						{
+							"name": "GET - Butacas disponibles para el flujo",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"funcionPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const a=pm.response.json(); pm.expect(a).to.be.an(\"array\"); pm.expect(a.length).to.be.greaterThan(3);",
+											"if(a.length>=3){pm.collectionVariables.set(\"butacaReserva1Id\",String(a[0].id));pm.collectionVariables.set(\"butacaReserva2Id\",String(a[1].id));pm.collectionVariables.set(\"butacaReserva3Id\",String(a[2].id));}"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/funciones/{{funcionPruebaId}}/butacas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"funciones",
+										"{{funcionPruebaId}}",
+										"butacas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear reserva para pagar",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaReserva1Id\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.collectionVariables.set(\"reservaPagoId\",String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"funcion_id\": {{funcionPruebaId}}, \"butaca_ids\": [{{butacaReserva1Id}}]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Repetir butaca reservada",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) pm.execution.skipRequest();"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"funcion_id\": {{funcionPruebaId}}, \"butaca_ids\": [{{butacaReserva1Id}}]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear reserva para cancelar",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaReserva2Id\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.collectionVariables.set(\"reservaCancelarId\",String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"funcion_id\": {{funcionPruebaId}}, \"butaca_ids\": [{{butacaReserva2Id}}]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Cancelar reserva creada",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaCancelarId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"estado\": \"cancelada\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaCancelarId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaCancelarId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Crear reserva para probar servicios",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"butacaReserva3Id\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.collectionVariables.set(\"reservaServiciosId\",String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"funcion_id\": {{funcionPruebaId}}, \"butaca_ids\": [{{butacaReserva3Id}}]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Consultar reserva propia",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Intentar pago con tarjeta inválida",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"titular\": \"Juan Perez\",\n  \"numero_tarjeta\": \"123\",\n  \"mes_vencimiento\": \"12\",\n  \"anio_vencimiento\": \"2030\",\n  \"cvv\": \"123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}/pago",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}",
+										"pago"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Pago simulado válido",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const d=pm.response.json(); pm.expect(d.estado).to.eql(\"confirmada\");"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"titular\": \"Juan Perez\",\n  \"numero_tarjeta\": \"4111111111111111\",\n  \"mes_vencimiento\": \"12\",\n  \"anio_vencimiento\": \"2030\",\n  \"cvv\": \"123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}/pago",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}",
+										"pago"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Pagar reserva confirmada otra vez",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"titular\": \"Juan Perez\",\n  \"numero_tarjeta\": \"4111111111111111\",\n  \"mes_vencimiento\": \"12\",\n  \"anio_vencimiento\": \"2030\",\n  \"cvv\": \"123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}/pago",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}",
+										"pago"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Entradas generadas por el pago",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+											"const d=pm.response.json(); const a=d.entradas || []; pm.expect(a.length).to.be.greaterThan(0); if(a.length){pm.collectionVariables.set(\"entradaPruebaId\",String(a[0].id));pm.collectionVariables.set(\"codigoQrPrueba\",String(a[0].codigo_qr));}"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}/entradas?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}",
+										"entradas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Cancelar reserva pendiente de servicios",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"estado\": \"cancelada\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Estado no admitido",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"estado\": \"confirmada\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaPagoId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaPagoId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Repetir cancelación",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"estado\": \"cancelada\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "07 - Servicios",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar catálogo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar pochoclo activo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios?nombre=Pochoclo&activo=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios"
+									],
+									"query": [
+										{
+											"key": "nombre",
+											"value": "Pochoclo"
+										},
+										{
+											"key": "activo",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtro activo inválido",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios?activo=si",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios"
+									],
+									"query": [
+										{
+											"key": "activo",
+											"value": "si"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Servicio del seed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios/{{servicioSemillaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"{{servicioSemillaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Servicio inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Servicios de reserva de prueba",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP [200, 204]\", function () { pm.response.to.have.status([200, 204]); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}/servicios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}",
+										"servicios"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Crear servicio QA",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+											"const d=pm.response.json(); pm.expect(d).to.have.property(\"id\"); pm.collectionVariables.set(\"servicioPruebaId\",String(d.id));"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Producto Postman QA\",\n  \"descripcion\": \"Servicio de prueba\",\n  \"precio\": 12500,\n  \"activo\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/servicios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Precio cero",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"nombre\": \"Servicio inválido\",\n  \"precio\": 0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/servicios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "PATCH",
+					"item": [
+						{
+							"name": "PATCH - Modificar servicio QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"servicioPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"precio\": 13000,\n  \"activo\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/servicios/{{servicioPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"{{servicioPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Body vacío",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"servicioPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/servicios/{{servicioPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"{{servicioPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Cantidad servicio reservado no existente",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP [404, 409]\", function () { pm.response.to.have.status([404, 409]); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"cantidad\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}/servicios/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}",
+										"servicios",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DELETE",
+					"item": [
+						{
+							"name": "DELETE - Eliminar servicio QA",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"servicioPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 204\", function () { pm.response.to.have.status(204); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios/{{servicioPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"{{servicioPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Servicio inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/servicios/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"servicios",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Servicio reservado inexistente",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP [404, 409]\", function () { pm.response.to.have.status([404, 409]); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}/servicios/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}",
+										"servicios",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST documentado pero no implementado",
+					"item": [
+						{
+							"name": "POST - Agregar servicio a reserva (no implementado)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaServiciosId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 405\", function () { pm.response.to.have.status(405); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"servicio_id\": 1,\n  \"cantidad\": 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reservas/{{reservaServiciosId}}/servicios",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reservas",
+										"{{reservaServiciosId}}",
+										"servicios"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "08 - Entradas y validación QR",
+			"item": [
+				{
+					"name": "GET",
+					"item": [
+						{
+							"name": "GET - Listar entradas admin",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP esperado: [200, 204]\", function () { pm.expect([200, 204]).to.include(pm.response.code); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/entradas?_limit=10&_offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas"
+									],
+									"query": [
+										{
+											"key": "_limit",
+											"value": "10"
+										},
+										{
+											"key": "_offset",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Filtrar entradas por reserva",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"reservaPagoId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP [200, 204]\", function () { pm.response.to.have.status([200, 204]); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/entradas?reserva_id={{reservaPagoId}}&estado=confirmada",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas"
+									],
+									"query": [
+										{
+											"key": "reserva_id",
+											"value": "{{reservaPagoId}}"
+										},
+										{
+											"key": "estado",
+											"value": "confirmada"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Cliente no puede listar todas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/entradas",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Obtener entrada propia",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"entradaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/entradas/{{entradaPruebaId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas",
+										"{{entradaPruebaId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - Entrada inexistente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/entradas/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas",
+										"999999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "POST",
+					"item": [
+						{
+							"name": "POST - Validación QR incorrecto",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"entradaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"codigo_qr\": \"QR_INCORRECTO\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/entradas/{{entradaPruebaId}}/validacion",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas",
+										"{{entradaPruebaId}}",
+										"validacion"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Validación QR real (200 durante la función; 409 fuera de horario)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"entradaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP [200, 409]\", function () { pm.response.to.have.status([200, 409]); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"codigo_qr\": \"{{codigoQrPrueba}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/entradas/{{entradaPruebaId}}/validacion",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas",
+										"{{entradaPruebaId}}",
+										"validacion"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Cliente no puede validar QR",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (!pm.collectionVariables.get(\"entradaPruebaId\")) { pm.execution.skipRequest(); }"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });"
+										]
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{clienteToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"codigo_qr\": \"{{codigoQrPrueba}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/entradas/{{entradaPruebaId}}/validacion",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"entradas",
+										"{{entradaPruebaId}}",
+										"validacion"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5001",
+			"type": "string"
+		},
+		{
+			"key": "adminEmail",
+			"value": "admin@cineparadiso.com",
+			"type": "string"
+		},
+		{
+			"key": "adminPassword",
+			"value": "Admin1234",
+			"type": "string"
+		},
+		{
+			"key": "clienteEmail",
+			"value": "cliente@cineparadiso.com",
+			"type": "string"
+		},
+		{
+			"key": "clientePassword",
+			"value": "Admin1234",
+			"type": "string"
+		},
+		{
+			"key": "adminId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "clienteId",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "peliculaSemillaId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "imdbIdPrueba",
+			"value": "tt0120338",
+			"type": "string"
+		},
+		{
+			"key": "sucursalSemillaId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "salaSemillaSinFuncionId",
+			"value": "7",
+			"type": "string"
+		},
+		{
+			"key": "funcionSemillaId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "servicioSemillaId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "clienteToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "usuarioNuevoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "peliculaPruebaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sucursalNuevaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "salaNuevaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "butacaGeneradaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "butacaManualId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "funcionPruebaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "fechaHoraFuncionPersistida",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "butacaReserva1Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "butacaReserva2Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "butacaReserva3Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reservaPagoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reservaCancelarId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reservaServiciosId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "entradaPruebaId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "codigoQrPrueba",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "servicioPruebaId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

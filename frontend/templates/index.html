@@ -2,7 +2,203 @@
 
 {% block title %}Inicio | Cine Paradiso{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}">
+{% endblock %}
+
+
 {% block content %}
-    <h1>Bienvenido a Cine Paradiso</h1>
-    <p>Esta es la página de inicio.</p>
+
+
+<!--CARRUSEL DE PELÍCULAS DESTACADAS-->
+
+<section class="home-carousel" aria-label="Películas destacadas">
+
+    <h1>Destacados</h1>
+
+    <div class="carousel-container">
+
+        {% for pelicula in peliculas_destacadas %}
+
+        <article class="carousel-slide">
+
+            {% if pelicula.poster_url %}
+
+            <img
+                src="{{ pelicula.poster_url }}"
+                alt="Póster de {{ pelicula.titulo }}"
+            >
+
+            {% endif %}
+
+            <div class="carousel-info">
+
+                <h2>{{ pelicula.titulo }}</h2>
+
+                <p>
+                    {{ pelicula.sinopsis | default('', true) | truncate(180) }}
+                </p>
+
+            </div>
+
+        </article>
+
+        {% else %}
+
+        <p class="carousel-empty">
+            No hay películas destacadas disponibles.
+        </p>
+
+        {% endfor %}
+
+
+        <!-- Botones del carrusel -->
+
+        <button
+            type="button"
+            class="carousel-prev"
+            aria-label="Película anterior"
+        >
+            &#10094;
+        </button>
+
+        <button
+            type="button"
+            class="carousel-next"
+            aria-label="Película siguiente"
+        >
+            &#10095;
+        </button>
+
+
+        <!-- Indicadores -->
+
+        <div class="carousel-indicators"></div>
+
+    </div>
+
+</section>
+
+
+
+<!-- CARTELERA -->
+
+<section id="cartelera" class="home-cartelera">
+
+    <h2 class="cartelera-encabezado">Cartelera</h2>
+
+    <!-- FILTROS POR GÉNERO -->
+
+    <div class="home-filtros">
+
+        <h2>Explorá por género</h2>
+
+        <div class="filtros-container">
+            <!-- Los filtros se generan desde inicio.js -->
+        </div>
+
+    </div>
+
+
+    <!-- LISTADO DE PELÍCULAS -->
+
+    <h2>En cartelera</h2>
+
+    {% if error_cartelera %}
+
+        <p class="cartelera-vacia">
+            {{ error_cartelera }}
+        </p>
+
+    {% elif peliculas %}
+
+        <div class="peliculas-grid">
+
+            {% for pelicula in peliculas %}
+
+            <article
+                class="pelicula-card"
+                data-generos="{{ pelicula.genero or '' }}"
+            >
+
+                <!-- PÓSTER -->
+
+                <div class="pelicula-poster">
+
+                    {% if pelicula.poster_url %}
+
+                        <img
+                            src="{{ pelicula.poster_url }}"
+                            alt="Póster de {{ pelicula.titulo }}"
+                            loading="lazy"
+                        >
+
+                    {% else %}
+
+                        <div class="poster-sin-imagen">
+                            Sin póster disponible
+                        </div>
+
+                    {% endif %}
+
+                    {% if pelicula.clasificacion %}
+
+                        <span class="pelicula-clasificacion">
+                            {{ pelicula.clasificacion }}
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- INFORMACIÓN -->
+
+                <div class="pelicula-card-info">
+
+                    <h3>{{ pelicula.titulo }}</h3>
+
+                    <p>
+                        {{ pelicula.genero or "Género no disponible" }}
+
+                        {% if pelicula.duracion_min %}
+                            · {{ pelicula.duracion_min }} min
+                        {% endif %}
+                    </p>
+
+                    <a
+                        class="boton-funciones"
+                        href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=pelicula.id) }}"
+                    >
+                        Ver funciones
+                    </a>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p class="cartelera-vacia">
+            No hay películas disponibles en cartelera.
+        </p>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}
+
+
+
+<!--JAVASCRIPT-->
+
+{% block scripts %}
+
+<script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+
 {% endblock %}

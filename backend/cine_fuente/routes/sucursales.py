@@ -1,17 +1,16 @@
 from flask import Blueprint, jsonify, request
 import pymysql
-
+from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
 
-sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/api/sucursales")
+sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/sucursales")
 
 
 def error(codigo, mensaje, descripcion, estado):
@@ -28,7 +27,7 @@ def validar_texto(datos, campo, maximo):
     return valor
 
 
-@sucursales_bp.get("")
+@sucursales_bp.route("", methods=["GET"])
 # Lista las sucursales disponibles.
 def listar_sucursales():
     try:
@@ -39,7 +38,7 @@ def listar_sucursales():
     return respuesta_paginada("sucursales", sucursales[offset:offset + limit], len(sucursales), limit, offset)
 
 
-@sucursales_bp.get("/<int:sucursal_id>")
+@sucursales_bp.route("/<int:sucursal_id>", methods=["GET"])
 # Obtiene una sucursal por su identificador.
 def obtener_sucursal(sucursal_id):
     sucursal = consultar_sucursal_por_id(sucursal_id)
@@ -48,8 +47,8 @@ def obtener_sucursal(sucursal_id):
     return jsonify(sucursal), 200
 
 
-@sucursales_bp.post("")
-@requiere_token(("administrador",))
+@sucursales_bp.route("", methods=["POST"])
+@requiere_rol("administrador")
 # Registra una nueva sucursal.
 def crear_sucursal():
     datos = request.get_json(silent=True) or {}
@@ -65,8 +64,8 @@ def crear_sucursal():
     return jsonify(consultar_sucursal_por_id(sucursal_id)), 201
 
 
-@sucursales_bp.patch("/<int:sucursal_id>")
-@requiere_token(("administrador",))
+@sucursales_bp.route("/<int:sucursal_id>", methods=["PATCH"])
+@requiere_rol("administrador")
 # Actualiza los datos de una sucursal.
 def modificar_sucursal(sucursal_id):
     if consultar_sucursal_por_id(sucursal_id) is None:
@@ -87,8 +86,8 @@ def modificar_sucursal(sucursal_id):
     return "", 204
 
 
-@sucursales_bp.delete("/<int:sucursal_id>")
-@requiere_token(("administrador",))
+@sucursales_bp.route("/<int:sucursal_id>", methods=["DELETE"])
+@requiere_rol("administrador")
 # Elimina una sucursal existente.
 def borrar_sucursal(sucursal_id):
     if consultar_sucursal_por_id(sucursal_id) is None:

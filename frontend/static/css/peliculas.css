@@ -1,0 +1,142 @@
+
+.catalogo {
+    padding: 30px 0 60px;
+}
+
+.catalogo-header {
+    margin-bottom: 40px;
+}
+
+.catalogo-header h1 {
+    font-family: var(--font-title);
+    font-size: 42px;
+    color: var(--gold);
+    margin-bottom: 15px;
+}
+
+.catalogo-header p {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+
+/* Listado vertical */
+
+.catalogo-listado {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.catalogo-item {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+
+    padding: 22px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    color: inherit;
+    transition: border-color 0.25s ease;
+}
+
+.catalogo-item:hover {
+    border-color: var(--gold);
+}
+
+
+/* Póster */
+
+.catalogo-poster {
+    width: 160px;
+    flex-shrink: 0;
+}
+
+.catalogo-poster img {
+    display: block;
+
+    width: 100%;
+    height: 235px;
+
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.catalogo-sin-poster {
+    height: 235px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--surface-dark);
+    color: var(--text-muted);
+
+    border-radius: 8px;
+    text-align: center;
+    padding: 10px;
+}
+
+.catalogo-info {
+    flex: 1;
+}
+
+.catalogo-info h2 {
+    font-family: var(--font-title);
+    font-size: 29px;
+    color: var(--text);
+
+    margin-bottom: 18px;
+}
+
+.catalogo-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.catalogo-datos span {
+    padding: 6px 12px;
+
+    background: var(--surface-dark);
+    color: var(--gold);
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    font-size: 13px;
+}
+
+.catalogo-sinopsis {
+    color: var(--text-soft);
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.catalogo-mensaje {
+    padding: 35px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+
+    .catalogo-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .catalogo-poster {
+        width: 150px;
+    }
+
+    .catalogo-header h1 {
+        font-size: 32px;
+    }
+
+}

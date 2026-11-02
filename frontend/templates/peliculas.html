@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Películas | Cine Paradiso{% endblock %}
+
+{% block head %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/peliculas.css') }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<section class="catalogo">
+
+    <!-- ENCABEZADO -->
+
+    <header class="catalogo-header">
+
+        <h1>Películas</h1>
+
+        <p>
+            Descubrí todas las películas disponibles
+            en Cine Paradiso.
+        </p>
+
+    </header>
+
+
+    <!-- LISTADO VERTICAL -->
+
+    <div class="catalogo-listado">
+
+        {% if error_peliculas %}
+
+            <p class="catalogo-mensaje">
+                {{ error_peliculas }}
+            </p>
+
+        {% elif peliculas %}
+
+            {% for pelicula in peliculas %}
+
+            <a class="catalogo-item" href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=pelicula.id) }}">
+
+                <!-- PÓSTER -->
+
+                <div class="catalogo-poster">
+
+                    {% if pelicula.poster_url %}
+
+                        <img
+                            src="{{ pelicula.poster_url }}"
+                            alt="Póster de {{ pelicula.titulo }}"
+                            loading="lazy"
+                        >
+
+                    {% else %}
+
+                        <div class="catalogo-sin-poster">
+                            Sin póster disponible
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- INFORMACIÓN -->
+
+                <div class="catalogo-info">
+
+                    <h2>{{ pelicula.titulo }}</h2>
+
+                    <div class="catalogo-datos">
+
+                        {% if pelicula.genero %}
+
+                            <span>
+                                {{ pelicula.genero }}
+                            </span>
+
+                        {% endif %}
+
+                        {% if pelicula.duracion_min %}
+
+                            <span>
+                                {{ pelicula.duracion_min }} min
+                            </span>
+
+                        {% endif %}
+
+                        {% if pelicula.clasificacion %}
+
+                            <span>
+                                {{ pelicula.clasificacion }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- SINOPSIS -->
+
+                    <p class="catalogo-sinopsis">
+
+                        {% if pelicula.sinopsis %}
+
+                            {{ pelicula.sinopsis | truncate(250) }}
+
+                        {% else %}
+
+                            Sinopsis no disponible.
+
+                        {% endif %}
+
+                    </p>
+
+                </div>
+
+            </a>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p class="catalogo-mensaje">
+                No hay películas disponibles.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endblock %}

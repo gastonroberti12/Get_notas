@@ -1,0 +1,175 @@
+-----> SALAS Y BUTACAS <-----
+
+-- GET /salas
+
+Caso 1 - Listado paginado:
+GET /salas?_limit=10&_offset=0
+Esperado: 200.
+
+Caso 2 - Filtrar por sucursal:
+GET /salas?sucursal_id=1&_limit=10&_offset=0
+Esperado: 200 (o 204 si no hay salas).
+
+Caso 3 - Obtener sala del seed:
+GET /salas/7
+Esperado: 200.
+
+Caso 4 - Sala inexistente:
+GET /salas/999999
+Esperado: 404.
+
+-- POST /salas (administrador)
+
+Caso 5 - Crear sala de capacidad 10 en sucursalNuevaId:
+POST /salas
+Authorization: Bearer {{adminToken}}
+{
+  "sucursal_id": {{sucursalNuevaId}},
+  "nombre": "Sala Postman QA",
+  "capacidad": 10
+}
+Esperado: 201. La colección guarda salaNuevaId.
+
+Caso 6 - Capacidad cero:
+POST /salas
+Authorization: Bearer {{adminToken}}
+{
+  "sucursal_id": 1,
+  "nombre": "Sala Inválida",
+  "capacidad": 0
+}
+Esperado: 400.
+
+Caso 7 - Sucursal inexistente:
+POST /salas
+Authorization: Bearer {{adminToken}}
+{
+  "sucursal_id": 999999,
+  "nombre": "Sala Sin Sucursal",
+  "capacidad": 10
+}
+Esperado: 404.
+
+-- PATCH /salas/{id}
+
+Caso 8 - Modificar nombre:
+PATCH /salas/{{salaNuevaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Sala Postman QA Modificada"
+}
+Esperado: 204.
+
+Caso 9 - Capacidad inválida:
+PATCH /salas/{{salaNuevaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "capacidad": -1
+}
+Esperado: 400.
+
+Caso 10 - Body vacío:
+PATCH /salas/{{salaNuevaId}}
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+-- GET /salas/{id}/butacas
+
+Caso 11 - Antes de generar butacas:
+GET /salas/{{salaNuevaId}}/butacas
+Esperado: 204 si todavía no hay butacas.
+
+Caso 12 - Listar butacas luego de generar:
+GET /salas/{{salaNuevaId}}/butacas?_limit=100&_offset=0
+Esperado: 200, 10 butacas. La colección guarda butacaGeneradaId.
+
+Caso 13 - Sala inexistente:
+GET /salas/999999/butacas
+Esperado: 404.
+
+-- POST /salas/{id}/butacas/generar (administrador)
+
+Caso 14 - Generar butacas de sala con capacidad 10:
+POST /salas/{{salaNuevaId}}/butacas/generar
+Authorization: Bearer {{adminToken}}
+Sin body.
+Esperado: 201 y cantidad=10.
+
+Caso 15 - Generar por segunda vez:
+POST /salas/{{salaNuevaId}}/butacas/generar
+Authorization: Bearer {{adminToken}}
+Esperado: 409 (ya existen butacas).
+
+-- POST /butacas (administrador)
+
+Caso 16 - Alta individual en sala 7:
+POST /butacas
+Authorization: Bearer {{adminToken}}
+{
+  "sala_id": 7,
+  "fila": "Z",
+  "numero": 99
+}
+Esperado: 201.
+
+Caso 17 - Butaca duplicada:
+Repetir fila Z y número 99 en la misma sala.
+Esperado: 409.
+
+Caso 18 - Número cero:
+POST /butacas
+Authorization: Bearer {{adminToken}}
+{
+  "sala_id": 7,
+  "fila": "Z",
+  "numero": 0
+}
+Esperado: 400.
+
+-- PATCH /butacas/{id}
+
+Caso 19 - Modificar butaca manual:
+PATCH /butacas/{{butacaManualId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fila": "Y",
+  "numero": 99
+}
+Esperado: 204.
+
+Caso 20 - Fila inválida:
+PATCH /butacas/{{butacaManualId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fila": "ZZ"
+}
+Esperado: 400.
+
+-- DELETE /butacas/{id}
+
+Caso 21 - Eliminar butaca manual:
+DELETE /butacas/{{butacaManualId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 204.
+
+Caso 22 - Butaca inexistente:
+DELETE /butacas/999999
+Authorization: Bearer {{adminToken}}
+Esperado: 404.
+
+-- DELETE /salas/{id}/butacas
+
+Caso 23 - Sala con butacas relacionadas a entradas:
+DELETE /salas/{sala_id}/butacas
+Authorization: Bearer {{adminToken}}
+Esperado: 409 si alguna butaca tiene entradas asociadas.
+
+Caso 24 - Limpieza sala QA:
+DELETE /salas/{{salaNuevaId}}/butacas
+Authorization: Bearer {{adminToken}}
+Esperado: 204. Se ejecuta al final, antes de eliminar la sala.
+
+Nota: Swagger declara POST /salas/{id}/butacas con body {butacas:[...]}, pero
+esa operación no existe en el código actual. La implementación disponible es
+POST /salas/{id}/butacas/generar sin body y POST /butacas individual.

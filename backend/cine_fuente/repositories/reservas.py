@@ -271,8 +271,55 @@ def obtener_datos_notificacion(reserva_id):
     return datos
 
 
-# PATCH /reservas/{id}
+def crear_reserva_con_entradas(datos, butaca_ids):
+    """Transacción única: bloquea la función, valida butacas e inserta reserva y entradas.
+    Devuelve (reserva_id, []) o (None, butacas_ocupadas) si hay conflicto."""
+    placeholders, parametros_in = clausula_in(butaca_ids, "ocupada")
+    with obtener_conexion() as conexion:
+        try:
+            with conexion.cursor() as cursor:
+                cursor.execute(
+                    "SELECT id FROM funcion WHERE id = %(funcion_id)s FOR UPDATE",
+                    {"funcion_id": datos["funcion_id"]},
+                )
+                cursor.execute(
+                    f"""
+                    SELECT e.butaca_id
+                    FROM entrada AS e
+                    INNER JOIN reservas AS r ON e.reserva_id = r.id
+                    WHERE r.funcion_id = %(funcion_id)s
+                    AND r.estado IN ('pendiente', 'confirmada', 'finalizada')
+                    AND e.butaca_id IN ({placeholders})
+                    """,
+                    {"funcion_id": datos["funcion_id"], **parametros_in},
+                )
+                ocupadas = sorted({int(f["butaca_id"]) for f in cursor.fetchall()})
+                if ocupadas:
+                    conexion.rollback()
+                    return None, ocupadas
 
+                cursor.execute(
+                    """
+                    INSERT INTO reservas (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion)
+                    VALUES (%(usuario_id)s, %(funcion_id)s, %(fecha_compra)s, %(estado)s, NULL)
+                    """,
+                    datos,
+                )
+                reserva_id = cursor.lastrowid
+                for butaca_id in butaca_ids:
+                    cursor.execute(
+                        "INSERT INTO entrada (reserva_id, butaca_id, codigo_qr, fecha_uso) "
+                        "VALUES (%(reserva_id)s, %(butaca_id)s, NULL, NULL)",
+                        {"reserva_id": reserva_id, "butaca_id": butaca_id},
+                    )
+            conexion.commit()
+            return int(reserva_id), []
+        except Exception:
+            conexion.rollback()
+            raise
+
+
+# PATCH /reservas/{id}
 def obtener_fecha_funcion_de_reserva(reserva_id):
     """Obtiene la fecha de la función para validar la anticipación de cancelación."""
     sql = """

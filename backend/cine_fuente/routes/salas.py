@@ -1,25 +1,24 @@
 from flask import Blueprint, jsonify, request
 import pymysql
-
+from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.salas import actualizar_sala, consultar_sala_por_id, consultar_salas, eliminar_sala, insertar_sala
 from cine_fuente.repositories.sucursales import consultar_sucursal_por_id
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
 
-salas_bp = Blueprint("salas", __name__, url_prefix="/api/salas")
+salas_bp = Blueprint("salas", __name__, url_prefix="/salas")
 
 
 def error(codigo, mensaje, descripcion, estado):
     return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
-@salas_bp.get("")
+@salas_bp.route("", methods=["GET"])
 # Lista las salas disponibles.
 def listar_salas():
     try:
@@ -30,7 +29,7 @@ def listar_salas():
     return respuesta_paginada("salas", salas[offset:offset + limit], len(salas), limit, offset)
 
 
-@salas_bp.get("/<int:sala_id>")
+@salas_bp.route("/<int:sala_id>", methods=["GET"])
 # Obtiene una sala por su identificador.
 def obtener_sala(sala_id):
     sala = consultar_sala_por_id(sala_id)
@@ -39,8 +38,8 @@ def obtener_sala(sala_id):
     return jsonify(sala), 200
 
 
-@salas_bp.post("")
-@requiere_token(("administrador",))
+@salas_bp.route("", methods=["POST"])
+@requiere_rol("administrador")
 # Registra una nueva sala.
 def crear_sala():
     datos = request.get_json(silent=True) or {}
@@ -66,8 +65,8 @@ def crear_sala():
     return jsonify(consultar_sala_por_id(sala_id)), 201
 
 
-@salas_bp.patch("/<int:sala_id>")
-@requiere_token(("administrador",))
+@salas_bp.route("/<int:sala_id>", methods=["PATCH"])
+@requiere_rol("administrador")
 # Actualiza los datos de una sala.
 def modificar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
@@ -104,8 +103,8 @@ def modificar_sala(sala_id):
     return "", 204
 
 
-@salas_bp.delete("/<int:sala_id>")
-@requiere_token(("administrador",))
+@salas_bp.route("/<int:sala_id>", methods=["DELETE"])
+@requiere_rol("administrador")
 # Elimina una sala existente.
 def borrar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:

@@ -11,10 +11,12 @@
     <h1>Ingresar</h1>
     <p class="formulario_intro">Entrá a tu cuenta para comprar entradas.</p>
 
+    <!-- Mensaje de error del backend -->
     {% if error %}
     <div class="formulario_alerta" role="alert">{{ error }}</div>
     {% endif %}
 
+    <!-- Formulario -->
     <form method="post" action="{{ url_for('users.login') }}" class="formulario-login">
         <label class="formulario_campo">
             <span>Email *</span>

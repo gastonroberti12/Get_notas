@@ -1,0 +1,115 @@
+-----> PELÍCULAS <-----
+
+-- GET /peliculas
+
+Caso 1 - Listar cartelera local:
+GET /peliculas?_limit=10&_offset=0
+Esperado: 200 con peliculas y _links (el seed trae 3 películas).
+
+Caso 2 - Paginación fuera de rango:
+GET /peliculas?_limit=101
+Esperado: 400.
+
+Caso 3 - Obtener película existente:
+GET /peliculas/1
+Esperado: 200.
+
+Caso 4 - Película inexistente:
+GET /peliculas/999999
+Esperado: 404.
+
+-- GET /peliculas/buscar (OMDb)
+
+Caso 5 - Búsqueda externa correcta:
+GET /peliculas/buscar?q=batman&pagina=1
+Esperado: 200 si OMDB_API_KEY está configurada y OMDb responde.
+Puede responder 502/503 ante problemas externos/configuración.
+
+Caso 6 - Falta q:
+GET /peliculas/buscar
+Esperado: 400.
+
+Caso 7 - Página fuera de rango:
+GET /peliculas/buscar?q=batman&pagina=101
+Esperado: 400.
+
+Caso 8 - Página no numérica:
+GET /peliculas/buscar?q=batman&pagina=abc
+Esperado: 400.
+
+-- GET /peliculas/{imdb_id} (OMDb)
+
+Caso 9 - Detalle externo existente:
+GET /peliculas/tt0068646
+Esperado: 200 si OMDb está disponible; 502/503 si falla la integración.
+
+Caso 10 - imdbID inexistente:
+GET /peliculas/tt0000000
+Esperado: 404 si OMDb responde correctamente.
+
+-- POST /peliculas
+
+Caso 11 - Alta sin id_externo:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+Caso 12 - Película duplicada del seed:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+{
+  "id_externo": "tt0068646",
+  "fecha_inicio_cartelera": "2026-11-01",
+  "fecha_fin_cartelera": "2026-11-07"
+}
+Esperado: 409.
+
+Caso 13 - Alta nueva película:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+{
+  "id_externo": "tt0120338",
+  "fecha_inicio_cartelera": "<hoy YYYY-MM-DD>",
+  "fecha_fin_cartelera": "<hoy + 6 días YYYY-MM-DD>"
+}
+Esperado: 201 si OMDb está configurada y devuelve la película; puede responder
+502 si OMDb no está disponible o 503 si falta configuración.
+La colección calcula las fechas y guarda peliculaPruebaId cuando recibe 201.
+
+-- PATCH /peliculas/{id}
+
+Caso 14 - Modificar película creada por el Caso 13:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "sinopsis": "Descripción actualizada mediante Postman"
+}
+Esperado: 204. Ejecutar solo si el alta anterior devolvió 201.
+
+Caso 15 - Body sin campos editables:
+PATCH /peliculas/1
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+Caso 16 - Película inexistente:
+PATCH /peliculas/999999
+Authorization: Bearer {{adminToken}}
+{
+  "titulo": "No existe"
+}
+Esperado: 404.
+
+-- DELETE /peliculas/{id}
+
+Caso 17 - Baja lógica de la película QA:
+DELETE /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 204. El código cambia activa a false, no borra físicamente.
+Ejecutar solo si peliculaPruebaId fue capturado.
+
+Caso 18 - Baja de película inexistente:
+DELETE /peliculas/999999
+Authorization: Bearer {{adminToken}}
+Esperado: 404.

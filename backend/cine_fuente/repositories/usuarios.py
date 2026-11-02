@@ -2,10 +2,15 @@ import pymysql
 
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 
-CARACTER_ESCAPE_LIKE = "!"
 
 MYSQL_ERROR_DUPLICADO = 1062
 CARACTER_ESCAPE_LIKE = "!"
+
+
+# Columnas que se pueden devolver al exterior (nunca contrasena).
+COLUMNAS_PUBLICAS = "id, nombre, apellido, email, rol, fecha_registro"
+
+
 # Columnas que PATCH /usuarios/{id} puede modificar (los valores siempre van enlazados).
 COLUMNAS_ACTUALIZABLES = {"nombre", "apellido", "email", "contrasena", "rol"}
 
@@ -20,17 +25,14 @@ CONDICIONES_BUSQUEDA = {
 }
 
 
-class EmailDuplicadoError(Exception):
-    """El email ya pertenece a otro usuario (violación del UNIQUE de la tabla)."""
-
-
-def _escribir_usuario(sql, parametros):
-    """Ejecuta una escritura sobre usuarios y traduce el error de email duplicado de MySQL."""
+def _escribir_usuario(sql, parametros, devolver_id=False):
+    """Ejecuta una escritura; devuelve None si el email ya está registrado."""
     try:
-        return ejecutar_escritura(sql, parametros)
+        resultado = ejecutar_escritura(sql, parametros)
+        return resultado if devolver_id else True
     except pymysql.err.IntegrityError as error:
         if error.args and error.args[0] == MYSQL_ERROR_DUPLICADO:
-            raise EmailDuplicadoError() from error
+            return None
         raise
 
 
@@ -59,12 +61,13 @@ def _construir_filtros(filtros):
     where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
     return where, parametros
 
+
 def listar_usuarios(filtros, limit, offset):
     """Lista usuarios con filtros y paginación. Nunca expone contrasena ni token."""
     where, parametros = _construir_filtros(filtros)
     parametros.update({"limit": limit, "offset": offset})
     sql = f"""
-        SELECT id, nombre, apellido, email, rol, fecha_registro
+        SELECT {COLUMNAS_PUBLICAS}
         FROM usuarios
         {where}
         ORDER BY id ASC
@@ -79,15 +82,28 @@ def contar_usuarios(filtros):
     filas = ejecutar_consulta(f"SELECT COUNT(*) AS total FROM usuarios {where}", parametros)
     return int(filas[0]["total"]) if filas else 0
 
-def obtener_por_id(usuario_id):
-    filas = ejecutar_consulta(
-        "SELECT id, nombre, apellido, email, rol, fecha_registro FROM usuarios WHERE id = %s",
-        (usuario_id,),
-    )
+
+def obtener_usuario_por_id(id_usuario):
+    """Devuelve la fila del usuario o None. Nunca expone contrasena."""
+    sql = f"SELECT {COLUMNAS_PUBLICAS} FROM usuarios WHERE id = %(id)s LIMIT 1"
+    filas = ejecutar_consulta(sql, {"id": id_usuario})
     return filas[0] if filas else None
 
+
+def obtener_usuario_por_email(email):
+    """Devuelve la fila del usuario con su hash de contrasena (solo para el login) o None."""
+    sql = f"""
+        SELECT {COLUMNAS_PUBLICAS}, contrasena
+        FROM usuarios
+        WHERE email = %(email)s
+        LIMIT 1
+    """
+    filas = ejecutar_consulta(sql, {"email": email})
+    return filas[0] if filas else None
+
+
 def crear_usuario(nombre, apellido, email, contrasenia):
-    """Inserta un usuario con rol 'cliente' y devuelve su id."""
+    """Inserta un usuario cliente y devuelve su id o None si el email ya existe."""
     sql = """
         INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
         VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
@@ -97,30 +113,7 @@ def crear_usuario(nombre, apellido, email, contrasenia):
         "apellido": apellido,
         "email": email,
         "contrasena": contrasenia,
-    })
-
-
-def obtener_usuario_por_email(email):
-    """Devuelve la fila del usuario con su hash de contrasena (solo para el login) o None."""
-    sql = """
-        SELECT id, nombre, apellido, email, contrasena, rol, fecha_registro
-        FROM usuarios
-        WHERE email = %(email)s
-        LIMIT 1
-    """
-    filas = ejecutar_consulta(sql, {"email": email})
-    return filas[0] if filas else None
-
-def obtener_usuario_por_id(id_usuario):
-    """Devuelve la fila del usuario o None. Nunca expone contrasena ni token."""
-    sql = """
-        SELECT id, nombre, apellido, email, rol, fecha_registro
-        FROM usuarios
-        WHERE id = %(id)s
-        LIMIT 1
-    """
-    filas = ejecutar_consulta(sql, {"id": id_usuario})
-    return filas[0] if filas else None
+    }, devolver_id=True)
 
 
 def email_en_uso(email, excluir_id=None):
@@ -130,11 +123,18 @@ def email_en_uso(email, excluir_id=None):
 
 
 def actualizar_usuario(id_usuario, cambios):
-    """UPDATE parcial: solo las columnas presentes en 'cambios'."""
+    """Actualiza solo las columnas indicadas; devuelve None si el email ya existe."""
     if not cambios or not set(cambios) <= COLUMNAS_ACTUALIZABLES:
         raise ValueError("Columnas a actualizar inválidas.")
     asignaciones = ", ".join(f"{columna} = %({columna})s" for columna in cambios)
-    _escribir_usuario(
+    return _escribir_usuario(
         f"UPDATE usuarios SET {asignaciones} WHERE id = %(id)s",
         {**cambios, "id": id_usuario},
     )
+
+def actualizar_fecha_logout(id_usuario):
+    """Actualiza la fecha del último logout usando UTC explícito en MySQL."""
+    sql = "UPDATE usuarios SET fecha_ultimo_logout = UTC_TIMESTAMP() WHERE id = %(id)s"
+    ejecutar_escritura(sql, {"id": id_usuario})
+
+    

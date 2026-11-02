@@ -1,30 +1,10 @@
-import requests
 from flask import Blueprint, render_template, request, redirect, url_for, session
-from routes.roles import esta_logueado
+from api_cliente import llamar_api, mensaje_error
+from routes.roles import esta_logueado, es_cliente
+from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_reserva
 
 
 users_bp = Blueprint("users", __name__)
-
-API_URL = 'http://127.0.0.1:5001' # completar con la URL que pongan en el backend
-
-
-def llamar_api(metodo, endpoint, datos=None):
-    # Llama al back y devuelve (status_http, json). Si no hay conexion, status es None.
-    # Si hay sesion, manda el token en Authorization: Bearer.
-    headers = {}
-    if 'token' in session:
-        headers['Authorization'] = f"Bearer {session['token']}"
-    try:
-        r = requests.request(metodo, f'{API_URL}{endpoint}', json=datos, headers=headers, timeout=5)
-        return r.status_code, (r.json() if r.content else {})
-    except (requests.RequestException, ValueError):
-        return None, {}
-    
-def mensaje_error(status, cuerpo, por_defecto):
-    if status is None:
-        return 'No se pudo conectar con el servidor.'
-    errores = cuerpo.get('errors') or [{}]
-    return errores[0].get('message', por_defecto)
 
 @users_bp.route("/login", methods=['GET', 'POST'])
 def login():
@@ -72,4 +52,42 @@ def logout():
 def profile():
     if not esta_logueado():
         return redirect(url_for('users.login'))
-    return render_template("usuario.html")
+    
+    #pedir datos del usuario y sus reservas al backend
+    status, usuario = llamar_api('GET', '/usuarios/me')
+    if status == 401:  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
+        session.clear()
+        return redirect(url_for('users.login'))
+    if status != 200:
+        return render_template('errores/503.html'), 503
+
+    perfil = {
+        'nombre': usuario['nombre'],
+        'apellido': usuario['apellido'],
+        'email': usuario['email'],
+        'anio_registro': (usuario.get('fecha_registro') or '')[:4] or SIN_DATO,
+    }
+
+    reservas_api = []
+    if es_cliente():
+        status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
+        reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
+    cache = {}  # cache compartido por todas las reservas de este request
+    proximas = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
+    historial = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
+
+    return render_template('perfil.html', perfil=perfil, reservas_proximas=proximas, reservas_historial=historial)
+
+@users_bp.route("/perfil/actualizar", methods=['POST'])
+def actualizar_perfil():
+    if not esta_logueado():
+        return redirect(url_for('users.login'))
+
+    datos = {campo: request.form.get(campo, '').strip() for campo in ('nombre', 'apellido', 'email')}
+    if request.form.get('password'):
+        datos['contrasenia'] = request.form['password']
+
+    status, _ = llamar_api('PATCH', f"/usuarios/{session['usuario']['id']}", datos)
+    if status == 204:
+        session['usuario'] = {**session['usuario'], 'nombre': datos['nombre']}  # el navbar muestra el nombre
+    return redirect(url_for('users.profile'))

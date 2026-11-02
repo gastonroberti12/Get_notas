@@ -1,0 +1,83 @@
+-----> SUCURSALES <-----
+
+-- GET /sucursales
+
+Caso 1 - Listado:
+GET /sucursales?_limit=10&_offset=0
+Esperado: 200 con sucursales y _links.
+
+Caso 2 - Obtener sucursal del seed:
+GET /sucursales/1
+Esperado: 200.
+
+Caso 3 - Sucursal inexistente:
+GET /sucursales/999999
+Esperado: 404.
+
+-- POST /sucursales (administrador)
+
+Caso 4 - Crear sucursal QA:
+POST /sucursales
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Sucursal Postman QA",
+  "direccion": "Av. Pruebas 123",
+  "telefono": "1100000000"
+}
+Esperado: 201 y objeto con id. La colección usa un nombre único.
+
+Caso 5 - Falta dirección:
+POST /sucursales
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "Sucursal Incompleta"
+}
+Esperado: 400.
+
+Caso 6 - Cliente intenta crear sucursal:
+POST /sucursales
+Authorization: Bearer {{clienteToken}}
+{
+  "nombre": "No autorizada",
+  "direccion": "Calle 1"
+}
+Esperado: 403.
+
+-- PATCH /sucursales/{id}
+
+Caso 7 - Actualizar teléfono:
+PATCH /sucursales/{{sucursalNuevaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "telefono": "1199999999"
+}
+Esperado: 204.
+
+Caso 8 - Body vacío:
+PATCH /sucursales/{{sucursalNuevaId}}
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400.
+
+Caso 9 - Sucursal inexistente:
+PATCH /sucursales/999999
+Authorization: Bearer {{adminToken}}
+{
+  "nombre": "No existe"
+}
+Esperado: 404.
+
+-- DELETE /sucursales/{id}
+
+Caso 10 - Borrar sucursal que aún contiene una sala:
+DELETE /sucursales/{{sucursalNuevaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 409 por relación con salas. Ejecutar luego de crear la sala QA.
+
+Caso 11 - Sucursal inexistente:
+DELETE /sucursales/999999
+Authorization: Bearer {{adminToken}}
+Esperado: 404.
+
+La eliminación exitosa de sucursalNuevaId se ejecuta al final, después de
+borrar la sala de prueba (ver Limpieza final en la colección).

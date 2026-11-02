@@ -7,17 +7,18 @@ from cine_fuente.repositories.reservas import obtener_butacas_ocupadas
 from cine_fuente.validators import funciones as validator
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
 
-funciones_bp = Blueprint('funciones', __name__, url_prefix='/api/funciones')
+from cine_fuente.services.seguridad import requiere_rol
+
+funciones_bp = Blueprint('funciones', __name__, url_prefix='/funciones')
 
 
-@funciones_bp.get('')
+@funciones_bp.route('', methods=['GET'])
 # Lista las funciones disponibles.
 def listar_funciones():
     limit, offset = validar_paginacion(request.args)
@@ -27,12 +28,12 @@ def listar_funciones():
 
 
 # Obtiene una función por su identificador.
-@funciones_bp.get('/<int:funcion_id>')
+@funciones_bp.route('/<int:funcion_id>', methods=['GET'])
 def obtener_funcion(funcion_id):
     return jsonify(service.obtener_funcion_por_id(funcion_id)), 200
 
 
-@funciones_bp.get('/<int:funcion_id>/butacas')
+@funciones_bp.route('/<int:funcion_id>/butacas', methods=['GET'])
 # Consulta las butacas disponibles para una función.
 def obtener_butacas_disponibles(funcion_id):
     funcion = service.obtener_funcion_por_id(funcion_id)
@@ -53,8 +54,8 @@ def obtener_butacas_disponibles(funcion_id):
     return jsonify(disponibles), 200
 
 
-@funciones_bp.post('')
-@requiere_token(("administrador",))
+@funciones_bp.route('', methods=['POST'])
+@requiere_rol("administrador")
 # Registra una nueva función.
 def crear_funcion():
     pelicula_id, sala_id, fecha_hora, precio = validator.validar_creacion(request.get_json(silent=True))
@@ -62,16 +63,16 @@ def crear_funcion():
 
 
 # Valida y aplica cambios a una función existente.
-@funciones_bp.patch('/<int:funcion_id>')
-@requiere_token(("administrador",))
+@funciones_bp.route('/<int:funcion_id>', methods=['PATCH'])
+@requiere_rol("administrador")
 def modificar_funcion(funcion_id):
     cambios = validator.validar_modificacion(request.get_json(silent=True) or {})
     service.actualizar_funcion_por_id(funcion_id, cambios)
     return '', 204
 
 
-@funciones_bp.delete('/<int:funcion_id>')
-@requiere_token(("administrador",))
+@funciones_bp.route('/<int:funcion_id>', methods=['DELETE'])
+@requiere_rol("administrador")
 # Elimina o desactiva una función.
 def borrar_funcion(funcion_id):
     datos = request.get_json(silent=True) or {}

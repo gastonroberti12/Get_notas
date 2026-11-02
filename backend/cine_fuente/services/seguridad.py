@@ -4,6 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from constants import JWT_EXPIRACION_MINUTOS, JWT_SECRET_KEY
 from cine_fuente.utils import construir_error_api
 from flask import g, request
+from cine_fuente.db import ejecutar_consulta
 
 
 ALGORITMO = "HS256"
@@ -32,19 +33,29 @@ def generar_token(usuario_id: int, rol: str) -> str:
 
 
 def decodificar_token(token: str) -> dict:
-    """Verifica la firma y el vencimiento. Devuelve los claims o levanta ValueError (401)."""
     try:
         claims = jwt.decode(
             token,
             JWT_SECRET_KEY,
             algorithms=[ALGORITMO],
-            options={"require": ["sub", "rol", "exp"]},
+            options={"require": ["sub", "rol", "exp", "iat"]},
         )
-        int(claims["sub"])
+        usuario_id = int(claims["sub"])
+
+        # Validar si hubo un logout posterior a la emisión del token
+        filas = ejecutar_consulta("SELECT fecha_ultimo_logout FROM usuarios WHERE id = %(id)s", {"id": usuario_id})
+        if filas and filas[0]["fecha_ultimo_logout"]:
+            fecha_logout = filas[0]["fecha_ultimo_logout"]
+            iat_dt = datetime.fromtimestamp(claims["iat"], tz=timezone.utc).replace(tzinfo=None)
+            if iat_dt <= fecha_logout:
+                raise ValueError(construir_error_api(
+                    "TOKEN_INVALIDO", "Token inválido", "La sesión fue cerrada. Iniciá sesión nuevamente."
+                ), 401)
+
         return claims
     except jwt.ExpiredSignatureError:
         raise ValueError(construir_error_api(
-            "TOKEN_EXPIRADO", "Token expirado", "La sesión venció. Iniciá sesión nuevamente."
+            "TOKEN_EXPIRADO", "Token expirado", "La sesión venció."
         ), 401)
     except (jwt.InvalidTokenError, ValueError):
         raise ValueError(construir_error_api(
