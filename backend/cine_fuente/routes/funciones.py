@@ -7,12 +7,13 @@ from cine_fuente.repositories.reservas import obtener_butacas_ocupadas
 from cine_fuente.validators import funciones as validator
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
+
+from cine_fuente.services.seguridad import requiere_rol
 
 funciones_bp = Blueprint('funciones', __name__, url_prefix='/funciones')
 
@@ -54,7 +55,7 @@ def obtener_butacas_disponibles(funcion_id):
 
 
 @funciones_bp.route('', methods=['POST'])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Registra una nueva función.
 def crear_funcion():
     pelicula_id, sala_id, fecha_hora, precio = validator.validar_creacion(request.get_json(silent=True))
@@ -63,7 +64,7 @@ def crear_funcion():
 
 # Valida y aplica cambios a una función existente.
 @funciones_bp.route('/<int:funcion_id>', methods=['PATCH'])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 def modificar_funcion(funcion_id):
     cambios = validator.validar_modificacion(request.get_json(silent=True) or {})
     service.actualizar_funcion_por_id(funcion_id, cambios)
@@ -71,7 +72,7 @@ def modificar_funcion(funcion_id):
 
 
 @funciones_bp.route('/<int:funcion_id>', methods=['DELETE'])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Elimina o desactiva una función.
 def borrar_funcion(funcion_id):
     datos = request.get_json(silent=True) or {}

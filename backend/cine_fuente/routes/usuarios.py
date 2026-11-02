@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response, g
-
+from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.services import usuarios as usuarios_service
 from cine_fuente.utils import (
-    requiere_token,
     respuesta_error_excepcion,
     respuesta_error_interno,
     respuesta_paginada,
@@ -20,7 +19,7 @@ usuarios_bp = Blueprint("usuarios", __name__)
 
 # Endpoint GET /usuarios: listado paginado para el administrador, filtrable por rol, nombre y email.
 @usuarios_bp.route("/usuarios", methods=["GET"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 def get_usuarios():
     try:
         filtros = validar_filtros_usuarios(request.args)
@@ -50,7 +49,7 @@ def post_usuario():
 
 # Endpoint GET /usuarios/{id}: el administrador ve cualquier usuario; el cliente, solo el propio.
 @usuarios_bp.route("/usuarios/<id_usuario>", methods=["GET"])
-@requiere_token(("administrador", "cliente"))
+@requiere_rol("administrador","cliente")
 def get_usuario(id_usuario):
     try:
         id_usuario = validar_id_usuario(id_usuario)
@@ -63,7 +62,7 @@ def get_usuario(id_usuario):
 
 # Endpoint PATCH /usuarios/{id}: el titular edita sus datos; solo el administrador cambia el rol.
 @usuarios_bp.route("/usuarios/<id_usuario>", methods=["PATCH"])
-@requiere_token(("administrador", "cliente"))
+@requiere_rol("administrador","cliente")
 def patch_usuario(id_usuario):
     try:
         id_usuario = validar_id_usuario(id_usuario)
@@ -80,7 +79,7 @@ def patch_usuario(id_usuario):
     
 # Endpoint GET /usuarios/me: devuelve el perfil del usuario autenticado.
 @usuarios_bp.route("/usuarios/me", methods=["GET"])
-@requiere_token(("cliente", "administrador"))
+@requiere_rol("cliente", "admistrador")
 def get_mi_perfil():
     try:
         return jsonify(usuarios_service.obtener_perfil(int(g.usuario["id"]))), 200

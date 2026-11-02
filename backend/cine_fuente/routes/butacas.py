@@ -13,12 +13,12 @@ from cine_fuente.repositories.butacas import (
 from cine_fuente.repositories.salas import consultar_sala_por_id
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
+from cine_fuente.services.seguridad import requiere_rol
 
 butacas_bp = Blueprint("butacas", __name__)
 
@@ -41,7 +41,7 @@ def listar_butacas_sala(sala_id):
 
 
 @butacas_bp.route("/salas/<int:sala_id>/butacas/generar", methods=["POST"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Genera las butacas de una sala.
 def generar_butacas(sala_id):
     sala = consultar_sala_por_id(sala_id)
@@ -62,7 +62,7 @@ def generar_butacas(sala_id):
 
 
 @butacas_bp.route("/butacas", methods=["POST"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Registra una nueva butaca.
 def crear_butaca():
     datos = request.get_json(silent=True) or {}
@@ -88,7 +88,7 @@ def crear_butaca():
 
 
 @butacas_bp.route("/butacas/<int:butaca_id>", methods=["PATCH"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Modifica los datos de una butaca.
 def modificar_butaca(butaca_id):
     if consultar_butaca_por_id(butaca_id) is None:
@@ -118,7 +118,7 @@ def modificar_butaca(butaca_id):
 
 
 @butacas_bp.route("/butacas/<int:butaca_id>", methods=["DELETE"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Elimina una butaca.
 def borrar_butaca(butaca_id):
     if consultar_butaca_por_id(butaca_id) is None:
@@ -131,7 +131,7 @@ def borrar_butaca(butaca_id):
 
 
 @butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["DELETE"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Elimina las butacas de una sala.
 def borrar_butacas_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:

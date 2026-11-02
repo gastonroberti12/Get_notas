@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify, request
 import pymysql
-
+from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.salas import actualizar_sala, consultar_sala_por_id, consultar_salas, eliminar_sala, insertar_sala
 from cine_fuente.repositories.sucursales import consultar_sucursal_por_id
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_error_excepcion,
     respuesta_paginada,
@@ -40,7 +39,7 @@ def obtener_sala(sala_id):
 
 
 @salas_bp.route("", methods=["POST"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Registra una nueva sala.
 def crear_sala():
     datos = request.get_json(silent=True) or {}
@@ -67,7 +66,7 @@ def crear_sala():
 
 
 @salas_bp.route("/<int:sala_id>", methods=["PATCH"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Actualiza los datos de una sala.
 def modificar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
@@ -105,7 +104,7 @@ def modificar_sala(sala_id):
 
 
 @salas_bp.route("/<int:sala_id>", methods=["DELETE"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Elimina una sala existente.
 def borrar_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:

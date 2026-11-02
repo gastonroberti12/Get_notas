@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-
+from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.peliculas import (
     consultar_pelicula_por_id as obtener_pelicula,
     consultar_pelicula_por_imdb as obtener_pelicula_por_imdb,
@@ -9,7 +9,6 @@ from cine_fuente.repositories.peliculas import (
 )
 from cine_fuente.utils import (
     construir_error_api,
-    requiere_token,
     respuesta_error_api,
     respuesta_paginada,
     validar_paginacion,
@@ -36,7 +35,7 @@ def listar_peliculas():
 
 
 @peliculas_bp.route("", methods=["POST"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Permite al administrador cargar una película manualmente.
 def crear_pelicula():
     datos = request.get_json(silent=True) or {}
@@ -75,7 +74,7 @@ def crear_pelicula():
 
 
 @peliculas_bp.route("/<int:pelicula_id>", methods=["PATCH"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Actualiza los datos editables de una película.
 def modificar_pelicula(pelicula_id):
     if obtener_pelicula(pelicula_id) is None:
@@ -99,7 +98,7 @@ def modificar_pelicula(pelicula_id):
 
 
 @peliculas_bp.route("/<int:pelicula_id>", methods=["DELETE"])
-@requiere_token(("administrador",))
+@requiere_rol("administrador")
 # Da de baja una película sin eliminarla.
 def borrar_pelicula(pelicula_id):
     if obtener_pelicula(pelicula_id) is None:
