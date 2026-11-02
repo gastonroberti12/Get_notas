@@ -20,3 +20,19 @@ def obtener_ocupacion_general(filtros):
         "capacidad_total": capacidad,
         "porcentaje_ocupacion": porcentaje(entradas, capacidad),
     }
+
+
+# GET /admin/estadisticas/ocupacion/salas: prepara los datos y calcula el porcentaje para cada sala.
+def obtener_ocupacion_salas(filtros):
+    salas = []
+    for fila in estadisticas_repo.consultar_ocupacion_salas(filtros):
+        entradas = entero(fila.get("entradas_vendidas"))
+        capacidad = entero(fila.get("capacidad_total"))
+        salas.append({
+            "sala_id": int(fila["sala_id"]),
+            "sala_nombre": fila["sala_nombre"],
+            "entradas_vendidas": entradas,
+            "capacidad_total": capacidad,
+            "porcentaje_ocupacion": porcentaje(entradas, capacidad),
+        })
+    return {"salas": salas}
