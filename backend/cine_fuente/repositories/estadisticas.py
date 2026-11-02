@@ -186,3 +186,26 @@ def consultar_ventas_peliculas(filtros):
         ORDER BY monto_total DESC, p.titulo ASC
     """
     return consulta(sql, parametros)
+
+
+# GET /admin/estadisticas/cancelaciones: cuenta reservas del período y calcula cuántas fueron canceladas.
+def consultar_cancelaciones(filtros):
+    rango, parametros = filtro_fechas("r.fecha_compra", filtros)
+    sql = """
+        SELECT
+            COUNT(*) AS reservas_totales,
+            SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END)
+                AS reservas_canceladas,
+            ROUND(
+                100 * SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END)
+                / NULLIF(COUNT(*), 0),
+                1
+            ) AS porcentaje_cancelacion
+        FROM reservas AS r
+        WHERE 1 = 1""" + rango
+    filas = consulta(sql, parametros)
+    return filas[0] if filas else {
+        "reservas_totales": 0,
+        "reservas_canceladas": 0,
+        "porcentaje_cancelacion": 0,
+    }
