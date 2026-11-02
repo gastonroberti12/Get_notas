@@ -1,7 +1,6 @@
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
 
-from cine_fuente.utils import construir_error_api
+from cine_fuente.utils import construir_error_api,validar_precio
 
 
 # Valida la fecha y hora de una función.
@@ -12,17 +11,6 @@ def validar_fecha_hora(valor):
         return datetime.fromisoformat(valor.strip().replace("Z", "+00:00"))
     except ValueError as causa:
         raise ValueError(construir_error_api("invalid.fecha_hora.format", "Formato de fecha inválido", "fecha_hora debe tener formato ISO-8601.")) from causa
-
-
-# Valida el precio de una función.
-def validar_precio(valor):
-    try:
-        precio = Decimal(str(valor))
-    except (InvalidOperation, TypeError, ValueError) as causa:
-        raise ValueError(construir_error_api("invalid.precio.format", "Formato de precio inválido", "precio debe ser un número.")) from causa
-    if not precio.is_finite() or precio <= 0:
-        raise ValueError(construir_error_api("invalid.precio.value", "Precio inválido", "precio debe ser mayor que cero."))
-    return precio
 
 
 # Lee los filtros disponibles para las funciones.

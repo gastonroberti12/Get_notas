@@ -1,4 +1,6 @@
 from constants import CAMPOS_SERVICIOS_PERMITIDOS
+from functools import partial 
+from cine_fuente.utils import validar_precio
 
 
 # Validar nombre
@@ -32,18 +34,6 @@ def validar_descripcion(descripcion):
     return descripcion or None
 
 
-# Validar precio (entero en centavos según Swagger)
-def validar_precio(precio):
-
-    if type(precio) is not int:
-        raise ValueError("El precio debe ser un número entero en centavos")
-
-    if precio <= 0:
-        raise ValueError("El precio debe ser mayor a cero")
-
-    return precio
-
-
 # Validar activo
 def validar_activo(activo):
 
@@ -74,7 +64,7 @@ def validar_campos_servicio(datos):
     validadores = {
         "nombre": validar_nombre,
         "descripcion": validar_descripcion,
-        "precio": validar_precio,
+        "precio": partial(validar_precio, minimo=0),
         "activo": validar_activo
     }
 

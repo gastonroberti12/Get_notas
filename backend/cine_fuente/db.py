@@ -5,6 +5,7 @@ from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 
 def obtener_conexion():
+    print(f"DEBUG CONEXIÓN -> Host: {DB_HOST}, Port: {DB_PORT}, User: {DB_USER}, DB: {DB_NAME}")
     return pymysql.connect(
         host=DB_HOST,
         port=DB_PORT,

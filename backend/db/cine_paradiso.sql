@@ -61,7 +61,7 @@ CREATE TABLE funcion (
     pelicula_id INT NOT NULL,
     sala_id     INT NOT NULL,
     fecha_hora  DATETIME NOT NULL,
-    precio      DECIMAL(10,2) NOT NULL,
+    precio      INT NOT NULL,
     activa      BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (sala_id, fecha_hora),
     FOREIGN KEY (pelicula_id) REFERENCES pelicula(id),
@@ -75,7 +75,6 @@ CREATE TABLE reservas (
     funcion_id        INT NOT NULL,
     fecha_compra      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     estado            ENUM('pendiente','confirmada','cancelada','expirada','finalizada') NOT NULL DEFAULT 'pendiente',
-    total             DECIMAL(10,2) NOT NULL DEFAULT 0,
     fecha_cancelacion DATETIME,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (funcion_id) REFERENCES funcion(id)
@@ -96,7 +95,7 @@ CREATE TABLE servicios (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     nombre      VARCHAR(100) NOT NULL,
     descripcion VARCHAR(255),
-    precio      DECIMAL(10,2) NOT NULL,
+    precio      INT NOT NULL,
     activo      BOOLEAN NOT NULL DEFAULT TRUE
 );
 
@@ -105,7 +104,7 @@ CREATE TABLE reserva_servicios (
     reserva_id      INT NOT NULL,
     servicio_id     INT NOT NULL,
     cantidad        INT NOT NULL,
-    precio_unitario DECIMAL(10,2) NOT NULL,  -- precio congelado al momento de la compra
+    precio_unitario INT NOT NULL,  -- precio congelado al momento de la compra
     UNIQUE (reserva_id, servicio_id),
     FOREIGN KEY (reserva_id)  REFERENCES reservas(id),
     FOREIGN KEY (servicio_id) REFERENCES servicios(id)

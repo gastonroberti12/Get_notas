@@ -56,6 +56,11 @@ def respuesta_error_interno(error: Exception | None = None):
     ), 500)
 
 
+def mensaje_validacion(error: ValueError) -> str:
+    detalle = error.args[0]
+    return detalle["errors"][0]["mensaje"] if isinstance(detalle, dict) else str(detalle)
+
+
 def formatear_fecha_hora(valor):
     if valor is None:
         return None
@@ -200,3 +205,11 @@ def construir_links_paginacion(total: int, limit: int, offset: int) -> dict:
         limit,
         offset
     )
+
+def validar_precio(valor, minimo=1):
+    """Precio en pesos enteros; rechaza decimales, strings y booleanos."""
+    if isinstance(valor, bool) or not isinstance(valor, int) or valor < minimo:
+        raise ValueError(construir_error_api(
+            "invalid.precio.value", "Precio inválido",
+            f"precio debe ser un entero mayor o igual a {minimo}."), 400)
+    return valor
