@@ -64,3 +64,10 @@ def get_ventas_generos():
 @requiere_rol("administrador")
 def get_ventas_peliculas():
     return ejecutar(estadisticas_service.obtener_ventas_peliculas)
+
+
+# GET /admin/estadisticas/cancelaciones: resume reservas y porcentaje cancelado.
+@estadisticas_bp.route("/admin/estadisticas/cancelaciones", methods=["GET"])
+@requiere_rol("administrador")
+def get_cancelaciones():
+    return ejecutar(estadisticas_service.obtener_cancelaciones)
