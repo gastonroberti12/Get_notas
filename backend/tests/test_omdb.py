@@ -6,6 +6,7 @@ from cine_fuente.services.omdb_service import (
     buscar_peliculas,
     obtener_detalle_pelicula,
 )
+from cine_fuente.validators.peliculas import validar_rango_cartelera
 
 
 @patch("cine_fuente.services.omdb_service.requests.get")
@@ -80,7 +81,7 @@ def test_busqueda_requiere_consulta():
     response = app.test_client().get("/peliculas/buscar")
 
     assert response.status_code == 400
-    assert "error" in response.get_json()
+    assert response.get_json()["errors"][0]["codigo"] == "pelicula.query.required"
 
 
 def test_busqueda_informa_clave_api_ausente():
@@ -88,11 +89,41 @@ def test_busqueda_informa_clave_api_ausente():
         response = app.test_client().get("/peliculas/buscar?q=Batman")
 
     assert response.status_code == 503
-    assert "OMDB_API_KEY" in response.get_json()["error"]
+    assert "OMDB_API_KEY" in response.get_json()["errors"][0]["mensaje"]
 
 
 def test_detalle_rechaza_id_imdb_invalido():
     response = app.test_client().get("/peliculas/invalid")
 
     assert response.status_code == 400
-    assert "error" in response.get_json()
+    assert response.get_json()["errors"][0]["codigo"] == "pelicula.invalid"
+
+
+def test_rango_cartelera_rechaza_formato_invalido():
+    try:
+        validar_rango_cartelera(
+            "2026-11-20",
+            "2026-11-21T00:00:00.000000-03:00",
+        )
+    except ValueError as error:
+        assert error.args[1] == 400
+    else:
+        raise AssertionError("Se esperaba un error de validación")
+
+
+def test_rango_cartelera_rechaza_fin_anterior():
+    try:
+        validar_rango_cartelera(
+            "2026-11-20T21:30:00.000000-03:00",
+            "2026-11-19T21:30:00.000000-03:00",
+        )
+    except ValueError as error:
+        assert error.args[1] == 400
+    else:
+        raise AssertionError("Se esperaba un error de validación")
+
+
+def test_rango_cartelera_permite_una_semana():
+    inicio = "2026-11-20T21:30:00.000000-03:00"
+    fin = "2026-11-27T21:30:00.000000-03:00"
+    assert validar_rango_cartelera(inicio, fin) == (inicio, fin)

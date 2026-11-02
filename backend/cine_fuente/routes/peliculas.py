@@ -21,6 +21,10 @@ from cine_fuente.services.omdb_service import (
     obtener_detalle_pelicula,
     buscar_peliculas as buscar_peliculas_omdb,
 )
+from cine_fuente.validators.peliculas import (
+    convertir_fecha_existente,
+    validar_rango_cartelera,
+)
 
 
 peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/peliculas")
@@ -53,6 +57,17 @@ def crear_pelicula():
             "La película ya existe en la cartelera.",
         ), 409)
 
+    if "fecha_inicio_cartelera" not in datos or "fecha_fin_cartelera" not in datos:
+        raise ValueError(construir_error_api(
+            "pelicula.fecha.required",
+            "Fechas requeridas",
+            "fecha_inicio_cartelera y fecha_fin_cartelera son obligatorias.",
+        ), 400)
+    fecha_inicio, fecha_fin = validar_rango_cartelera(
+        datos["fecha_inicio_cartelera"],
+        datos["fecha_fin_cartelera"],
+    )
+
     try:
         pelicula = obtener_detalle_pelicula(imdb_id.strip())
     except OmdbResponseError as error:
@@ -65,8 +80,8 @@ def crear_pelicula():
         ), 502)
 
     pelicula.update({
-        "fecha_inicio_cartelera": datos.get("fecha_inicio_cartelera"),
-        "fecha_fin_cartelera": datos.get("fecha_fin_cartelera"),
+        "fecha_inicio_cartelera": fecha_inicio,
+        "fecha_fin_cartelera": fecha_fin,
         "activa": True,
     })
     pelicula_id = insertar_pelicula(pelicula)
@@ -77,7 +92,8 @@ def crear_pelicula():
 @requiere_rol("administrador")
 # Actualiza los datos editables de una película.
 def modificar_pelicula(pelicula_id):
-    if obtener_pelicula(pelicula_id) is None:
+    pelicula_actual = obtener_pelicula(pelicula_id)
+    if pelicula_actual is None:
         return jsonify(construir_error_api(
             "pelicula.not.found", "Película no encontrada",
             "La película solicitada no existe.",
@@ -93,6 +109,20 @@ def modificar_pelicula(pelicula_id):
             "invalid.body", "Datos inválidos",
             "No se enviaron campos para modificar.",
         )), 400
+    fecha_inicio = convertir_fecha_existente(
+        cambios.get("fecha_inicio_cartelera", pelicula_actual["fecha_inicio_cartelera"])
+    )
+    fecha_fin = convertir_fecha_existente(
+        cambios.get("fecha_fin_cartelera", pelicula_actual["fecha_fin_cartelera"])
+    )
+    if fecha_inicio is not None or fecha_fin is not None:
+        if fecha_inicio is None or fecha_fin is None:
+            raise ValueError(construir_error_api(
+                "pelicula.fecha.required",
+                "Fechas requeridas",
+                "La película debe tener fecha de inicio y fecha de fin.",
+            ), 400)
+        validar_rango_cartelera(fecha_inicio, fecha_fin)
     actualizar_pelicula(pelicula_id, cambios)
     return "", 204
 
