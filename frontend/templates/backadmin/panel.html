@@ -1,7 +1,147 @@
 {% extends "base.html" %}
 
-{% block title %}Backoffice{% endblock %}
+{% block title %}Panel de administración | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
+{% endblock %}
 
 {% block content %}
-<h1>Backoffice</h1>
+
+<section class="admin-panel">
+
+    <!--encabezado-->
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+            <h1>Panel de administración</h1>
+            <p class="admin-subtitle">
+                Gestioná el cine y consultá los indicadores de actividad.
+            </p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        <!--menu lateral-->
+        <aside class="admin-sidebar">
+
+            <h2>Administración</h2>
+
+            <nav aria-label="Menú del backoffice">
+                <ul class="admin-menu">
+                    <li><span>Películas</span></li>
+                    <li><span>Funciones</span></li>
+                    <li><span>Locales</span></li>
+                    <li><span>Salas</span></li>
+                    <li><span>Servicios</span></li>
+                    <li><span>Usuarios</span></li>
+                    <li><span>Compras</span></li>
+                    <li>
+                        <span class="admin-menu-active">
+                            Estadísticas
+                        </span>
+                    </li>
+                </ul>
+            </nav>
+
+            <p class="admin-menu-note">
+                Las secciones de gestión estarán disponibles
+                cuando se implementen sus respectivas vistas.
+            </p>
+
+        </aside>
+
+        <!--cont. principal-->
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Estadísticas</h2>
+                <span class="admin-pending">
+                    Integración pendiente
+                </span>
+            </div>
+
+            <p class="admin-description">
+                Resumen de la actividad de Cine Paradiso.
+                Los indicadores se mostrarán cuando estén
+                conectados al backend.
+            </p>
+
+            <!--tarjetas de estadisticas-->
+            <div class="admin-stats">
+
+                <article class="admin-stat">
+                    <h3>Ocupación</h3>
+                    <p>—</p>
+                    <small>Porcentaje de butacas ocupadas</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Entradas</h3>
+                    <p>—</p>
+                    <small>Entradas vendidas</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Ventas</h3>
+                    <p>—</p>
+                    <small>Importe total</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Cancelaciones</h3>
+                    <p>—</p>
+                    <small>Reservas canceladas</small>
+                </article>
+
+            </div>
+
+            <!--grafficos-->
+            <div class="admin-charts">
+
+                <section class="admin-chart">
+
+                    <h3>Ventas por género</h3>
+
+                    <div class="admin-empty-chart">
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            El gráfico se completará al integrar
+                            las estadísticas del backend.
+                        </small>
+                    </div>
+
+                </section>
+
+                <section class="admin-chart">
+
+                    <h3>Franjas horarias más vendidas</h3>
+
+                    <div class="admin-empty-chart">
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            El gráfico se completará al integrar
+                            las estadísticas del backend.
+                        </small>
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
 {% endblock %}
