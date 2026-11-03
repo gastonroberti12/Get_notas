@@ -1,0 +1,28 @@
+<!-- Menú lateral del backoffice -->
+<aside class="admin-sidebar">
+
+    <h2>Administración</h2>
+
+    <nav aria-label="Menú del backoffice">
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('backoffice.peliculas_admin') }}">Películas</a></li>
+            <li><span>Funciones</span></li>
+            <li><span>Locales</span></li>
+            <li><span>Salas</span></li>
+            <li><span>Servicios</span></li>
+            <li><span>Usuarios</span></li>
+            <li><span>Compras</span></li>
+            <li>
+                <span class="admin-menu-active">
+                    Estadísticas
+                </span>
+            </li>
+        </ul>
+    </nav>
+
+    <p class="admin-menu-note">
+        Las secciones de gestión estarán disponibles
+        cuando se implementen sus respectivas vistas.
+    </p>
+
+</aside>
