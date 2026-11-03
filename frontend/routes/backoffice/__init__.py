@@ -3,3 +3,4 @@ from routes.backoffice import backoffice_peliculas
 from routes.backoffice import backoffice_funciones
 from routes.backoffice import backoffice_servicios
 from routes.backoffice import backoffice_estadisticas
+from routes.backoffice import backoffice_entradas
