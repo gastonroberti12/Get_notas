@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-panel">
+
+    <!-- Encabezado -->
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+
+            <h1>Estadísticas</h1>
+
+            <p class="admin-subtitle">
+                Consultá los indicadores de actividad de Cine Paradiso.
+            </p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        <!-- Menú lateral -->
+        {% include "backadmin/barralateral.html" %}
+
+        <!-- Contenido principal -->
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Resumen general</h2>
+                <span class="admin-pending">Pendiente de integración</span>
+            </div>
+
+            <p class="admin-description">
+                Resumen de ocupación, ventas y cancelaciones
+                de Cine Paradiso.
+            </p>
+
+            <!-- Indicadores generales -->
+            <div class="admin-stats">
+
+                <article class="admin-stat">
+                    <h3>Ocupación general</h3>
+                    <p>—</p>
+                    <small>Porcentaje de butacas ocupadas</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Entradas vendidas</h3>
+                    <p>—</p>
+                    <small>Cantidad de entradas vendidas</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Ventas totales</h3>
+                    <p>—</p>
+                    <small>Importe total recaudado</small>
+                </article>
+
+                <article class="admin-stat">
+                    <h3>Cancelaciones</h3>
+                    <p>—</p>
+                    <small>Reservas canceladas</small>
+                </article>
+
+            </div>
+
+            <!-- Ocupación -->
+            <div class="admin-section-heading">
+                <h2>Ocupación</h2>
+            </div>
+
+            <p class="admin-description">
+                Consultá la ocupación de las funciones
+                y películas proyectadas.
+            </p>
+
+            <div class="admin-charts">
+
+                <section class="admin-chart">
+
+                    <h3>Ocupación por función</h3>
+
+                    <div class="admin-empty-chart">
+
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            La ocupación de cada función se mostrará
+                            cuando esté disponible su integración.
+                        </small>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-chart">
+
+                    <h3>Ocupación por película</h3>
+
+                    <div class="admin-empty-chart">
+
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            La ocupación por película se mostrará
+                            cuando esté disponible su integración.
+                        </small>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <!-- Ventas -->
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Ventas</h2>
+            </div>
+
+            <p class="admin-description">
+                Consultá las ventas según el género cinematográfico
+                y los horarios de las funciones.
+            </p>
+
+            <div class="admin-charts">
+
+                <section class="admin-chart">
+
+                    <h3>Ventas por género</h3>
+
+                    <div class="admin-empty-chart">
+
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            El gráfico mostrará las entradas vendidas
+                            según el género de las películas.
+                        </small>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-chart">
+
+                    <h3>Franjas horarias más vendidas</h3>
+
+                    <div class="admin-empty-chart">
+
+                        <span class="admin-chart-icon">▥</span>
+
+                        <p>Sin datos para mostrar</p>
+
+                        <small>
+                            El gráfico mostrará los horarios
+                            con mayor cantidad de entradas vendidas.
+                        </small>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <!-- Cancelaciones -->
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Cancelaciones</h2>
+            </div>
+
+            <p class="admin-description">
+                Consultá las reservas canceladas y su proporción
+                respecto del total de reservas.
+            </p>
+
+            <div class="admin-stats">
+
+                <article class="admin-stat">
+
+                    <h3>Reservas canceladas</h3>
+
+                    <p>—</p>
+
+                    <small>Cantidad de cancelaciones</small>
+
+                </article>
+
+                <article class="admin-stat">
+
+                    <h3>Porcentaje de cancelación</h3>
+
+                    <p>—</p>
+
+                    <small>Respecto del total de reservas</small>
+
+                </article>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
