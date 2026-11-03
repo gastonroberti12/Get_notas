@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de funciones | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-panel">
+
+    <!-- Encabezado -->
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+            <h1>Gestión de funciones</h1>
+            <p class="admin-subtitle">
+                Administrá las funciones y horarios de Cine Paradiso.
+            </p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        <!-- Menú lateral -->
+        {% include "backadmin/barralateral.html" %}
+
+        <!-- Contenido principal -->
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Nueva función</h2>
+                <span class="admin-pending">Pendiente de integración</span>
+            </div>
+
+            <p class="admin-description">
+                Seleccioná una película, una sala y el horario
+                en el que se realizará la función.
+            </p>
+
+            <!-- Formulario -->
+            <div class="admin-form-card">
+
+                <form class="admin-form">
+
+                    <!-- Película -->
+                    <div class="admin-form-group">
+
+                        <label for="pelicula_id">Película</label>
+
+                        <select id="pelicula_id"
+                                name="pelicula_id"
+                                required>
+
+                            <option value="">
+                                Seleccionar película
+                            </option>
+
+                        </select>
+
+                        <small>
+                            Se mostrarán las películas disponibles
+                            en cartelera.
+                        </small>
+
+                    </div>
+
+                    <!-- Sala -->
+                    <div class="admin-form-group">
+
+                        <label for="sala_id">Sala</label>
+
+                        <select id="sala_id"
+                                name="sala_id"
+                                required>
+
+                            <option value="">
+                                Seleccionar sala
+                            </option>
+
+                        </select>
+
+                        <small>
+                            Seleccioná la sala donde se proyectará
+                            la película.
+                        </small>
+
+                    </div>
+
+                    <!-- Fecha y precio -->
+                    <div class="admin-form-dates">
+
+                        <div class="admin-form-group">
+
+                            <label for="fecha_hora">
+                                Fecha y hora
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                id="fecha_hora"
+                                name="fecha_hora"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="admin-form-group">
+
+                            <label for="precio">
+                                Precio de entrada ($)
+                            </label>
+
+                            <input
+                                type="number"
+                                id="precio"
+                                name="precio"
+                                min="0.01"
+                                step="0.01"
+                                placeholder="Ejemplo: 4500"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+                    <!-- Información -->
+                    <div class="admin-form-info">
+
+                        <h3>Información de la función</h3>
+
+                        <p>
+                            Antes de registrar la función, el sistema
+                            verificará que la película esté disponible
+                            en cartelera y que la sala no tenga otra
+                            función programada en el mismo horario.
+                        </p>
+
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="admin-form-actions">
+
+                        <a href="{{ url_for('backoffice.panel') }}"
+                           class="admin-btn-secondary">
+                            Volver al panel
+                        </a>
+
+                        <button type="submit"
+                                class="admin-btn-primary"
+                                disabled>
+                            Crear función
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Listado de funciones -->
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Funciones programadas</h2>
+            </div>
+
+            <p class="admin-description">
+                Consultá las funciones registradas y sus horarios.
+            </p>
+
+            <div class="admin-form-card">
+
+                <div class="admin-empty-chart">
+
+                    <span class="admin-chart-icon">▥</span>
+
+                    <p>Sin funciones para mostrar</p>
+
+                    <small>
+                        Las funciones programadas aparecerán
+                        cuando se integre esta sección con el backend.
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

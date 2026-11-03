@@ -1,2 +1,3 @@
 from routes.backoffice.backoffice import backoffice_bp
 from routes.backoffice import backoffice_peliculas
+from routes.backoffice import backoffice_funciones
