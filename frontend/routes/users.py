@@ -84,8 +84,6 @@ def actualizar_perfil():
         return redirect(url_for('users.login'))
 
     datos = {campo: request.form.get(campo, '').strip() for campo in ('nombre', 'apellido', 'email')}
-    if request.form.get('password'):
-        datos['contrasenia'] = request.form['password']
 
     status, _ = llamar_api('PATCH', f"/usuarios/{session['usuario']['id']}", datos)
     if status == 204:

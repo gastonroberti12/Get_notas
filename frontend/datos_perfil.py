@@ -30,8 +30,6 @@ def armar_reserva(r, cache):
     entradas_api = obtener(f"/reservas/{r['id']}/entradas?_limit=100", cache).get('entradas', [])
     entradas = [{
         'butaca': butacas.get(entrada['butaca_id'], SIN_DATO),
-        'codigo_qr': entrada.get('codigo_qr') or '',
-        'qr': None,  # el back no expone la imagen del QR; el template muestra un texto de reemplazo
         'fecha_uso': formatear_fecha(entrada.get('fecha_uso'), '%d/%m/%Y %H:%M', None),
     } for entrada in entradas_api]
 
@@ -65,6 +63,6 @@ def parsear_fecha(valor):
         return None
 
 
-def formatear_fecha(valor, formato, SIN_DATO):
+def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
     fecha = parsear_fecha(valor)
-    return fecha.strftime(formato) if fecha else SIN_DATO
+    return fecha.strftime(formato) if fecha else sin_dato
