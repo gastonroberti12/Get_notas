@@ -3,7 +3,6 @@ from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.peliculas import (
     consultar_pelicula_por_id as obtener_pelicula,
     consultar_pelicula_por_imdb as obtener_pelicula_por_imdb,
-    consultar_peliculas as listar_peliculas_locales,
     insertar_pelicula,
     actualizar_pelicula,
 )
@@ -21,9 +20,13 @@ from cine_fuente.services.omdb_service import (
     obtener_detalle_pelicula,
     buscar_peliculas as buscar_peliculas_omdb,
 )
+
+from cine_fuente.services.peliculas_service import obtener_peliculas
+
 from cine_fuente.validators.peliculas import (
     convertir_fecha_existente,
     validar_rango_cartelera,
+    validar_filtros,
 )
 
 
@@ -34,7 +37,7 @@ peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/peliculas")
 # Lista las películas locales disponibles.
 def listar_peliculas():
     limit, offset = validar_paginacion(request.args)
-    peliculas = listar_peliculas_locales()
+    peliculas = obtener_peliculas(validar_filtros(request.args))
     return respuesta_paginada("peliculas", peliculas[offset:offset + limit], len(peliculas), limit, offset)
 
 
