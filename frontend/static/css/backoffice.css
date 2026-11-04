@@ -233,10 +233,7 @@
     color: var(--gold);
 }
 
-
-
 /* RESPONSIVE*/
-
 
 /* Tablets */
 
@@ -275,4 +272,208 @@
         grid-template-columns: 1fr;
     }
 
+}
+
+/*formularios backoffice*/
+
+.admin-form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-form-group label {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-form-group input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+
+    background: var(--surface-dark);
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.admin-form-group input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.admin-form-group small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/*fechas*/
+
+.admin-form-dates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.admin-form-help {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: -12px 0 0;
+}
+
+/*info*/
+
+.admin-form-info {
+    background: var(--surface-dark);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.admin-form-info h3 {
+    color: var(--gold);
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.admin-form-info p {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/*botones*/
+
+.admin-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-btn-primary,
+.admin-btn-secondary {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-btn-primary {
+    background: var(--gold);
+    color: var(--bg);
+    border: 1px solid var(--gold);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+    background: var(--gold-hover);
+}
+
+.admin-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-btn-secondary {
+    background: var(--surface-dark);
+    color: var(--text);
+    border: 1px solid var(--border-input);
+}
+
+.admin-btn-secondary:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+}
+
+/*responsive */
+
+@media (max-width: 760px) {
+
+    .admin-form-card {
+        padding: 20px;
+    }
+
+    .admin-form-dates {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-form-actions {
+        flex-direction: column;
+    }
+
+    .admin-btn-primary,
+    .admin-btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+
+}
+
+.admin-menu li a {
+    display: block;
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: var(--text-soft);
+    background: var(--surface-dark);
+    text-decoration: none;
+}
+
+.admin-menu li a:hover {
+    color: var(--gold);
+    background: var(--border);
+}
+
+/* Selectores de formularios */
+
+.admin-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+
+    background: var(--surface-dark);
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.admin-form-group select:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+/* Listados del backoffice */
+
+.admin-list-heading {
+    margin-top: 32px;
 }
