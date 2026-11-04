@@ -10,3 +10,20 @@ def panel():
         # return render_template("403.html"), 403  , cuando exista el manejo de errores
         return redirect(url_for('peliculas.inicio'))
     return render_template("backadmin/panel.html")
+
+@backoffice_bp.route("/backoffice/locales")
+def locales_admin():
+
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    return render_template("backadmin/locales.html")
+
+
+@backoffice_bp.route("/backoffice/salas")
+def salas_admin():
+
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    return render_template("backadmin/salas.html")
