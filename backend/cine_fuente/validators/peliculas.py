@@ -62,3 +62,8 @@ def convertir_fecha_existente(valor):
             valor = valor.replace(tzinfo=timezone(timedelta(hours=-3)))
         return valor.isoformat(timespec="microseconds")
     return valor
+
+
+# Lee los filtros disponibles para las películas.
+def validar_filtros(parametros):
+    return {"sucursal_id": parametros.get("sucursal_id", type=int)}
