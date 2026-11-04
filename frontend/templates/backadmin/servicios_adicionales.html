@@ -41,7 +41,11 @@
             <!--form para agregar servicios-->
             <div class="admin-form-card">
 
-                <form class="admin-form">
+                {% if error_alta %}
+                    <p>{{ error_alta }}</p>
+                {% endif %}
+
+                <form class="admin-form" method="POST" action="{{ url_for('backoffice.servicios_admin') }}">
 
                     <!--nombre-->
                     <div class="admin-form-group">
@@ -83,12 +87,20 @@
                             type="number"
                             id="precio"
                             name="precio"
-                            min="0.01"
-                            step="0.01"
+                            min="0"
+                            step="1"
                             placeholder="Ejemplo: 3500"
                             required
                         >
 
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="activo">
+                            <input type="checkbox" id="activo" name="activo" checked>
+                            Servicio activo
+                        </label>
+                        <small>Si lo destildás, no estará disponible para nuevas reservas.</small>
                     </div>
 
                     <div class="admin-form-info">
@@ -113,8 +125,7 @@
 
                         <button
                             type="submit"
-                            class="admin-btn-primary"
-                            disabled>
+                            class="admin-btn-primary">
                             Agregar servicio
                         </button>
 
