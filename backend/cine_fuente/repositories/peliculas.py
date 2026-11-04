@@ -36,3 +36,15 @@ def insertar_pelicula(datos):
 def actualizar_pelicula(pelicula_id, datos):
     campos = ", ".join(f"{campo} = %s" for campo in datos)
     ejecutar_escritura(f"UPDATE pelicula SET {campos} WHERE id = %s", (*datos.values(), pelicula_id))
+
+
+# Consulta las películas activas con funciones futuras en una sucursal.
+def consultar_peliculas_por_sucursal(sucursal_id, desde):
+    return ejecutar_consulta(
+        "SELECT p.* FROM pelicula p "
+        "JOIN funcion f ON f.pelicula_id = p.id "
+        "JOIN salas s ON s.id = f.sala_id "
+        "WHERE p.activa = TRUE AND s.sucursal_id = %s AND f.fecha_hora > %s "
+        "GROUP BY p.id ORDER BY p.id",
+        (sucursal_id, desde),
+    )
