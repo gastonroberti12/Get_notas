@@ -44,12 +44,12 @@
                 <td>{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
                 <td class="admin-actions">
                   <a href="/backoffice/peliculas/{{ p.id }}/editar" class="admin-btn-secondary">Editar</a>
-                  {% if p.activa %}
-                  <form method="post" action="{{ url_for('backoffice.baja_pelicula', pelicula_id=p.id) }}"
-                        onsubmit="return confirm('¿Dar de baja esta película?')">
-                    <button type="submit" class="admin-btn-secondary">Dar de baja</button>
-                  </form>
-                  {% endif %}
+                  <form method="post" action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
+                        data-confirmar="{{ '¿Dar de baja esta película?' if p.activa else '¿Dar de alta esta película?' }}"
+                        onsubmit="return confirm(this.dataset.confirmar)">
+                     <input type="hidden" name="activa" value="{{ 'false' if p.activa else 'true' }}">
+                     <button type="submit" class="admin-btn-secondary">{{ 'Dar de baja' if p.activa else 'Dar de alta' }}</button>
+                    </form>
                 </td>
               </tr>
               {% endfor %}

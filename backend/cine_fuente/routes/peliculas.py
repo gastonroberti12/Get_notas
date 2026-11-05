@@ -112,20 +112,21 @@ def modificar_pelicula(pelicula_id):
             "invalid.body", "Datos inválidos",
             "No se enviaron campos para modificar.",
         )), 400
-    fecha_inicio = convertir_fecha_existente(
-        cambios.get("fecha_inicio_cartelera", pelicula_actual["fecha_inicio_cartelera"])
-    )
-    fecha_fin = convertir_fecha_existente(
-        cambios.get("fecha_fin_cartelera", pelicula_actual["fecha_fin_cartelera"])
-    )
-    if fecha_inicio is not None or fecha_fin is not None:
-        if fecha_inicio is None or fecha_fin is None:
-            raise ValueError(construir_error_api(
-                "pelicula.fecha.required",
-                "Fechas requeridas",
-                "La película debe tener fecha de inicio y fecha de fin.",
-            ), 400)
-        validar_rango_cartelera(fecha_inicio, fecha_fin)
+    if "fecha_inicio_cartelera" in cambios or "fecha_fin_cartelera" in cambios:
+        fecha_inicio = convertir_fecha_existente(
+            cambios.get("fecha_inicio_cartelera", pelicula_actual["fecha_inicio_cartelera"])
+        )
+        fecha_fin = convertir_fecha_existente(
+            cambios.get("fecha_fin_cartelera", pelicula_actual["fecha_fin_cartelera"])
+        )
+        if fecha_inicio is not None or fecha_fin is not None:
+            if fecha_inicio is None or fecha_fin is None:
+                raise ValueError(construir_error_api(
+                    "pelicula.fecha.required",
+                    "Fechas requeridas",
+                    "La película debe tener fecha de inicio y fecha de fin.",
+                ), 400)
+            validar_rango_cartelera(fecha_inicio, fecha_fin)
     actualizar_pelicula(pelicula_id, cambios)
     return "", 204
 
