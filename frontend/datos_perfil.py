@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from api_cliente import llamar_api
 
 ESTADOS_PROXIMAS = ('confirmada',)
@@ -13,8 +14,12 @@ def obtener(endpoint, cache):
         cache[endpoint] = cuerpo if status == 200 else {}
     return cache[endpoint]
 
-def formatear_total(centavos):
-    return f"{int(centavos) // 100:,}".replace(',', '.')
+def formatear_total(pesos):
+    try:
+        monto = Decimal(str(pesos)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError):
+        monto = Decimal('0')
+    return f"{monto:,}".replace(',', '.')
 
 def armar_reserva(r, cache):
     # Consulta los datos de la reserva

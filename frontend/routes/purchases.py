@@ -1,5 +1,6 @@
 from flask import Blueprint, redirect, url_for, render_template, flash, request, abort
 from api_cliente import llamar_api, mensaje_error
+from datos_perfil import formatear_total
 from routes.roles import esta_logueado
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -101,6 +102,29 @@ def checkout():
         return redirect(url_for("movies.index"))
 
     if request.method == "POST":
+        for clave, cantidad_texto in request.form.items():
+            if not clave.startswith("servicio_"):
+                continue
+            try:
+                cantidad = int(cantidad_texto)
+                servicio_id = int(clave.removeprefix("servicio_"))
+            except ValueError:
+                continue
+            if cantidad <= 0:
+                continue
+            status_servicio, _ = llamar_api(
+                "POST",
+                f"/reservas/{reserva_id}/servicios",
+                {"servicio_id": servicio_id, "cantidad": cantidad},
+            )
+            if status_servicio not in (201, 409):
+                flash("No se pudo agregar un servicio adicional.", "error")
+                return redirect(url_for(
+                    "purchases.checkout",
+                    reserva_id=reserva_id,
+                    funcion_id=request.args.get("funcion_id"),
+                ))
+
         datos_pago = {
             campo: request.form.get(campo, "")
             for campo in ("titular", "numero_tarjeta", "mes_vencimiento", "anio_vencimiento", "cvv")
@@ -131,6 +155,8 @@ def checkout():
 
     status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100")
     servicios = servicios_data.get("servicios", []) if status_servicios == 200 else []
+    for servicio in servicios:
+        servicio["precio_formateado"] = formatear_total(servicio["precio"])
 
     return render_template(
         "checkout.html",

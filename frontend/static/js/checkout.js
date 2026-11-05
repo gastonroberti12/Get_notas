@@ -82,6 +82,7 @@ form.addEventListener('submit', (e) => {
 
   errorBox.hidden = valido;
   errorBox.textContent = 'Revisá los datos de la tarjeta.';
+  if (!valido) e.preventDefault();
 
 });
 
