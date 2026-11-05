@@ -129,7 +129,7 @@
         {% else %}
 
             <p class="catalogo-mensaje">
-                No hay películas disponibles.
+                No hay películas disponibles{% if sucursal_actual %} en {{ sucursal_actual.nombre }}{% endif %}.
             </p>
 
         {% endif %}
