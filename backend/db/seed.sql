@@ -40,14 +40,14 @@ INSERT INTO usuarios (nombre, apellido, email, contrasena, rol) VALUES
      'cliente');
 
 -- Películas (póster null: se completa con PATCH o cargando desde OMDb)
-INSERT INTO pelicula (titulo, sinopsis, duracion_min, clasificacion, genero, id_externo,
-                      fecha_inicio_cartelera, fecha_fin_cartelera) VALUES
-    ('The Godfather', 'La saga de la familia Corleone y su ascenso en el crimen organizado.',
-     175, 'R', 'Crime, Drama', 'tt0068646', NOW(), NOW() + INTERVAL 60 DAY),
-    ('Back to the Future', 'Un adolescente viaja al pasado en una máquina del tiempo.',
-     116, 'PG', 'Adventure, Comedy, Sci-Fi', 'tt0088763', NOW(), NOW() + INTERVAL 60 DAY),
-    ('Pulp Fiction', 'Historias entrelazadas de criminales en Los Ángeles.',
-     154, 'R', 'Crime, Drama', 'tt0110912', NOW(), NOW() + INTERVAL 60 DAY);
+--INSERT INTO pelicula (titulo, sinopsis, duracion_min, clasificacion, genero, id_externo,
+                    --fecha_inicio_cartelera, fecha_fin_cartelera) VALUES
+    --('The Godfather', 'La saga de la familia Corleone y su ascenso en el crimen organizado.',
+    --175, 'R', 'Crime, Drama', 'tt0068646', NOW(), NOW() + INTERVAL 60 DAY),
+    --('Back to the Future', 'Un adolescente viaja al pasado en una máquina del tiempo.',
+    --116, 'PG', 'Adventure, Comedy, Sci-Fi', 'tt0088763', NOW(), NOW() + INTERVAL 60 DAY),
+    --('Pulp Fiction', 'Historias entrelazadas de criminales en Los Ángeles.',
+    --154, 'R', 'Crime, Drama', 'tt0110912', NOW(), NOW() + INTERVAL 60 DAY); 
 
 -- Funciones relativas a la fecha de creación (ids: películas 1-3, salas 1-7 en el orden de arriba)
 INSERT INTO funcion (pelicula_id, sala_id, fecha_hora, precio) VALUES
