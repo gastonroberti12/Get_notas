@@ -26,7 +26,7 @@ function cambiarModoEdicion(formularioPerfil, valoresOriginales, quiereEditar) {
 }
 
 
-// guarda los valores originales y conecta los botones Editar y Cancelar.
+// guarda los valores originales del formulario y conecta los botones Editar y Cancelar.
 function configurarFormularioPerfil() {
   const formularioPerfil = document.getElementsByClassName('formulario-perfil')[0];
   if (!formularioPerfil) return;
@@ -48,7 +48,7 @@ function configurarFormularioPerfil() {
   });
 }
 
-
+// cambiar entre pestañas proximas / historial
 function configurarPestanas() {
   const botonesDePestana = document.getElementsByClassName('tab');
   const panelesDePestana = document.getElementsByClassName('panel-tab');
@@ -63,11 +63,42 @@ function configurarPestanas() {
   mostrarSoloElElemento(botonesDePestana, panelesDePestana, 0);
 }
 
+// Muestra el mensaje de confirmacion, solo si se confirma se envia el formulario de cancelar reserva
+function configurarModalCancelar() {
+  const modal = document.getElementById('modal-cancelar');
+  if (!modal) return;
 
-// Pide confirmacion antes de enviar el formulario de cancelar reserva
-function pedirConfirmacionAntesDeCancelar(evento) {
-  const confirmo = window.confirm('¿Cancelar esta reserva? Se liberan las butacas.');
-  if (!confirmo) evento.preventDefault();
+  const botonVolver = modal.getElementsByClassName('modal_volver')[0];
+  const botonConfirmar = modal.getElementsByClassName('modal_confirmar')[0];
+
+  function cerrarModal() {
+    if (botonConfirmar.disabled) return;
+    modal.classList.add('oculto');
+  }
+
+  // Cada boton "Cancelar reserva" abre el modal y conecta el boton de confirmar con el formulario de esa reserva
+  for (const botonCancelar of document.getElementsByClassName('reserva_cancelar')) {
+    botonCancelar.addEventListener('click', () => {
+      botonConfirmar.setAttribute('form', botonCancelar.form.id);
+      modal.classList.remove('oculto');
+    });
+  }
+
+  // cuando el formulario se envia, se bloquean los botones para evitar el doble click
+  for (const formularioCancelar of document.getElementsByClassName('form-cancelar-reserva')) {
+    formularioCancelar.addEventListener('submit', () => {
+      botonConfirmar.disabled = true;
+      botonVolver.disabled = true;
+      botonConfirmar.textContent = 'Cancelando...';
+    });
+  }
+
+  botonVolver.addEventListener('click', cerrarModal);
+
+  // Click en el fondo oscuro
+  modal.addEventListener('click', (evento) => {
+    if (evento.target === modal) cerrarModal();
+  });
 }
 
 
@@ -75,7 +106,4 @@ function pedirConfirmacionAntesDeCancelar(evento) {
 
 configurarFormularioPerfil();
 configurarPestanas();
-
-for (const formularioCancelar of document.getElementsByClassName('form-cancelar-reserva')) {
-  formularioCancelar.addEventListener('submit', pedirConfirmacionAntesDeCancelar);
-}
+configurarModalCancelar();
