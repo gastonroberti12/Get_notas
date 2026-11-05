@@ -85,7 +85,10 @@ def resumen_pelicula(item):
 def buscar_peliculas(query, page=1):
     data = solicitar_omdb({"s": query, "type": "movie", "page": page})
     error = data.get("Error", "").strip() if isinstance(data.get("Error"), str) else ""
-    if data.get("Response") == "False" and error == "Pelicula no encontrada!":
+    if data.get("Response") == "False" and error in {
+        "Movie not found!",
+        "Pelicula no encontrada!",
+    }:
         return {"resultados": [], "total_resultados": 0}
     verificar_respuesta_api(data)
 
