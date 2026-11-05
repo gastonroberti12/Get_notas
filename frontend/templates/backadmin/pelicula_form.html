@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Alta de película | Cine Paradiso{% endblock %}
+{% block title %}{{ 'Editar película' if editando else 'Alta de película' }} | Cine Paradiso{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
@@ -13,7 +13,7 @@
         <div>
             <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
             <h1>Gestión de películas</h1>
-            <p class="admin-subtitle">Revisá los datos obtenidos de OMDb y definí el período en cartelera.</p>
+            <p class="admin-subtitle">Revisá los datos y definí el período en cartelera.</p>
         </div>
         <span class="admin-role">Administrador</span>
     </div>
@@ -25,15 +25,16 @@
             <div class="admin-section-heading">
                 <h2>{{ 'Editar película' if editando else 'Agregar película' }}</h2>
             </div>
-            <p class="admin-description">Estos datos fueron obtenidos de OMDb. Confirmá la película para agregarla.</p>
+            <p class="admin-description">Todos los campos se pueden editar antes de guardar.</p>
 
             {% if error %}<div class="admin-alert" role="alert">{{ error }}</div>{% endif %}
 
-            {% if v.titulo %}
             <div class="admin-form-card">
                 <form class="admin-form" method="post"
                       action="{{ url_for('backoffice.editar_pelicula', pelicula_id=v.id) if editando else url_for('backoffice.nueva_pelicula') }}">
+                    {% if not editando %}
                     <input type="hidden" name="id_externo" value="{{ v.id_externo or '' }}">
+                    {% endif %}
 
                     <div class="admin-form-body">
                         <!-- Vista previa del póster -->
@@ -45,33 +46,33 @@
                         <div class="admin-form-fields">
                             <div class="admin-form-group">
                                 <label for="titulo">Título *</label>
-                                <input type="text" id="titulo" name="titulo" value="{{ v.titulo or '' }}" maxlength="200" {{ 'readonly' if not editando }}>
+                                <input type="text" id="titulo" name="titulo" value="{{ v.titulo or '' }}" maxlength="200" required>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="sinopsis">Sinopsis</label>
-                                <textarea id="sinopsis" name="sinopsis" rows="5" {{ 'readonly' if not editando }}>{{ v.sinopsis or '' }}</textarea>
+                                <textarea id="sinopsis" name="sinopsis" rows="5">{{ v.sinopsis or '' }}</textarea>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="poster_url">URL del póster</label>
-                                <input type="url" id="poster_url" name="poster_url" value="{{ v.poster_url or '' }}" maxlength="500" {{ 'readonly' if not editando }}>
+                                <input type="url" id="poster_url" name="poster_url" value="{{ v.poster_url or '' }}" maxlength="500">
                             </div>
 
                             <div class="admin-form-dates">
                                 <div class="admin-form-group">
                                     <label for="duracion_min">Duración (min)</label>
-                                    <input type="number" id="duracion_min" name="duracion_min" min="1" value="{{ v.duracion_min or '' }}" {{ 'readonly' if not editando }}>
+                                    <input type="number" id="duracion_min" name="duracion_min" min="1" value="{{ v.duracion_min or '' }}">
                                 </div>
                                 <div class="admin-form-group">
                                     <label for="clasificacion">Clasificación</label>
-                                    <input type="text" id="clasificacion" name="clasificacion" maxlength="20" value="{{ v.clasificacion or '' }}" {{ 'readonly' if not editando }}>
+                                    <input type="text" id="clasificacion" name="clasificacion" maxlength="20" value="{{ v.clasificacion or '' }}">
                                 </div>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="genero">Género</label>
-                                <input type="text" id="genero" name="genero" maxlength="100" value="{{ v.genero or '' }}" {{ 'readonly' if not editando }}>
+                                <input type="text" id="genero" name="genero" maxlength="100" value="{{ v.genero or '' }}">
                             </div>
                         </div>
                     </div>
@@ -91,16 +92,15 @@
                     <p class="admin-form-help">La película puede permanecer en cartelera como máximo 7 días.</p>
 
                     <div class="admin-form-actions">
+                        {% if editando %}
+                        <a href="{{ url_for('backoffice.peliculas_admin') }}" class="admin-btn-secondary">Cancelar</a>
+                        {% else %}
                         <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-secondary">Volver al buscador</a>
-                        <button type="submit" class="admin-btn-primary">{{ 'Guardar cambios' if editando else 'Agregar película' }}</button>
+                        {% endif %}
+                        <button type="submit" class="admin-btn-primary">{{ 'Guardar cambios' if editando else 'Guardar película' }}</button>
                     </div>
                 </form>
             </div>
-            {% else %}
-            <div class="admin-form-actions">
-                <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-secondary">Volver al buscador</a>
-            </div>
-            {% endif %}
         </div>
     </div>
 </section>
