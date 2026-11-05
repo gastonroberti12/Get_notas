@@ -43,6 +43,21 @@
         </nav>
     </header>
 
+    <!-- NOTIFICACIONES -->
+    {% set notificaciones = get_flashed_messages(with_categories=true) %}
+    {% if notificaciones %}
+    <div class="notificaciones">
+        {% for tipo, aviso in notificaciones %}
+        <div class="notificacion notificacion-{{ tipo }}">
+            <span class="notificacion_icono">{% if tipo == 'error' %}!{% else %}ok{% endif %}</span>
+            
+            <p class="notificacion_texto">{{ aviso }}</p>
+            <button type="button" class="notificacion_cerrar">×</button>
+            <span class="notificacion_barra"></span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <main>
         {% block content %}{% endblock %}
     </main>

@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion, ejecutar_actualizacion
 
 TOTAL_RESERVA_SQL = """
     (
@@ -354,7 +354,7 @@ def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None, estado
     else:
         sql = "UPDATE reservas SET estado = %(estado)s WHERE id = %(reserva_id)s"
     sql = sql.rstrip() + condicion_estado
-    return escribir(sql, parametros)
+    return ejecutar_actualizacion(sql, parametros)
 
 
 def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):

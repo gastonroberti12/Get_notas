@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
 from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_reserva
@@ -16,6 +16,7 @@ def login():
         if status == 200:
             session['token'] = cuerpo['token']
             session['usuario'] = cuerpo['usuario'] # incluye el rol
+            flash('Sesión iniciada con éxito.', 'exito') # flash: mensaje que se muestra en la siguiente página
             return redirect('/')
         
         error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
@@ -36,6 +37,7 @@ def registro():
 
         status, cuerpo = llamar_api('POST', '/usuarios', datos)
         if status == 201:
+            flash('Te registraste con éxito. Ya podés iniciar sesión.', 'exito')
             return redirect(url_for('users.login'))
 
         error = mensaje_error(status, cuerpo, 'No se pudo crear la cuenta.')
@@ -46,6 +48,7 @@ def registro():
 @users_bp.route("/logout", methods=['POST'])
 def logout():
     session.clear()
+    flash('Sesión cerrada con éxito.', 'exito')
     return redirect(url_for('peliculas.inicio'))
 
 @users_bp.route("/perfil")
