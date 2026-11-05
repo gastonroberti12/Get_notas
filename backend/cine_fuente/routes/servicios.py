@@ -144,6 +144,43 @@ def eliminar_servicio_endpoint(servicio_id):
 
 
 # 6. GET /reservas/{id}/servicios
+@servicios_bp.route("/reservas/<int:reserva_id>/servicios", methods=["POST"])
+@requiere_rol("cliente")
+def agregar_servicio_reserva(reserva_id):
+    error = verificar_reserva(reserva_id, g.usuario, modificar=True)
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return error_servicio(
+            "ERROR_VALIDACION", "Cuerpo JSON inválido", 400
+        )
+
+    try:
+        servicio_id = int(datos["servicio_id"])
+        cantidad = validar_cantidad(datos["cantidad"])
+    except (KeyError, TypeError, ValueError):
+        return error_servicio(
+            "ERROR_VALIDACION",
+            "Se requieren servicio_id y una cantidad válida",
+            400,
+        )
+
+    error = verificar_servicio(servicio_id)
+    if error is not None:
+        return jsonify(error[0]), error[1]
+
+    if servicios_repo.insertar_servicio_reserva(reserva_id, servicio_id, cantidad) == 0:
+        return error_servicio(
+            "SERVICIO_INACTIVO",
+            "El servicio seleccionado no está activo",
+            409,
+        )
+
+    return "", 201
+
+
 @servicios_bp.route("/reservas/<int:reserva_id>/servicios", methods=["GET"])
 @requiere_rol("cliente", "administrador")
 def listar_servicios_reserva(reserva_id):

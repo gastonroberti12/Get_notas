@@ -190,6 +190,23 @@ def consultar_servicios_reserva(reserva_id):
     return ejecutar_consulta(sql, {"reserva_id": reserva_id})
 
 
+# POST /reservas/<id_reserva>/servicios
+def insertar_servicio_reserva(reserva_id, servicio_id, cantidad):
+    sql = """
+        INSERT INTO reserva_servicios (reserva_id, servicio_id, cantidad, precio_unitario)
+        SELECT %(reserva_id)s, %(servicio_id)s, %(cantidad)s, precio
+        FROM servicios
+        WHERE id = %(servicio_id)s AND activo = TRUE
+        ON DUPLICATE KEY UPDATE cantidad = VALUES(cantidad)
+    """
+    params = {
+        "reserva_id": reserva_id,
+        "servicio_id": servicio_id,
+        "cantidad": cantidad,
+    }
+    return ejecutar_escritura(sql, params)
+
+
 # servicio_reserva_id es reserva_servicios.id, no servicios.id.
 # Verificar que un servicio reservado pertenece a una reserva.
 def existe_servicio_en_reserva(reserva_id, servicio_reserva_id):
