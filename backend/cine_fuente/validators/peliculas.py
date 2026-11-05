@@ -39,7 +39,7 @@ def validar_rango_cartelera(inicio, fin):
     inicio_dt = parsear_fecha_cartelera(inicio, "fecha_inicio_cartelera")
     fin_dt = parsear_fecha_cartelera(fin, "fecha_fin_cartelera")
 
-    if fin_dt < inicio_dt:
+    if fin_dt <= inicio_dt:
         raise ValueError(construir_error_api(
             "pelicula.fecha.rango",
             "Rango de fechas inválido",
