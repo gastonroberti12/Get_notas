@@ -52,7 +52,7 @@
                             <td>{{ p.clasificacion or '—' }}</td>
                             <td>{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
                             <td class="admin-actions">
-                                <a href="{{ url_for('backoffice.editar_pelicula', pelicula_id=p.id) }}"
+                                <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
                                    class="admin-btn-secondary">Editar</a>
                                 <form method="post"
                                       action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"

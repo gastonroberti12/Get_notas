@@ -31,6 +31,7 @@ from cine_fuente.services.peliculas_service import (
 
 from cine_fuente.validators.peliculas import (
     convertir_fecha_existente,
+    validar_modificacion_pelicula,
     validar_rango_cartelera,
     validar_filtros,
 )
@@ -121,17 +122,8 @@ def modificar_pelicula(pelicula_id):
             "pelicula.not.found", "Película no encontrada",
             "La película solicitada no existe.",
         )), 404
-    datos = request.get_json(silent=True) or {}
-    permitidos = (
-        "titulo", "sinopsis", "poster_url", "duracion_min", "clasificacion",
-        "genero", "fecha_inicio_cartelera", "fecha_fin_cartelera", "activa",
-    )
-    cambios = {campo: datos[campo] for campo in permitidos if campo in datos}
-    if not cambios:
-        return jsonify(construir_error_api(
-            "invalid.body", "Datos inválidos",
-            "No se enviaron campos para modificar.",
-        )), 400
+    datos = request.get_json(silent=True)
+    cambios = validar_modificacion_pelicula(datos)
     if "fecha_inicio_cartelera" in cambios or "fecha_fin_cartelera" in cambios:
         fecha_inicio = convertir_fecha_existente(
             cambios.get("fecha_inicio_cartelera", pelicula_actual["fecha_inicio_cartelera"])

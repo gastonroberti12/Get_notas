@@ -49,7 +49,7 @@
             <div class="admin-results">
                 {% for resultado in resultados %}
                 <a class="admin-result"
-                   {% if not resultado.cargada %}href="{{ url_for('backoffice.nueva_pelicula', id=resultado.id_externo) }}"{% endif %}>
+                   {% if not resultado.cargada %}href="{{ url_for('backoffice.pelicula_nueva', id=resultado.id_externo) }}"{% endif %}>
                     {% if resultado.poster_url %}
                     <img src="{{ resultado.poster_url }}" alt="Póster de {{ resultado.titulo }}" loading="lazy">
                     {% else %}
