@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Funciones | Cine Paradiso{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">{% endblock %}
 
 {% block content %}
 <section class="admin-panel">
@@ -22,7 +23,17 @@
       {% if funciones %}
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Película</th><th>Sala</th><th>Local</th><th>Fecha y hora</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Película</th>
+              <th>Sala</th>
+              <th>Local</th>
+              <th>Fecha y hora</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             {% for f in funciones %}
             <tr>
@@ -33,7 +44,15 @@
               <td>${{ f.precio }}</td>
               <td>{{ 'Activa' if f.activa else 'Dada de baja' }}</td>
               <td class="admin-actions">
-                <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}" class="admin-btn-secondary">Editar</a>
+                <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
+                  class="admin-btn-secondary">Editar</a>
+                <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"
+                  data-confirmar="{{ '¿Dar de baja esta función?' if f.activa else '¿Dar de alta esta función?' }}"
+                  onsubmit="return confirm(this.dataset.confirmar)">
+                  <input type="hidden" name="activa" value="{{ 'false' if f.activa else 'true' }}">
+                  <button type="submit" class="admin-btn-secondary">{{ 'Dar de baja' if f.activa else 'Dar de alta'
+                    }}</button>
+                </form>
               </td>
             </tr>
             {% endfor %}
@@ -41,7 +60,7 @@
         </table>
       </div>
       {% elif not error %}
-        <p class="admin-description">Todavía no hay funciones cargadas.</p>
+      <p class="admin-description">Todavía no hay funciones cargadas.</p>
       {% endif %}
     </div>
   </div>

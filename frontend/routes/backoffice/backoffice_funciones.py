@@ -3,7 +3,7 @@ from api_cliente import llamar_api, mensaje_error
 from datos_perfil import formatear_fecha
 from routes.products import obtener_listado
 from routes.roles import solo_admin
-from routes.backoffice.backoffice import backoffice_bp
+from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
 
 
 @backoffice_bp.route("/backoffice/funciones")
@@ -62,3 +62,8 @@ def editar_funcion(funcion_id):
         return redirect(url_for("backoffice.funciones_admin"))
     return _formulario({**valores, "id": funcion_id},
                        mensaje_error(status, cuerpo, "No se pudo actualizar la función."))
+
+@backoffice_bp.route("/backoffice/funciones/<int:funcion_id>/estado", methods=["POST"])
+@solo_admin
+def cambiar_estado_funcion(funcion_id):
+    return cambiar_estado(f"/funciones/{funcion_id}", "Función", "backoffice.funciones_admin")
