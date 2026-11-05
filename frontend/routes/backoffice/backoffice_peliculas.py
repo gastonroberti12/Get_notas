@@ -7,6 +7,22 @@ from routes.roles import es_admin, solo_admin
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
 
 
+def fecha_para_api(valor):
+    if not valor:
+        return ""
+    try:
+        return datetime.fromisoformat(valor).isoformat(timespec="microseconds") + "-03:00"
+    except ValueError:
+        return valor
+
+
+def pagina_para_vista(valor):
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return 1
+
+
 @backoffice_bp.route("/backoffice/peliculas")
 def peliculas_admin():
     if not es_admin():
@@ -40,8 +56,8 @@ def nueva_pelicula():
 
     datos = {
         "id_externo": request.form.get("id_externo", "").strip(),
-        "fecha_inicio_cartelera": _fecha_para_api(request.form.get("fecha_inicio_cartelera")),
-        "fecha_fin_cartelera": _fecha_para_api(request.form.get("fecha_fin_cartelera")),
+        "fecha_inicio_cartelera": fecha_para_api(request.form.get("fecha_inicio_cartelera")),
+        "fecha_fin_cartelera": fecha_para_api(request.form.get("fecha_fin_cartelera")),
     }
     if not datos["id_externo"]:
         return redirect(url_for("backoffice.pelicula_buscar"))
@@ -84,7 +100,7 @@ def pelicula_buscar():
             q=query,
             resultados=[],
             total=0,
-            pagina=_pagina_para_vista(pagina),
+            pagina=pagina_para_vista(pagina),
             buscado=True,
             error=mensaje_error(status, datos, "No se pudo buscar en OMDb."),
         )
@@ -94,25 +110,9 @@ def pelicula_buscar():
         q=query,
         resultados=datos.get("resultados", []),
         total=datos.get("total_resultados", 0),
-        pagina=datos.get("pagina", _pagina_para_vista(pagina)),
+        pagina=datos.get("pagina", pagina_para_vista(pagina)),
         buscado=True,
     )
-
-
-def _fecha_para_api(valor):
-    if not valor:
-        return ""
-    try:
-        return datetime.fromisoformat(valor).isoformat(timespec="microseconds") + "-03:00"
-    except ValueError:
-        return valor
-
-
-def _pagina_para_vista(valor):
-    try:
-        return int(valor)
-    except (TypeError, ValueError):
-        return 1
 
 
 @backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/estado", methods=["POST"])
