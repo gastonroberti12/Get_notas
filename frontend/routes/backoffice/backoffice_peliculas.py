@@ -1,3 +1,6 @@
+from datetime import datetime
+from urllib.parse import urlencode
+
 from flask import render_template, redirect, url_for, flash, request
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import es_admin, solo_admin
@@ -16,11 +19,100 @@ def peliculas_admin():
                            peliculas=datos.get("peliculas", []), error=None)
 
 
-@backoffice_bp.route("/backoffice/peliculas/nueva")
+@backoffice_bp.route("/backoffice/peliculas/nueva", methods=["GET", "POST"])
 def nueva_pelicula():
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
-    return render_template("backadmin/subirpelicula.html")
+
+    if request.method == "GET":
+        imdb_id = request.args.get("id", "").strip()
+        if not imdb_id:
+            return redirect(url_for("backoffice.pelicula_buscar"))
+
+        status, datos = llamar_api("GET", f"/peliculas/{imdb_id}")
+        if status != 200:
+            return render_template(
+                "backadmin/pelicula_form.html",
+                v={"id_externo": imdb_id},
+                error=mensaje_error(status, datos, "No se pudo obtener la película desde OMDb."),
+            )
+        return render_template("backadmin/pelicula_form.html", v=datos)
+
+    datos = {
+        "id_externo": request.form.get("id_externo", "").strip(),
+        "fecha_inicio_cartelera": _fecha_para_api(request.form.get("fecha_inicio_cartelera")),
+        "fecha_fin_cartelera": _fecha_para_api(request.form.get("fecha_fin_cartelera")),
+    }
+    if not datos["id_externo"]:
+        return redirect(url_for("backoffice.pelicula_buscar"))
+
+    status, respuesta = llamar_api("POST", "/peliculas", datos)
+    if status == 201:
+        flash("Película agregada correctamente.", "ok")
+        return redirect(url_for("backoffice.peliculas_admin"))
+
+    return render_template(
+        "backadmin/pelicula_form.html",
+        v={**datos, **request.form},
+        error=mensaje_error(status, respuesta, "No se pudo agregar la película."),
+    )
+
+
+@backoffice_bp.route("/backoffice/peliculas/buscar")
+def pelicula_buscar():
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    query = request.args.get("q", "").strip()
+    pagina = request.args.get("pagina", "1")
+    if not query:
+        return render_template(
+            "backadmin/subirpelicula.html",
+            q="",
+            resultados=[],
+            total=0,
+            pagina=1,
+            buscado=False,
+        )
+
+    status, datos = llamar_api(
+        "GET", f"/peliculas/buscar?{urlencode({'q': query, 'pagina': pagina})}"
+    )
+    if status != 200:
+        return render_template(
+            "backadmin/subirpelicula.html",
+            q=query,
+            resultados=[],
+            total=0,
+            pagina=_pagina_para_vista(pagina),
+            buscado=True,
+            error=mensaje_error(status, datos, "No se pudo buscar en OMDb."),
+        )
+
+    return render_template(
+        "backadmin/subirpelicula.html",
+        q=query,
+        resultados=datos.get("resultados", []),
+        total=datos.get("total_resultados", 0),
+        pagina=datos.get("pagina", _pagina_para_vista(pagina)),
+        buscado=True,
+    )
+
+
+def _fecha_para_api(valor):
+    if not valor:
+        return ""
+    try:
+        return datetime.fromisoformat(valor).isoformat(timespec="microseconds") + "-03:00"
+    except ValueError:
+        return valor
+
+
+def _pagina_para_vista(valor):
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return 1
 
 
 @backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/estado", methods=["POST"])

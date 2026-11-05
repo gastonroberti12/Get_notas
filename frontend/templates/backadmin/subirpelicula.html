@@ -7,145 +7,79 @@
 {% endblock %}
 
 {% block content %}
-
 <section class="admin-panel">
-
-    <!-- Encabezado -->
     <div class="admin-header">
         <div>
             <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
             <h1>Gestión de películas</h1>
-            <p class="admin-subtitle">
-                Incorporá nuevas películas a la cartelera de Cine Paradiso.
-            </p>
+            <p class="admin-subtitle">Incorporá nuevas películas a la cartelera de Cine Paradiso.</p>
         </div>
-
         <span class="admin-role">Administrador</span>
     </div>
 
     <div class="admin-layout">
-
-        <!-- Menú lateral -->
         {% include "backadmin/barralateral.html" %}
 
-        <!-- Contenido principal -->
         <div class="admin-content">
-
             <div class="admin-section-heading">
-                <h2>Agregar película</h2>
+                <h2>Buscar película</h2>
             </div>
-
             <p class="admin-description">
-                Ingresá el identificador de IMDb y seleccioná las fechas
-                durante las cuales la película estará en cartelera.
+                Buscá por título y elegí una de las coincidencias de OMDb.
             </p>
 
-            <!-- Formulario -->
-            <div class="admin-form-card">
+            <form class="admin-search" method="get" action="{{ url_for('backoffice.pelicula_buscar') }}">
+                <input type="search" name="q" value="{{ q or '' }}" maxlength="100"
+                       required placeholder="Ejemplo: Inception" aria-label="Título de la película" autofocus>
+                <button type="submit" class="admin-btn-primary">Buscar</button>
+            </form>
 
-                <form class="admin-form">
+            {% if error %}
+            <div class="admin-alert" role="alert">{{ error }}</div>
+            {% elif buscado and not resultados %}
+            <div class="admin-empty-results">
+                <p>No encontramos películas para “{{ q }}”.</p>
+                <small>Revisá el título o probá con otro nombre.</small>
+            </div>
+            {% elif resultados %}
+            <p class="admin-results-count">
+                {{ total }} resultado{{ 's' if total != 1 }} para “{{ q }}”
+            </p>
 
-                    <!-- Identificador IMDb -->
-                    <div class="admin-form-group">
-
-                        <label for="id_externo">
-                            Identificador IMDb
-                        </label>
-
-                        <input
-                            type="text"
-                            id="id_externo"
-                            name="id_externo"
-                            placeholder="Ejemplo: tt1375666"
-                            pattern="tt[0-9]+"
-                            required
-                        >
-
-                        <small>
-                            Los datos de la película se obtendrán
-                            automáticamente desde OMDb.
-                        </small>
-
+            <div class="admin-results">
+                {% for resultado in resultados %}
+                <a class="admin-result"
+                   href="{{ url_for('backoffice.nueva_pelicula', id=resultado.id_externo) }}">
+                    {% if resultado.poster_url %}
+                    <img src="{{ resultado.poster_url }}" alt="Póster de {{ resultado.titulo }}" loading="lazy">
+                    {% else %}
+                    <div class="admin-result-sin-poster">Sin póster</div>
+                    {% endif %}
+                    <div class="admin-result-info">
+                        <strong>{{ resultado.titulo }}</strong>
+                        <span>{{ resultado.anio }}</span>
                     </div>
-
-                    <!-- Fechas de cartelera -->
-                    <div class="admin-form-dates">
-
-                        <div class="admin-form-group">
-
-                            <label for="fecha_inicio_cartelera">
-                                Inicio de cartelera
-                            </label>
-
-                            <input
-                                type="datetime-local"
-                                id="fecha_inicio_cartelera"
-                                name="fecha_inicio_cartelera"
-                                required
-                            >
-
-                        </div>
-
-                        <div class="admin-form-group">
-
-                            <label for="fecha_fin_cartelera">
-                                Fin de cartelera
-                            </label>
-
-                            <input
-                                type="datetime-local"
-                                id="fecha_fin_cartelera"
-                                name="fecha_fin_cartelera"
-                                required
-                            >
-
-                        </div>
-
-                    </div>
-
-                    <p class="admin-form-help">
-                        La película podrá permanecer en cartelera
-                        durante un máximo de 7 días.
-                    </p>
-
-                    <!-- Información sobre OMDb -->
-                    <div class="admin-form-info">
-
-                        <h3>Información de la película</h3>
-
-                        <p>
-                            Al registrar una película, el sistema consultará
-                            OMDb para obtener automáticamente su título,
-                            sinopsis, género, duración, clasificación y póster.
-                        </p>
-
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="admin-form-actions">
-
-                        <a href="{{ url_for('backoffice.panel') }}"
-                           class="admin-btn-secondary">
-                            Volver al panel
-                        </a>
-
-                        <button
-                            type="submit"
-                            class="admin-btn-primary"
-                            disabled>
-                            Agregar película
-                        </button>
-
-                    </div>
-
-                </form>
-
+                </a>
+                {% endfor %}
             </div>
 
+            <div class="admin-pager">
+                {% if pagina > 1 %}
+                <a class="admin-btn-secondary"
+                   href="{{ url_for('backoffice.pelicula_buscar', q=q, pagina=pagina - 1) }}">← Anterior</a>
+                {% endif %}
+                {% if pagina * 10 < total %}
+                <a class="admin-btn-secondary"
+                   href="{{ url_for('backoffice.pelicula_buscar', q=q, pagina=pagina + 1) }}">Siguiente →</a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="admin-form-info">
+                <h3>¿Cómo funciona?</h3>
+                <p>Los resultados provienen de OMDb. Elegí una película para revisar sus datos y definir las fechas de cartelera antes de guardarla.</p>
+            </div>
+            {% endif %}
         </div>
-
     </div>
-
 </section>
-
 {% endblock %}
