@@ -1,26 +1,28 @@
 from datetime import datetime
 from urllib.parse import urlencode
 
-from flask import render_template, redirect, url_for, flash, request
+from flask import abort, redirect, render_template, request, session, url_for
+
 from api_cliente import llamar_api, mensaje_error
-from routes.roles import es_admin, solo_admin
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
+from routes.roles import es_admin, solo_admin
 
 
-def fecha_para_api(valor):
+CAMPOS = ("titulo", "sinopsis", "poster_url", "duracion_min", "clasificacion", "genero")
+CAMPOS_FECHA = ("fecha_inicio_cartelera", "fecha_fin_cartelera")
+
+
+def url_listado():
+    return url_for("backoffice.peliculas_admin")
+
+
+def a_iso_gmt3(valor):
     if not valor:
         return ""
     try:
-        return datetime.fromisoformat(valor).isoformat(timespec="microseconds") + "-03:00"
+        return datetime.fromisoformat(valor).strftime("%Y-%m-%dT%H:%M:%S.%f") + "-03:00"
     except ValueError:
         return valor
-
-
-def pagina_para_vista(valor):
-    try:
-        return int(valor)
-    except (TypeError, ValueError):
-        return 1
 
 
 @backoffice_bp.route("/backoffice/peliculas")
@@ -31,85 +33,10 @@ def peliculas_admin():
     if status not in (200, 204):
         error = mensaje_error(status, datos, "No se pudieron obtener las películas.")
         return render_template("backadmin/peliculas_listado.html", peliculas=[], error=error)
-    return render_template("backadmin/peliculas_listado.html",
-                           peliculas=datos.get("peliculas", []), error=None)
-
-
-@backoffice_bp.route("/backoffice/peliculas/nueva", methods=["GET", "POST"])
-def nueva_pelicula():
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-
-    if request.method == "GET":
-        imdb_id = request.args.get("id", "").strip()
-        if not imdb_id:
-            return redirect(url_for("backoffice.pelicula_buscar"))
-
-        status, datos = llamar_api("GET", f"/peliculas/{imdb_id}")
-        if status != 200:
-            return render_template(
-                "backadmin/pelicula_form.html",
-                v={"id_externo": imdb_id},
-                error=mensaje_error(status, datos, "No se pudo obtener la película desde OMDb."),
-            )
-        return render_template("backadmin/pelicula_form.html", v=datos)
-
-    datos = {
-        "id_externo": request.form.get("id_externo", "").strip(),
-        "fecha_inicio_cartelera": fecha_para_api(request.form.get("fecha_inicio_cartelera")),
-        "fecha_fin_cartelera": fecha_para_api(request.form.get("fecha_fin_cartelera")),
-    }
-    if not datos["id_externo"]:
-        return redirect(url_for("backoffice.pelicula_buscar"))
-
-    status, respuesta = llamar_api("POST", "/peliculas", datos)
-    if status == 201:
-        flash("Película agregada correctamente.", "ok")
-        return redirect(url_for("backoffice.peliculas_admin"))
-
     return render_template(
-        "backadmin/pelicula_form.html",
-        v={**datos, **request.form},
-        error=mensaje_error(status, respuesta, "No se pudo agregar la película."),
-    )
-
-
-@backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/editar", methods=["GET", "POST"])
-@solo_admin
-def editar_pelicula(pelicula_id):
-    if request.method == "GET":
-        status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}")
-        if status != 200:
-            flash(mensaje_error(status, datos, "No se pudo obtener la película."), "error")
-            return redirect(url_for("backoffice.peliculas_admin"))
-        for campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
-            if datos.get(campo):
-                datos[campo] = datos[campo][:16]
-        return render_template("backadmin/pelicula_form.html", v=datos, editando=True)
-
-    datos = {
-        campo: request.form.get(campo, "").strip()
-        for campo in (
-            "titulo", "sinopsis", "poster_url", "duracion_min",
-            "clasificacion", "genero",
-        )
-    }
-    datos.update({
-        "fecha_inicio_cartelera": fecha_para_api(request.form.get("fecha_inicio_cartelera")),
-        "fecha_fin_cartelera": fecha_para_api(request.form.get("fecha_fin_cartelera")),
-    })
-    if datos["duracion_min"].isdigit():
-        datos["duracion_min"] = int(datos["duracion_min"])
-
-    status, respuesta = llamar_api("PATCH", f"/peliculas/{pelicula_id}", datos)
-    if status == 204:
-        flash("Película actualizada.", "ok")
-        return redirect(url_for("backoffice.peliculas_admin"))
-    return render_template(
-        "backadmin/pelicula_form.html",
-        v={**datos, "id": pelicula_id},
-        editando=True,
-        error=mensaje_error(status, respuesta, "No se pudo actualizar la película."),
+        "backadmin/peliculas_listado.html",
+        peliculas=datos.get("peliculas", []),
+        error=None,
     )
 
 
@@ -118,63 +45,177 @@ def pelicula_buscar():
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
 
-    query = request.args.get("q", "").strip()
-    pagina = request.args.get("pagina", "1")
-    if not query:
-        return render_template(
-            "backadmin/subirpelicula.html",
-            q="",
-            resultados=[],
-            total=0,
-            pagina=1,
-            buscado=False,
-        )
+    q = request.args.get("q", "").strip()
+    pagina = request.args.get("pagina", 1, type=int)
+    resultados, total, error = [], 0, None
 
-    status, datos = llamar_api(
-        "GET", f"/peliculas/buscar?{urlencode({'q': query, 'pagina': pagina})}"
-    )
-    if status != 200:
-        return render_template(
-            "backadmin/subirpelicula.html",
-            q=query,
-            resultados=[],
-            total=0,
-            pagina=pagina_para_vista(pagina),
-            buscado=True,
-            error=mensaje_error(status, datos, "No se pudo buscar en OMDb."),
+    if q:
+        status, datos = llamar_api(
+            "GET", "/peliculas/buscar?" + urlencode({"q": q, "pagina": pagina})
         )
-
-    status_local, datos_locales = llamar_api("GET", "/peliculas?_limit=100")
-    if status_local not in (200, 204):
-        return render_template(
-            "backadmin/subirpelicula.html",
-            q=query,
-            resultados=[],
-            total=0,
-            pagina=pagina_para_vista(pagina),
-            buscado=True,
-            error=mensaje_error(
-                status_local, datos_locales, "No se pudieron verificar las películas cargadas."
-            ),
-        )
-    ids_cargados = {
-        pelicula["id_externo"]
-        for pelicula in datos_locales.get("peliculas", [])
-    }
-    for resultado in datos.get("resultados", []):
-        resultado["cargada"] = resultado["id_externo"] in ids_cargados
+        if status == 200:
+            resultados = datos.get("resultados", [])
+            total = datos.get("total_resultados", 0)
+        else:
+            error = mensaje_error(status, datos, "No se pudo consultar OMDb.")
 
     return render_template(
         "backadmin/subirpelicula.html",
-        q=query,
-        resultados=datos.get("resultados", []),
-        total=datos.get("total_resultados", 0),
-        pagina=datos.get("pagina", pagina_para_vista(pagina)),
-        buscado=True,
+        q=q,
+        pagina=pagina,
+        resultados=resultados,
+        total=total,
+        error=error,
+        buscado=bool(q),
+    )
+
+
+@backoffice_bp.route("/backoffice/peliculas/nueva", methods=["GET", "POST"])
+def pelicula_nueva():
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    if request.method == "POST":
+        valores = {campo: request.form.get(campo, "").strip() for campo in CAMPOS}
+        valores["id_externo"] = request.form.get("id_externo", "").strip()
+        inicio = request.form.get("fecha_inicio_cartelera", "")
+        fin = request.form.get("fecha_fin_cartelera", "")
+        datos = {campo: valor for campo, valor in valores.items() if valor}
+        if "duracion_min" in datos:
+            datos["duracion_min"] = (
+                int(datos["duracion_min"]) if datos["duracion_min"].isdigit() else 0
+            )
+        datos.update(
+            fecha_inicio_cartelera=a_iso_gmt3(inicio),
+            fecha_fin_cartelera=a_iso_gmt3(fin),
+        )
+
+        status, cuerpo = llamar_api("POST", "/peliculas", datos)
+        if status == 201:
+            return redirect(url_listado())
+        if status == 401:
+            session.clear()
+            return redirect(url_for("users.login"))
+        valores.update(fecha_inicio_cartelera=inicio, fecha_fin_cartelera=fin)
+        return render_template(
+            "backadmin/pelicula_form.html",
+            v=valores,
+            error=mensaje_error(status, cuerpo, "No se pudo guardar la película."),
+        )
+
+    valores, aviso = {}, None
+    imdb_id = request.args.get("id", "").strip()
+    if imdb_id:
+        status, detalle = llamar_api("GET", f"/peliculas/{imdb_id}")
+        if status == 200:
+            valores = {campo: detalle.get(campo) or "" for campo in CAMPOS}
+            valores["genero"] = valores["genero"].split(",")[0].strip()
+        else:
+            aviso = (
+                mensaje_error(status, detalle, "No se pudieron traer los datos.")
+                + " Podés cargar la película a mano."
+            )
+        valores["id_externo"] = imdb_id
+    return render_template("backadmin/pelicula_form.html", v=valores, aviso=aviso)
+
+
+def traer_pelicula(pelicula_id):
+    status, pelicula = llamar_api("GET", f"/peliculas/{pelicula_id}")
+    if status == 404:
+        abort(404)
+    if status != 200:
+        abort(503 if status is None else 500)
+    return pelicula
+
+
+@backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/editar", methods=["GET", "POST"])
+def pelicula_editar(pelicula_id):
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    actual = traer_pelicula(pelicula_id)
+    accion = url_for("backoffice.pelicula_editar", pelicula_id=pelicula_id)
+    valores = {campo: actual.get(campo) or "" for campo in CAMPOS}
+    for campo in CAMPOS_FECHA:
+        valores[campo] = (actual.get(campo) or "")[:16]
+
+    if request.method == "GET":
+        return render_template(
+            "backadmin/pelicula_form.html",
+            v={**valores, "id": pelicula_id},
+            editando=True,
+            accion=accion,
+            volver=url_listado(),
+        )
+
+    enviados = {
+        campo: request.form.get(campo, "").strip()
+        for campo in CAMPOS + CAMPOS_FECHA
+    }
+    cambios = {}
+    for campo, nuevo in enviados.items():
+        if nuevo == str(valores[campo]):
+            continue
+        if campo in CAMPOS_FECHA:
+            cambios[campo] = a_iso_gmt3(nuevo)
+        else:
+            cambios[campo] = (
+                int(nuevo) if campo == "duracion_min" and nuevo.isdigit() else nuevo
+            ) or None
+
+    valores_formulario = {**enviados, "id": pelicula_id}
+    if not cambios:
+        return render_template(
+            "backadmin/pelicula_form.html",
+            v=valores_formulario,
+            editando=True,
+            accion=accion,
+            volver=url_listado(),
+            aviso="No hay cambios para guardar.",
+        )
+
+    status, cuerpo = llamar_api("PATCH", f"/peliculas/{pelicula_id}", cambios)
+    if status == 204:
+        return redirect(url_listado())
+    if status == 401:
+        session.clear()
+        return redirect(url_for("users.login"))
+    return render_template(
+        "backadmin/pelicula_form.html",
+        v=valores_formulario,
+        editando=True,
+        accion=accion,
+        volver=url_listado(),
+        error=mensaje_error(status, cuerpo, "No se pudo guardar la película."),
+    )
+
+
+@backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/baja", methods=["GET", "POST"])
+def pelicula_baja(pelicula_id):
+    if not es_admin():
+        return redirect(url_for("peliculas.inicio"))
+
+    pelicula = traer_pelicula(pelicula_id)
+    error = None
+    if request.method == "POST":
+        status, cuerpo = llamar_api("DELETE", f"/peliculas/{pelicula_id}")
+        if status == 204:
+            return redirect(url_listado())
+        if status == 401:
+            session.clear()
+            return redirect(url_for("users.login"))
+        error = mensaje_error(status, cuerpo, "No se pudo dar de baja la película.")
+    return render_template(
+        "backadmin/pelicula_baja.html",
+        pelicula=pelicula,
+        error=error,
+        volver=url_listado(),
     )
 
 
 @backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/estado", methods=["POST"])
 @solo_admin
 def cambiar_estado_pelicula(pelicula_id):
-    return cambiar_estado(f"/peliculas/{pelicula_id}", "Película", "backoffice.peliculas_admin")
+    return cambiar_estado(
+        f"/peliculas/{pelicula_id}", "Película", "backoffice.peliculas_admin"
+    )
