@@ -1,8 +1,18 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, flash , request
 from routes.roles import es_admin
+from api_cliente import llamar_api, mensaje_error
 
 backoffice_bp = Blueprint("backoffice", __name__)
 
+def cambiar_estado(endpoint, nombre, listado):
+    # Da de alta o de baja un recurso con PATCH {"activa": ...} y vuelve a su listado.
+    activa = request.form.get("activa") == "true"
+    status, cuerpo = llamar_api("PATCH", endpoint, {"activa": activa})
+    if status == 204:
+        flash(f"{nombre} dada de {'alta' if activa else 'baja'}.", "ok")
+    else:
+        flash(mensaje_error(status, cuerpo, "No se pudo cambiar el estado."), "error")
+    return redirect(url_for(listado))
 
 @backoffice_bp.route("/backoffice")
 def panel():

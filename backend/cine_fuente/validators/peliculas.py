@@ -62,3 +62,13 @@ def convertir_fecha_existente(valor):
             valor = valor.replace(tzinfo=timezone(timedelta(hours=-3)))
         return valor.isoformat(timespec="microseconds")
     return valor
+
+
+# Lee los filtros disponibles para las películas.
+def validar_filtros(parametros):
+    activa = parametros.get("activa")
+    if activa not in (None, "true", "false"):
+        raise ValueError(construir_error_api(
+            "invalid.activa.format", "Formato inválido", "activa debe ser true o false."), 400)
+    return {"sucursal_id": parametros.get("sucursal_id", type=int),
+            "activa": None if activa is None else activa == "true"}

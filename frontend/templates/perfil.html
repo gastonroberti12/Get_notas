@@ -101,8 +101,8 @@
                             <strong class="reserva_total">${{ reserva.total }}</strong>
                             <div class="reserva_botones">
                                 {% if reserva.cancelable %}
-                                <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
-                                    <button type="submit" class="reserva_cancelar">Cancelar reserva</button>
+                                <form method="post" id="form-cancelar-{{ reserva.id }}" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
+                                    <button type="button" class="reserva_cancelar">Cancelar reserva</button>
                                 </form>
                                 {% endif %}
                             </div>
@@ -119,6 +119,19 @@
         {% endfor %}
     </div>
 </section>
+
+<!-- mensaje de confirmación para cancelar una reserva -->
+<div class="modal-fondo oculto" id="modal-cancelar">
+    <div class="modal">
+        <h3>¿Cancelar esta reserva?</h3>
+        <p>Se liberan las butacas y no podrás recuperarlas.</p>
+        <div class="modal_botones">
+            <button type="button" class="modal_volver">Volver</button>
+            <button type="submit" class="modal_confirmar">Sí, cancelar reserva</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}

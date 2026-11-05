@@ -477,3 +477,40 @@
 .admin-list-heading {
     margin-top: 32px;
 }
+
+.admin-table-wrap {
+    overflow-x: auto;
+ }
+
+
+.admin-table { 
+    width: 100%; border-collapse: collapse; background: var(--card);
+ }
+
+.admin-table th, .admin-table td {
+    padding: .6rem .8rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle;
+ }
+
+.admin-table th {
+     color: var(--gold); 
+ } 
+
+.admin-poster {
+     width: 48px; border-radius: 4px; 
+ }
+
+.admin-actions {
+     display: flex; gap: .5rem; 
+ }
+
+.admin-msg { 
+    padding: .6rem .8rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 1rem;
+ }
+
+.admin-msg-error { 
+    color: #e57373; 
+ }
+
+.admin-msg-ok {
+     color: var(--gold); 
+ }
