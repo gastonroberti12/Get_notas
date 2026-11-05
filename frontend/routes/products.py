@@ -6,8 +6,9 @@ from datos_perfil import parsear_fecha
 peliculas_bp = Blueprint("peliculas", __name__)
 
 # Obtener listados del backend
-def obtener_listado(endpoint, clave):
-    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100")
+# Obtener listados del backend
+def obtener_listado(endpoint, clave, filtros=""):
+    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100{filtros}")
 
     if status not in (200, 204):
         return [], mensaje_error(status, datos, "No se pudieron obtener los datos.")
@@ -23,7 +24,8 @@ def inicio():
     # Obtener películas del backend
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
-        "peliculas"
+        "peliculas",
+        "&activa=true"
     )
 
     # Primeras cinco películas para el carrusel
@@ -52,7 +54,8 @@ def listado_peliculas():
 
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
-        "peliculas"
+        "peliculas",
+        "&activa=true"
     )
 
     return render_template(

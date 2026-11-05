@@ -1,14 +1,17 @@
 ﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 
+#constante para simplificar consultar_funciones y consultar_funcion_por_id
+SELECT_FUNCION = (
+    "SELECT f.id, f.pelicula_id, p.titulo AS pelicula, f.sala_id, s.nombre AS sala, "
+    "su.nombre AS sucursal, f.fecha_hora, f.precio, f.activa "
+    "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
+    "JOIN salas s ON s.id = f.sala_id JOIN sucursales su ON su.id = s.sucursal_id"
+)
+
 
 # Consulta las funciones registradas.
 def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id=None):
-    sql = (
-        "SELECT f.id, f.pelicula_id, p.titulo AS pelicula, f.sala_id, s.nombre AS sala, "
-        "f.fecha_hora, f.precio, f.activa "
-        "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
-        "JOIN salas s ON s.id = f.sala_id WHERE 1 = 1"
-    )
+    sql = SELECT_FUNCION + " WHERE 1 = 1"
     params = []
     if pelicula_id is not None:
         sql += " AND f.pelicula_id = %s"
@@ -28,13 +31,7 @@ def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id
 
 # Busca una función por su identificador.
 def consultar_funcion_por_id(funcion_id):
-    filas = ejecutar_consulta(
-        "SELECT f.id, f.pelicula_id, p.titulo AS pelicula, f.sala_id, s.nombre AS sala, "
-        "f.fecha_hora, f.precio, f.activa "
-        "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
-        "JOIN salas s ON s.id = f.sala_id WHERE f.id = %s",
-        (funcion_id,),
-    )
+    filas = ejecutar_consulta(SELECT_FUNCION + " WHERE f.id = %s", (funcion_id,))
     return filas[0] if filas else None
 
 
