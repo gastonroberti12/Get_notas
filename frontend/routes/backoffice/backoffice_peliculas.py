@@ -74,6 +74,45 @@ def nueva_pelicula():
     )
 
 
+@backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/editar", methods=["GET", "POST"])
+@solo_admin
+def editar_pelicula(pelicula_id):
+    if request.method == "GET":
+        status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}")
+        if status != 200:
+            flash(mensaje_error(status, datos, "No se pudo obtener la película."), "error")
+            return redirect(url_for("backoffice.peliculas_admin"))
+        for campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
+            if datos.get(campo):
+                datos[campo] = datos[campo][:16]
+        return render_template("backadmin/pelicula_form.html", v=datos, editando=True)
+
+    datos = {
+        campo: request.form.get(campo, "").strip()
+        for campo in (
+            "titulo", "sinopsis", "poster_url", "duracion_min",
+            "clasificacion", "genero",
+        )
+    }
+    datos.update({
+        "fecha_inicio_cartelera": fecha_para_api(request.form.get("fecha_inicio_cartelera")),
+        "fecha_fin_cartelera": fecha_para_api(request.form.get("fecha_fin_cartelera")),
+    })
+    if datos["duracion_min"].isdigit():
+        datos["duracion_min"] = int(datos["duracion_min"])
+
+    status, respuesta = llamar_api("PATCH", f"/peliculas/{pelicula_id}", datos)
+    if status == 204:
+        flash("Película actualizada.", "ok")
+        return redirect(url_for("backoffice.peliculas_admin"))
+    return render_template(
+        "backadmin/pelicula_form.html",
+        v={**datos, "id": pelicula_id},
+        editando=True,
+        error=mensaje_error(status, respuesta, "No se pudo actualizar la película."),
+    )
+
+
 @backoffice_bp.route("/backoffice/peliculas/buscar")
 def pelicula_buscar():
     if not es_admin():
@@ -104,6 +143,26 @@ def pelicula_buscar():
             buscado=True,
             error=mensaje_error(status, datos, "No se pudo buscar en OMDb."),
         )
+
+    status_local, datos_locales = llamar_api("GET", "/peliculas?_limit=100")
+    if status_local not in (200, 204):
+        return render_template(
+            "backadmin/subirpelicula.html",
+            q=query,
+            resultados=[],
+            total=0,
+            pagina=pagina_para_vista(pagina),
+            buscado=True,
+            error=mensaje_error(
+                status_local, datos_locales, "No se pudieron verificar las películas cargadas."
+            ),
+        )
+    ids_cargados = {
+        pelicula["id_externo"]
+        for pelicula in datos_locales.get("peliculas", [])
+    }
+    for resultado in datos.get("resultados", []):
+        resultado["cargada"] = resultado["id_externo"] in ids_cargados
 
     return render_template(
         "backadmin/subirpelicula.html",

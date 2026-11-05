@@ -1,4 +1,5 @@
 ﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.utils import ahora_gmt3
 
 
 # Busca una película por su identificador.
@@ -38,6 +39,20 @@ def insertar_pelicula(datos):
 def actualizar_pelicula(pelicula_id, datos):
     campos = ", ".join(f"{campo} = %s" for campo in datos)
     ejecutar_escritura(f"UPDATE pelicula SET {campos} WHERE id = %s", (*datos.values(), pelicula_id))
+
+
+def tiene_reservas_activas(pelicula_id):
+    filas = ejecutar_consulta(
+        "SELECT COUNT(*) AS cantidad "
+        "FROM reservas r "
+        "JOIN funcion f ON f.id = r.funcion_id "
+        "JOIN pelicula p ON p.id = f.pelicula_id "
+        "WHERE p.id = %s "
+        "AND r.estado IN ('pendiente', 'confirmada') "
+        "AND f.fecha_hora > %s",
+        (pelicula_id, ahora_gmt3().replace(tzinfo=None)),
+    )
+    return filas[0]["cantidad"] > 0
 
 
 # Consulta las películas activas con funciones futuras en una sucursal.
