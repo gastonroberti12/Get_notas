@@ -27,21 +27,8 @@ function actualizar() {
   vacia.hidden = elegidas.length > 0;
   cantidad.textContent = `${elegidas.length} entrada(s)`;
   monto.textContent = formatear(total);
-  campo.value = elegidas.map((b) => b.id).join(',');
+  campo.value = elegidas.map((b) => b.dataset.butacaId).join(',');
   boton.disabled = elegidas.length === 0;
-}
-
-
-// Butacas ocupadas 
-// El HTML trae las ocupadas, acá se marcan y se deshabilitan.
-const ocupadas = document.getElementById('ocupadas').value.split(',');
-
-for (const butaca of document.getElementsByClassName('butaca')) {
-  if (!ocupadas.includes(butaca.id)) continue;
-  butaca.classList.add('ocupada');
-  butaca.disabled = true;
-  butaca.textContent = '×';
-  butaca.title = `${butaca.id} · ocupada`;
 }
 
 
@@ -49,6 +36,10 @@ for (const butaca of document.getElementsByClassName('butaca')) {
 for (const butaca of document.getElementsByClassName('butaca')) {
   butaca.addEventListener('click', () => {
     if (butaca.classList.contains('ocupada')) return;
+    if (!butaca.classList.contains('seleccionada') &&
+        document.getElementsByClassName('seleccionada').length >= 5) {
+      return;
+    }
 
     butaca.classList.toggle('seleccionada');
     actualizar();
