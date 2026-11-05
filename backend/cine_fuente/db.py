@@ -5,7 +5,6 @@ from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 
 def obtener_conexion():
-    print(f"DEBUG CONEXIÓN -> Host: {DB_HOST}, Port: {DB_PORT}, User: {DB_USER}, DB: {DB_NAME}")
     return pymysql.connect(
         host=DB_HOST,
         port=DB_PORT,
@@ -28,3 +27,10 @@ def ejecutar_escritura(sql, params=None):
         cursor.execute(sql, params)
         conexion.commit()
         return cursor.lastrowid
+
+
+def ejecutar_actualizacion(sql, params=None):
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql, params)
+        conexion.commit()
+        return cursor.rowcount
