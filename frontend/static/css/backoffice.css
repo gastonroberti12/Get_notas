@@ -705,6 +705,21 @@
 }
 
 
+.admin-form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.admin-form-group .admin-form-check input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--gold);
+    cursor: pointer;
+}
 /* Edición y baja de películas */
 
 .admin-btn-danger {
