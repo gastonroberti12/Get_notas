@@ -3,6 +3,7 @@ from dashboard import armar_dashboard, leer_filtros
 from routes.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp
 
+SECCIONES_COMPLETAS = ("ocupacion", "entradas", "importe", "cancelaciones", "salas", "generos", "franjas")
 
 @backoffice_bp.route("/backoffice/estadisticas")
 @solo_admin
