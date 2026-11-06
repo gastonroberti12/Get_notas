@@ -801,12 +801,13 @@
 
 @media (max-width: 480px) {
     .admin-stats { grid-template-columns: 1fr; }
-    .dash-filtros { flex-direction: column; align-items: stretch; }
+    .dash-filtros { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
     .dash-filtros .admin-btn-primary,
-    .dash-filtros .admin-btn-secondary { width: 100%; text-align: center; }
+    .dash-filtros .admin-btn-secondary { width: 100%; box-sizing: border-box; text-align: center; }
     .dash-barras-texto { flex-direction: column; gap: 2px; }
     .dash-barras-texto span:last-child { text-align: left; }
 }
+
 
 .admin-form-check {
     display: flex;
