@@ -6,19 +6,15 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
 {% endblock %}
 
-{% from "backadmin/componentes_dashboard.html" import tarjeta, barras_horizontales, columnas %}
 {% block content %}
 
 <section class="admin-panel">
 
-    <!--encabezado-->
     <div class="admin-header">
         <div>
             <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
             <h1>Panel de administración</h1>
-            <p class="admin-subtitle">
-                Gestioná el cine y consultá los indicadores de actividad.
-            </p>
+            <p class="admin-subtitle">Gestioná el cine y consultá los indicadores de actividad.</p>
         </div>
 
         <span class="admin-role">Administrador</span>
@@ -26,29 +22,74 @@
 
     <div class="admin-layout">
 
-         <!-- Menú lateral -->
         {% include "backadmin/barralateral.html" %}
 
-        <!--cont. principal-->
         <div class="admin-content">
 
             <div class="admin-section-heading">
                 <h2>Estadísticas</h2>
-                <a href="{{url_for('backoffice.estadisticas_admin') }}">Ver estadísticas completas</a>
+                <a href="{{ url_for('backoffice.estadisticas_admin') }}">Ver estadísticas completas</a>
             </div>
-            
+
             <p class="admin-description">Resumen de la actividad de Cine Paradiso.</p>
 
             <div class="admin-stats">
-                {{ tarjeta("Ocupación", d.ocupacion) }}
-                {{ tarjeta("Entradas", d.entradas) }}
-                {{ tarjeta("Ventas", d.importe) }}
-                {{ tarjeta("Cancelaciones", d.cancelaciones) }}
+                {% for titulo, s in [("Ocupación", d.ocupacion), ("Entradas", d.entradas), ("Ventas", d.importe), ("Cancelaciones", d.cancelaciones)] %}
+                <article class="admin-stat">
+                    <h3>{{ titulo }}</h3>
+                    {% if s.error %}
+                    <p class="admin-stat-error">—</p>
+                    <small class="admin-error-text">{{ s.error }}</small>
+                    {% else %}
+                    <p>{{ s.datos.valor }}</p>
+                    <small>{{ s.datos.detalle }}</small>
+                    {% endif %}
+                </article>
+                {% endfor %}
             </div>
 
             <div class="admin-charts">
-                {{ barras_horizontales("Ventas por género", d.generos, "No hay ventas registradas.") }}
-                {{ columnas("Franjas horarias más vendidas", d.franjas, "No hay ventas registradas.") }}
+                <section class="admin-chart">
+                    <h3>Ventas por género</h3>
+                    {% if d.generos.datos %}
+                    <ul class="dash-barras">
+                        {% for b in d.generos.datos %}
+                        <li>
+                            <div class="dash-barras-texto"><span>{{ b.etiqueta }}</span><span>{{ b.detalle }}</span></div>
+                            <div class="dash-pista"><div class="dash-relleno" style="width: {{ b.ancho }}%"></div></div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        <div class="admin-empty-chart{% if d.generos.error %} admin-chart-error{% endif %}">
+                            <span class="admin-chart-icon">{{ '!' if d.generos.error else '▥' }}</span>
+                            <p>{{ 'No se pudo cargar el gráfico' if d.generos.error else 'Sin datos para mostrar' }}</p>
+                            <small>{{ d.generos.error or "No hay ventas registradas." }}</small>
+                        </div>
+                    {% endif %}
+                </section>
+                <section class="admin-chart">
+                    <h3>Franjas horarias más vendidas</h3>
+                    {% if d.franjas.datos %}
+                    <div class="dash-columnas-wrap">
+                        <ul class="dash-columnas">
+                            {% for b in d.franjas.datos %}
+                            <li{% if b.destacada %} class="dash-top"{% endif %} title="{{ b.detalle }}">
+                                <span>{{ b.valor }}</span>
+                                <div class="dash-col-pista"><div class="dash-col-relleno" style="height: {{ b.ancho }}%"></div></div>
+                                <span>{{ b.etiqueta }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                        <div class="admin-empty-chart{% if d.franjas.error %} admin-chart-error{% endif %}">
+                            <span class="admin-chart-icon">{{ '!' if d.franjas.error else '▥' }}</span>
+                            <p>{{ 'No se pudo cargar el gráfico' if d.franjas.error else 'Sin datos para mostrar' }}</p>
+                            <small>{{ d.franjas.error or "No hay ventas registradas." }}</small>
+                        </div>
+                    {% endif %}
+                </section>
             </div>
 
         </div>
