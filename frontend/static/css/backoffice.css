@@ -704,6 +704,109 @@
     }
 }
 
+/* DASHBOARD: gráficos en HTML/CSS puro (renderizados por el servidor) */
+
+.admin-chart-full { grid-column: 1 / -1; }
+
+.admin-stat-error,
+.admin-error-text,
+.admin-chart-error .admin-chart-icon { color: var(--danger); }
+
+.admin-chart-error { border-color: var(--danger); }
+
+.dash-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* Barras horizontales */
+.dash-barras {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+}
+
+.dash-barras-texto {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.dash-barras-texto span:last-child {
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.dash-pista {
+    height: 10px;
+    background: var(--surface-dark);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.dash-relleno {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 99px;
+}
+
+/* Columnas verticales (franjas horarias) */
+.dash-columnas-wrap { overflow-x: auto; }
+
+.dash-columnas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 8px;
+    height: 260px;
+    min-width: min-content;
+}
+
+.dash-columnas li {
+    flex: 1 0 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dash-col-pista {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    background: var(--surface-dark);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dash-col-relleno {
+    width: 100%;
+    background: var(--text-faint);
+}
+
+.dash-top { color: var(--gold); font-weight: 700; }
+.dash-top .dash-col-relleno { background: var(--gold); }
+
+@media (max-width: 480px) {
+    .admin-stats { grid-template-columns: 1fr; }
+    .dash-filtros { flex-direction: column; align-items: stretch; }
+    .dash-filtros .admin-btn-primary,
+    .dash-filtros .admin-btn-secondary { width: 100%; text-align: center; }
+    .dash-barras-texto { flex-direction: column; gap: 2px; }
+    .dash-barras-texto span:last-child { text-align: left; }
+}
 
 .admin-form-check {
     display: flex;

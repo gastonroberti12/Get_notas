@@ -1,12 +1,12 @@
-from flask import render_template, redirect, url_for
-from routes.roles import es_admin
+from flask import render_template, request
+from dashboard import armar_dashboard, leer_filtros
+from routes.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp
 
+SECCIONES_COMPLETAS = ("ocupacion", "entradas", "importe", "cancelaciones", "salas", "generos", "franjas")
 
 @backoffice_bp.route("/backoffice/estadisticas")
+@solo_admin
 def estadisticas_admin():
-
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-
-    return render_template("backadmin/estaditicas.html")
+    filtros = leer_filtros(request.args)
+    return render_template("backadmin/estadisticas.html", filtros=filtros, d=armar_dashboard(filtros, SECCIONES_COMPLETAS))

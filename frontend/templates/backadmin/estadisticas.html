@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-panel">
+
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+            <h1>Estadísticas</h1>
+            <p class="admin-subtitle">Consultá los indicadores de actividad de Cine Paradiso.</p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        {% include "backadmin/barralateral.html" %}
+
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Resumen general</h2>
+            </div>
+
+            <p class="admin-description">
+                Resumen de ocupación, ventas y cancelaciones de Cine Paradiso.
+                Podés acotar el período por fecha.
+            </p>
+
+            <!-- Filtro por período (GET: el backend valida las fechas) -->
+            <form class="dash-filtros" method="get" action="{{ url_for('backoffice.estadisticas_admin') }}">
+                <div class="admin-form-group">
+                    <label for="fecha_desde">Desde</label>
+                    <input type="date" id="fecha_desde" name="fecha_desde"
+                           value="{{ filtros.fecha_desde or '' }}" max="{{ filtros.fecha_hasta or '' }}">
+                </div>
+                <div class="admin-form-group">
+                    <label for="fecha_hasta">Hasta</label>
+                    <input type="date" id="fecha_hasta" name="fecha_hasta"
+                           value="{{ filtros.fecha_hasta or '' }}" min="{{ filtros.fecha_desde or '' }}">
+                </div>
+                <button type="submit" class="admin-btn-primary">Filtrar</button>
+                <a class="admin-btn-secondary" href="{{ url_for('backoffice.estadisticas_admin') }}">Limpiar</a>
+            </form>
+
+            <div class="admin-stats">
+                {% for titulo, s in [("Ocupación general", d.ocupacion), ("Entradas vendidas", d.entradas), ("Ventas totales", d.importe), ("Cancelaciones", d.cancelaciones)] %}
+                <article class="admin-stat">
+                    <h3>{{ titulo }}</h3>
+                    {% if s.error %}
+                    <p class="admin-stat-error">—</p>
+                    <small class="admin-error-text">{{ s.error }}</small>
+                    {% else %}
+                    <p>{{ s.datos.valor }}</p>
+                    <small>{{ s.datos.detalle }}</small>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Ocupación</h2>
+            </div>
+            <p class="admin-description">Porcentaje de butacas vendidas en las funciones de cada sala.</p>
+            <div class="admin-charts">
+                <section class="admin-chart admin-chart-full">
+                    <h3>Ocupación por sala</h3>
+                    {% if d.salas.datos %}
+                    <ul class="dash-barras">
+                        {% for b in d.salas.datos %}
+                        <li>
+                            <div class="dash-barras-texto"><span>{{ b.etiqueta }}</span><span>{{ b.detalle }}</span></div>
+                            <div class="dash-pista"><div class="dash-relleno" style="width: {{ b.ancho }}%"></div></div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        <div class="admin-empty-chart{% if d.salas.error %} admin-chart-error{% endif %}">
+                            <span class="admin-chart-icon">{{ '!' if d.salas.error else '▥' }}</span>
+                            <p>{{ 'No se pudo cargar el gráfico' if d.salas.error else 'Sin datos para mostrar' }}</p>
+                            <small>{{ d.salas.error or "No hay funciones con entradas en el período." }}</small>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Ventas</h2>
+            </div>
+            <p class="admin-description">
+                Entradas vendidas según el género cinematográfico y la hora de inicio de las funciones.
+            </p>
+            <div class="admin-charts">
+                <section class="admin-chart">
+                    <h3>Ventas por género</h3>
+                    {% if d.generos.datos %}
+                    <ul class="dash-barras">
+                        {% for b in d.generos.datos %}
+                        <li>
+                            <div class="dash-barras-texto"><span>{{ b.etiqueta }}</span><span>{{ b.detalle }}</span></div>
+                            <div class="dash-pista"><div class="dash-relleno" style="width: {{ b.ancho }}%"></div></div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        <div class="admin-empty-chart{% if d.generos.error %} admin-chart-error{% endif %}">
+                            <span class="admin-chart-icon">{{ '!' if d.generos.error else '▥' }}</span>
+                            <p>{{ 'No se pudo cargar el gráfico' if d.generos.error else 'Sin datos para mostrar' }}</p>
+                            <small>{{ d.generos.error or "No hay ventas registradas en el período." }}</small>
+                        </div>
+                    {% endif %}
+                </section>
+                <section class="admin-chart">
+                    <h3>Franjas horarias más vendidas</h3>
+                    {% if d.franjas.datos %}
+                    <div class="dash-columnas-wrap">
+                        <ul class="dash-columnas">
+                            {% for b in d.franjas.datos %}
+                            <li{% if b.destacada %} class="dash-top"{% endif %} title="{{ b.detalle }}">
+                                <span>{{ b.valor }}</span>
+                                <div class="dash-col-pista"><div class="dash-col-relleno" style="height: {{ b.ancho }}%"></div></div>
+                                <span>{{ b.etiqueta }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                        <div class="admin-empty-chart{% if d.franjas.error %} admin-chart-error{% endif %}">
+                            <span class="admin-chart-icon">{{ '!' if d.franjas.error else '▥' }}</span>
+                            <p>{{ 'No se pudo cargar el gráfico' if d.franjas.error else 'Sin datos para mostrar' }}</p>
+                            <small>{{ d.franjas.error or "No hay ventas registradas en el período." }}</small>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
