@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from cine_fuente.utils import construir_error_api
+from cine_fuente.utils import ahora_gmt3
 
 
 PATRON_FECHA_CARTELERA = re.compile(
@@ -104,6 +105,13 @@ def parsear_fecha_cartelera(valor, campo):
 def validar_rango_cartelera(inicio, fin):
     inicio_dt = parsear_fecha_cartelera(inicio, "fecha_inicio_cartelera")
     fin_dt = parsear_fecha_cartelera(fin, "fecha_fin_cartelera")
+
+    if inicio_dt < ahora_gmt3():
+        raise ValueError(construir_error_api(
+            "pelicula.fecha.pasada",
+            "Fecha de cartelera inválida",
+            "fecha_inicio_cartelera no puede estar en el pasado.",
+        ), 400)
 
     if fin_dt <= inicio_dt:
         raise ValueError(construir_error_api(

@@ -97,6 +97,12 @@
                         </div>
                     </div>
                     <p class="admin-form-help">La película puede permanecer en cartelera como máximo 7 días.</p>
+                    {% if editando and not v.activa %}
+                    <label class="admin-form-help">
+                        <input type="checkbox" name="reactivar" value="true">
+                        Reactivar con estas fechas
+                    </label>
+                    {% endif %}
 
                     <div class="admin-form-actions">
                         {% if editando %}

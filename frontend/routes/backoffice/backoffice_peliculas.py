@@ -1,7 +1,8 @@
 from datetime import datetime
+import re
 from urllib.parse import urlencode
 
-from flask import abort, redirect, render_template, request, session, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for
 
 from api_cliente import llamar_api, mensaje_error
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
@@ -14,6 +15,14 @@ CAMPOS_FECHA = ("fecha_inicio_cartelera", "fecha_fin_cartelera")
 
 def url_listado():
     return url_for("backoffice.peliculas_admin")
+
+
+def peliculas_locales():
+    activas_status, activas = llamar_api("GET", "/peliculas?_limit=100&activa=true")
+    inactivas_status, inactivas = llamar_api("GET", "/peliculas?_limit=100&activa=false")
+    if activas_status != 200 or inactivas_status != 200:
+        return None
+    return activas.get("peliculas", []) + inactivas.get("peliculas", [])
 
 
 def a_iso_gmt3(valor):
@@ -29,13 +38,13 @@ def a_iso_gmt3(valor):
 def peliculas_admin():
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
-    status, datos = llamar_api("GET", "/peliculas?_limit=100")
-    if status not in (200, 204):
-        error = mensaje_error(status, datos, "No se pudieron obtener las películas.")
+    peliculas = peliculas_locales()
+    if peliculas is None:
+        error = "No se pudieron obtener las películas."
         return render_template("backadmin/peliculas_listado.html", peliculas=[], error=error)
     return render_template(
         "backadmin/peliculas_listado.html",
-        peliculas=datos.get("peliculas", []),
+        peliculas=peliculas,
         error=None,
     )
 
@@ -56,11 +65,11 @@ def pelicula_buscar():
         if status == 200:
             resultados = datos.get("resultados", [])
             total = datos.get("total_resultados", 0)
-            locales_status, locales = llamar_api("GET", "/peliculas?_limit=100")
-            if locales_status == 200:
+            locales = peliculas_locales()
+            if locales is not None:
                 estado_por_imdb = {
                     pelicula["id_externo"]: pelicula["activa"]
-                    for pelicula in locales.get("peliculas", [])
+                    for pelicula in locales
                 }
                 for resultado in resultados:
                     if resultado["id_externo"] in estado_por_imdb:
@@ -98,6 +107,7 @@ def pelicula_nueva():
 
         status, cuerpo = llamar_api("POST", "/peliculas", datos)
         if status == 201:
+            flash("Película agregada correctamente.", "ok")
             return redirect(url_listado())
         if status == 401:
             session.clear()
@@ -112,6 +122,8 @@ def pelicula_nueva():
     valores, aviso = {}, None
     imdb_id = request.args.get("id", "").strip()
     if imdb_id:
+        if not re.fullmatch(r"tt\d+", imdb_id):
+            return redirect(url_for("backoffice.pelicula_buscar"))
         status, detalle = llamar_api("GET", f"/peliculas/{imdb_id}")
         if status == 200:
             valores = {campo: detalle.get(campo) or "" for campo in CAMPOS}
@@ -143,6 +155,7 @@ def pelicula_editar(pelicula_id):
     actual = traer_pelicula(pelicula_id)
     accion = url_for("backoffice.pelicula_editar", pelicula_id=pelicula_id)
     valores = {campo: actual.get(campo) or "" for campo in CAMPOS}
+    valores["activa"] = bool(actual.get("activa"))
     for campo in CAMPOS_FECHA:
         valores[campo] = (actual.get(campo) or "")[:16]
 
@@ -169,8 +182,10 @@ def pelicula_editar(pelicula_id):
             cambios[campo] = (
                 int(nuevo) if campo == "duracion_min" and nuevo.isdigit() else nuevo
             ) or None
+    if not valores["activa"] and request.form.get("reactivar") == "true":
+        cambios["activa"] = True
 
-    valores_formulario = {**enviados, "id": pelicula_id}
+    valores_formulario = {**enviados, "id": pelicula_id, "activa": valores["activa"]}
     if not cambios:
         return render_template(
             "backadmin/pelicula_form.html",

@@ -168,3 +168,39 @@ Authorization: Bearer {{adminToken}}
 }
 Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS; verificar que el título no
 cambió y que activa permanece true.
+
+Caso 23 - PATCH solo fecha de inicio:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"fecha_inicio_cartelera": "2026-11-20T10:00:00.000000-03:00"}
+Esperado: 204; fecha_fin_cartelera conserva su valor anterior.
+
+Caso 24 - PATCH solo fecha de fin:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00"}
+Esperado: 204; fecha_inicio_cartelera conserva su valor anterior.
+
+Caso 25 - PATCH sin fechas:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"titulo": "Título actualizado"}
+Esperado: 204; ambas fechas permanecen sin cambios.
+
+Caso 26 - POST con body no objeto:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+["x"]
+Esperado: 400 con código pelicula.invalid.
+
+Caso 27 - Alta con fecha vencida:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+{"id_externo": "tt0120338", "fecha_inicio_cartelera": "2020-01-01T10:00:00.000000-03:00", "fecha_fin_cartelera": "2020-01-02T10:00:00.000000-03:00"}
+Esperado: 400.
+
+Caso 28 - Reactivación con nuevas fechas:
+PATCH /peliculas/{{peliculaInactivaId}}
+Authorization: Bearer {{adminToken}}
+{"activa": true, "fecha_inicio_cartelera": "2026-11-20T10:00:00.000000-03:00", "fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00"}
+Esperado: 204; la película queda activa con el nuevo período.

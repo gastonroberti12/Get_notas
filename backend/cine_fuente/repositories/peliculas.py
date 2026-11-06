@@ -16,9 +16,22 @@ def consultar_pelicula_por_imdb(imdb_id):
 
 # Consulta las películas almacenadas; con activa, filtra por ese estado.
 def consultar_peliculas(activa=None):
-    if activa is None:
-        return ejecutar_consulta("SELECT * FROM pelicula ORDER BY id")
-    return ejecutar_consulta("SELECT * FROM pelicula WHERE activa = %s ORDER BY id", (activa,))
+    if activa is False:
+        return ejecutar_consulta(
+            "SELECT * FROM pelicula WHERE activa = FALSE ORDER BY id"
+        )
+    if activa is True:
+        return ejecutar_consulta(
+            "SELECT * FROM pelicula WHERE activa = TRUE ORDER BY id"
+        )
+    return ejecutar_consulta(
+        "SELECT * FROM pelicula "
+        "WHERE activa = TRUE "
+        "AND fecha_inicio_cartelera <= %s "
+        "AND fecha_fin_cartelera >= %s "
+        "ORDER BY id",
+        (ahora_gmt3().replace(tzinfo=None), ahora_gmt3().replace(tzinfo=None)),
+    )
 
 
 # Guarda los datos básicos de una película.

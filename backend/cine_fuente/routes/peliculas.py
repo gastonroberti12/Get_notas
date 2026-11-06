@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pymysql
 from flask import Blueprint, jsonify, request
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.peliculas import (
@@ -46,6 +47,12 @@ def normalizar_fecha_cartelera(valor):
     return datetime.fromisoformat(valor).replace(tzinfo=None)
 
 
+def normalizar_cambios_fecha(cambios):
+    for campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
+        if campo in cambios:
+            cambios[campo] = normalizar_fecha_cartelera(cambios[campo])
+
+
 @peliculas_bp.route("", methods=["GET"])
 # Lista las películas locales disponibles.
 def listar_peliculas():
@@ -65,7 +72,9 @@ def listar_peliculas():
 @requiere_rol("administrador")
 # Permite al administrador cargar una película manualmente.
 def crear_pelicula():
-    datos = request.get_json(silent=True) or {}
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        datos = {}
     imdb_id = datos.get("id_externo")
     if not isinstance(imdb_id, str) or not imdb_id.strip():
         return respuesta_error_api(construir_error_api(
@@ -114,7 +123,14 @@ def crear_pelicula():
         "fecha_fin_cartelera": normalizar_fecha_cartelera(fecha_fin),
         "activa": True,
     })
-    pelicula_id = insertar_pelicula(pelicula)
+    try:
+        pelicula_id = insertar_pelicula(pelicula)
+    except pymysql.err.IntegrityError as causa:
+        return respuesta_error_api(construir_error_api(
+            "pelicula.already.exists",
+            "Película duplicada",
+            "La película ya existe en la cartelera.",
+        ), 409)
     return jsonify(formatear_pelicula(obtener_pelicula(pelicula_id))), 201
 
 
@@ -145,12 +161,7 @@ def modificar_pelicula(pelicula_id):
                     "La película debe tener fecha de inicio y fecha de fin.",
                 ), 400)
             validar_rango_cartelera(fecha_inicio, fecha_fin)
-        cambios["fecha_inicio_cartelera"] = normalizar_fecha_cartelera(
-            cambios.get("fecha_inicio_cartelera")
-        )
-        cambios["fecha_fin_cartelera"] = normalizar_fecha_cartelera(
-            cambios.get("fecha_fin_cartelera")
-        )
+        normalizar_cambios_fecha(cambios)
     if cambios.get("activa") is False:
         if not dar_de_baja(pelicula_id):
             return respuesta_error_api(construir_error_api(
@@ -159,6 +170,13 @@ def modificar_pelicula(pelicula_id):
                 "La película tiene reservas activas para funciones futuras.",
             ), 409)
         cambios.pop("activa")
+    elif cambios.get("activa") is True and not pelicula_actual["activa"]:
+        if "fecha_inicio_cartelera" not in cambios or "fecha_fin_cartelera" not in cambios:
+            raise ValueError(construir_error_api(
+                "pelicula.fecha.required",
+                "Fechas requeridas",
+                "La reactivación requiere un nuevo período de cartelera.",
+            ), 400)
     if cambios:
         actualizar_pelicula(pelicula_id, cambios)
     return "", 204

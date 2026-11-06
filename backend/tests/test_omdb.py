@@ -1,4 +1,6 @@
 import os
+import pytest
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 from app import app
@@ -58,6 +60,7 @@ def test_detalle_pelicula_normaliza_campos(solicitud_mock):
     assert result["duracion_min"] == 140
     assert result["poster_url"] is None
     assert result["sinopsis"] == "A synopsis."
+    assert result["genero"] == "Action"
 
 
 @patch("cine_fuente.services.omdb_service.requests.get")
@@ -139,3 +142,74 @@ def test_rango_cartelera_permite_una_semana():
     inicio = "2026-11-20T21:30:00.000000-03:00"
     fin = "2026-11-27T21:30:00.000000-03:00"
     assert validar_rango_cartelera(inicio, fin) == (inicio, fin)
+
+
+@patch("cine_fuente.services.seguridad.decodificar_token", return_value={"sub": "1", "rol": "administrador"})
+@patch("cine_fuente.routes.peliculas.actualizar_pelicula")
+@patch("cine_fuente.routes.peliculas.obtener_pelicula")
+def test_patch_fechas_conserva_las_no_enviadas(obtener_mock, actualizar_mock, _token_mock):
+    obtener_mock.return_value = {
+        "id": 1,
+        "activa": True,
+        "fecha_inicio_cartelera": datetime(2026, 11, 20, 10),
+        "fecha_fin_cartelera": datetime(2026, 11, 25, 10),
+    }
+
+    client = app.test_client()
+    respuesta = client.patch(
+        "/peliculas/1",
+        json={"fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert respuesta.status_code == 204
+    actualizar_mock.assert_called_once_with(1, {
+        "fecha_fin_cartelera": datetime(2026, 11, 26, 10),
+    })
+
+
+@pytest.mark.parametrize("payload", [
+    {"fecha_inicio_cartelera": "2026-11-21T10:00:00.000000-03:00"},
+    {
+        "fecha_inicio_cartelera": "2026-11-21T10:00:00.000000-03:00",
+        "fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00",
+    },
+    {"titulo": "Título sin tocar fechas"},
+])
+@patch("cine_fuente.services.seguridad.decodificar_token", return_value={"sub": "1", "rol": "administrador"})
+@patch("cine_fuente.routes.peliculas.actualizar_pelicula")
+@patch("cine_fuente.routes.peliculas.obtener_pelicula")
+def test_patch_fechas_usa_solo_los_campos_enviados(
+    obtener_mock, actualizar_mock, _token_mock, payload
+):
+    obtener_mock.return_value = {
+        "id": 1,
+        "activa": True,
+        "fecha_inicio_cartelera": datetime(2026, 11, 20, 10),
+        "fecha_fin_cartelera": datetime(2026, 11, 25, 10),
+    }
+
+    respuesta = app.test_client().patch(
+        "/peliculas/1",
+        json=payload,
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert respuesta.status_code == 204
+    assert actualizar_mock.call_count == 1
+    cambios = actualizar_mock.call_args.args[1]
+    assert "fecha_inicio_cartelera" not in cambios or "fecha_inicio_cartelera" in payload
+    assert "fecha_fin_cartelera" not in cambios or "fecha_fin_cartelera" in payload
+
+
+def test_post_rechaza_body_no_objeto():
+    with patch("cine_fuente.services.seguridad.decodificar_token",
+               return_value={"sub": "1", "rol": "administrador"}):
+        respuesta = app.test_client().post(
+            "/peliculas",
+            json=["x"],
+            headers={"Authorization": "Bearer token"},
+        )
+
+    assert respuesta.status_code == 400
+    assert respuesta.get_json()["errors"][0]["codigo"] == "pelicula.invalid"
