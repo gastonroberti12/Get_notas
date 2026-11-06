@@ -869,3 +869,21 @@
         flex-direction: column;
     }
 }
+
+.admin-section-heading a { color: var(--gold); font-weight: 600; }
+
+/* Menú lateral responsive */
+@media (max-width: 1000px) {
+    .admin-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 16px; }
+}
+
+@media (max-width: 760px) {
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-sidebar { padding: 12px; }
+    .admin-sidebar h2,
+    .admin-menu-note { display: none; }
+
+    /* Botones compactos en filas que se acomodan solos: el activo siempre queda a la vista */
+    .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
+    .admin-menu li a { padding: 11px 14px; font-size: 14px; }
+}
