@@ -8,12 +8,6 @@
 
 {% block content %}
 
-{# Datos de muestra: más adelante los reemplaza el backend (filas, columnas, ocupadas, precio y datos de la función). #}
-{% set filas = filas or ['A', 'B', 'C', 'D', 'E', 'F'] %}
-{% set columnas = columnas or 10 %}
-{% set ocupadas = ocupadas or ['A3', 'A4', 'B5', 'C2', 'C7', 'D6', 'E1', 'F5', 'F6'] %}
-{% set precio = precio or 9500 %}
-
 <div class="butacas-layout">
 
     <!-- SALA -->
@@ -22,11 +16,12 @@
 
         <!-- título y datos de la función -->
         <h1>Elegí tus butacas</h1>
-        <p class="butacas-funcion">Película · Sala · Fecha y hora de la función</p>
+        <p class="butacas-funcion">
+            {{ funcion.pelicula }} · {{ funcion.sala }} · {{ funcion.fecha_hora }}
+        </p>
 
         <div class="sala-scroll">
             <!-- butacas ya vendidas y precio de la entrada -->
-            <input type="hidden" id="ocupadas" value="{{ ocupadas | join(',') }}">
             <input type="hidden" id="precio" value="{{ precio }}">
 
             <div class="sala">
@@ -37,16 +32,19 @@
                 <div class="filas">
                     {% for fila in filas %}
                     <div class="fila">
-
                         <span class="fila-letra">{{ fila }}</span>
-
-                        {% for n in range(1, columnas + 1) %}
-
-                            {% if n == columnas // 2 + 1 %}<span class="pasillo"></span>{% endif %}
-
-                            <!-- Butaca -->
-                            <button type="button" class="butaca" id="{{ fila }}{{ n }}" title="{{ fila }}{{ n }}">{{ n }}</button>
-
+                        {% set separados = butacas_por_fila[fila] | length // 2 %}
+                        {% for butaca in butacas_por_fila[fila] %}
+                            {% if loop.index0 == separados %}<span class="pasillo"></span>{% endif %}
+                            <button
+                                type="button"
+                                class="butaca{% if butaca.id in ocupadas_ids %} ocupada{% endif %}"
+                                id="{{ fila }}{{ butaca.numero }}"
+                                data-butaca-id="{{ butaca.id }}"
+                                title="{{ fila }}{{ butaca.numero }}"
+                                {% if butaca.id in ocupadas_ids %}disabled{% endif %}>
+                                {{ butaca.numero }}
+                            </button>
                         {% endfor %}
                     </div>
                     {% endfor %}
@@ -71,7 +69,7 @@
 
         <h2>Tu selección</h2>
 
-        <form method="get" action="{{ url_for('purchases.checkout') }}">
+        <form method="post" action="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion_id) }}">
 
             <!-- Butacas elegidas (lo completa el JS) -->
             <input type="hidden" name="butacas" id="butacas-input">

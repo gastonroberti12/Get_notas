@@ -8,15 +8,7 @@
 
 {% block content %}
 
-{# Datos de muestra: más adelante los reemplaza el backend (película, función, butacas, servicios y precios). #}
-{% set entradas = entradas or 2 %}
-{% set precio_entrada = precio_entrada or 9500 %}
-{% set servicios = servicios or [
-    {'id': 1, 'nombre': 'Pochoclo grande', 'precio': 4500},
-    {'id': 2, 'nombre': 'Bebida', 'precio': 3000},
-    {'id': 3, 'nombre': 'Estacionamiento', 'precio': 2500},
-    {'id': 4, 'nombre': 'Acceso VIP', 'precio': 6000}
-] %}
+{% set entradas = entradas or 0 %}
 
 <div class="checkout">
 
@@ -38,7 +30,7 @@
             <!-- Nombre y precio unitario -->
             <div class="servicio-nombre">
                 <span class="nombre">{{ s.nombre }}</span>
-                <small>$ {{ '{:,}'.format(s.precio).replace(',', '.') }}</small>
+                <small>$ {{ s.precio_formateado }}</small>
             </div>
 
             <!-- Contador − / cantidad / + -->

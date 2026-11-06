@@ -1,5 +1,6 @@
-from flask import Blueprint, redirect, url_for, render_template
-from api_cliente import llamar_api
+from flask import Blueprint, redirect, url_for, render_template, flash, request, abort
+from api_cliente import llamar_api, mensaje_error
+from datos_perfil import formatear_total
 from routes.roles import esta_logueado
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -10,15 +11,158 @@ def cancelar_reserva(reserva_id):
     if not esta_logueado():
         return redirect(url_for('users.login'))
     # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
-    llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
+    status, cuerpo = llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
+    if status in (200, 204):
+        flash('Reserva cancelada con éxito.', 'exito')
+    else:
+        flash(mensaje_error(status, cuerpo, 'No se pudo cancelar la reserva.'), 'error')
     return redirect(url_for('users.profile'))
 
-# Solo maqueta visual: todavía sin datos del backend.
-@purchases_bp.route("/funciones/<int:funcion_id>/butacas")
+@purchases_bp.route("/funciones/<int:funcion_id>/butacas", methods=["GET", "POST"])
 def seleccion_butacas(funcion_id):
-    return render_template("seleccion_butacas.html", funcion_id=funcion_id)
+    if not esta_logueado():
+        return redirect(url_for('users.login'))
+
+    status, funcion = llamar_api("GET", f"/funciones/{funcion_id}")
+    if status == 404:
+        abort(404)
+    if status != 200:
+        abort(503)
+
+    if request.method == "POST":
+        texto_ids = request.form.get("butacas", "").strip()
+        try:
+            butaca_ids = [int(valor) for valor in texto_ids.split(",") if valor.strip()]
+        except ValueError:
+            flash("Las butacas seleccionadas no son válidas.", "error")
+            return redirect(url_for("purchases.seleccion_butacas", funcion_id=funcion_id))
+
+        if not butaca_ids:
+            flash("Seleccioná al menos una butaca.", "error")
+            return redirect(url_for("purchases.seleccion_butacas", funcion_id=funcion_id))
+
+        status_reserva, reserva = llamar_api(
+            "POST",
+            "/reservas",
+            {"funcion_id": funcion_id, "butaca_ids": butaca_ids},
+        )
+        if status_reserva == 201:
+            return redirect(url_for(
+                "purchases.checkout",
+                reserva_id=reserva["id"],
+                funcion_id=funcion_id,
+            ))
+
+        flash(mensaje_error(status_reserva, reserva, "No se pudo crear la reserva."), "error")
+        return redirect(url_for("purchases.seleccion_butacas", funcion_id=funcion_id))
+
+    status_butacas, disponibles = llamar_api(
+        "GET", f"/funciones/{funcion_id}/butacas"
+    )
+    if status_butacas != 200:
+        abort(503)
+
+    status_todas, cuerpo_todas = llamar_api(
+        "GET", f"/salas/{funcion['sala_id']}/butacas?_limit=100"
+    )
+    if status_todas != 200:
+        abort(503)
+
+    todas = cuerpo_todas.get("butacas", [])
+    disponibles_ids = {int(b["id"]) for b in disponibles}
+    filas = sorted({b["fila"] for b in todas})
+    butacas_por_fila = {
+        fila: sorted(
+            (b for b in todas if b["fila"] == fila),
+            key=lambda b: int(b["numero"]),
+        )
+        for fila in filas
+    }
+    ocupadas_ids = {int(b["id"]) for b in todas if int(b["id"]) not in disponibles_ids}
+
+    return render_template(
+        "seleccion_butacas.html",
+        funcion_id=funcion_id,
+        funcion=funcion,
+        filas=filas,
+        butacas=todas,
+        butacas_por_fila=butacas_por_fila,
+        ocupadas_ids=ocupadas_ids,
+        precio=float(funcion["precio"]),
+    )
 
 
-@purchases_bp.route("/checkout")
+@purchases_bp.route("/checkout", methods=["GET", "POST"])
 def checkout():
-    return render_template("checkout.html")
+    if not esta_logueado():
+        return redirect(url_for("users.login"))
+
+    reserva_id = request.args.get("reserva_id", type=int)
+    if not reserva_id:
+        return redirect(url_for("movies.index"))
+
+    if request.method == "POST":
+        for clave, cantidad_texto in request.form.items():
+            if not clave.startswith("servicio_"):
+                continue
+            try:
+                cantidad = int(cantidad_texto)
+                servicio_id = int(clave.removeprefix("servicio_"))
+            except ValueError:
+                continue
+            if cantidad <= 0:
+                continue
+            status_servicio, _ = llamar_api(
+                "POST",
+                f"/reservas/{reserva_id}/servicios",
+                {"servicio_id": servicio_id, "cantidad": cantidad},
+            )
+            if status_servicio not in (201, 409):
+                flash("No se pudo agregar un servicio adicional.", "error")
+                return redirect(url_for(
+                    "purchases.checkout",
+                    reserva_id=reserva_id,
+                    funcion_id=request.args.get("funcion_id"),
+                ))
+
+        datos_pago = {
+            campo: request.form.get(campo, "")
+            for campo in ("titular", "numero_tarjeta", "mes_vencimiento", "anio_vencimiento", "cvv")
+        }
+        status, cuerpo = llamar_api("POST", f"/reservas/{reserva_id}/pago", datos_pago)
+        if status == 200:
+            flash("Pago confirmado. La reserva quedó creada.", "exito")
+            return redirect(url_for("users.profile"))
+        flash(mensaje_error(status, cuerpo, "No se pudo confirmar el pago."), "error")
+        return redirect(url_for(
+            "purchases.checkout",
+            reserva_id=reserva_id,
+            funcion_id=request.args.get("funcion_id"),
+        ))
+
+    status_reserva, reserva = llamar_api("GET", f"/reservas/{reserva_id}")
+    if status_reserva != 200:
+        abort(status_reserva or 503)
+
+    status_funcion, funcion = llamar_api("GET", f"/funciones/{reserva['funcion_id']}")
+    if status_funcion != 200:
+        abort(status_funcion or 503)
+
+    status_entradas, entradas_data = llamar_api(
+        "GET", f"/reservas/{reserva_id}/entradas?_limit=100"
+    )
+    entradas = entradas_data.get("entradas", []) if status_entradas == 200 else []
+
+    status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100")
+    servicios = servicios_data.get("servicios", []) if status_servicios == 200 else []
+    for servicio in servicios:
+        servicio["precio_formateado"] = formatear_total(servicio["precio"])
+
+    return render_template(
+        "checkout.html",
+        reserva=reserva,
+        funcion=funcion,
+        entradas=len(entradas),
+        precio_entrada=float(funcion["precio"]),
+        servicios=servicios,
+    )

@@ -5,14 +5,14 @@ from flask import session
 API_URL = os.getenv('BACKEND_URL', 'http://127.0.0.1:5001')
 
 MENSAJE_SIN_CONEXION = 'No se pudo conectar con el servidor.'
-MENSAJE_GENERICO = 'Ocurrió un error inesperado.'
+MENSAJE_GENERICO = 'OcurriÃ³ un error inesperado.'
 
 
 def llamar_api(metodo, endpoint, datos=None):
     # Si hay sesion, manda el token en Authorization: Bearer.
     headers = {}
     if 'token' in session:
-        headers['Authorization'] = f"Bearer {session['token']}"
+        headers['Authorization'] = 'Bearer ' + session['token']
     try:
         r = requests.request(metodo, f'{API_URL}{endpoint}', json=datos, headers=headers, timeout=5)
         return r.status_code, (r.json() if r.content else {})

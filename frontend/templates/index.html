@@ -184,7 +184,7 @@
     {% else %}
 
         <p class="cartelera-vacia">
-            No hay películas disponibles en cartelera.
+            No hay películas disponibles en la  cartelera{% if sucursal_actual %} de {{ sucursal_actual.nombre }}{% endif %}.
         </p>
 
     {% endif %}

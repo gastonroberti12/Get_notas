@@ -123,6 +123,18 @@ def test_rango_cartelera_rechaza_fin_anterior():
         raise AssertionError("Se esperaba un error de validación")
 
 
+def test_rango_cartelera_rechaza_fin_igual_al_inicio():
+    try:
+        validar_rango_cartelera(
+            "2026-11-20T21:30:00.000000-03:00",
+            "2026-11-20T21:30:00.000000-03:00",
+        )
+    except ValueError as error:
+        assert error.args[1] == 400
+    else:
+        raise AssertionError("Se esperaba un error de validación")
+
+
 def test_rango_cartelera_permite_una_semana():
     inicio = "2026-11-20T21:30:00.000000-03:00"
     fin = "2026-11-27T21:30:00.000000-03:00"

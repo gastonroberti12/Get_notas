@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from api_cliente import llamar_api
 
 ESTADOS_PROXIMAS = ('confirmada',)
@@ -13,8 +14,12 @@ def obtener(endpoint, cache):
         cache[endpoint] = cuerpo if status == 200 else {}
     return cache[endpoint]
 
-def formatear_total(centavos):
-    return f"{int(centavos) // 100:,}".replace(',', '.')
+def formatear_total(pesos):
+    try:
+        monto = Decimal(str(pesos)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError):
+        monto = Decimal('0')
+    return f"{monto:,}".replace(',', '.')
 
 def armar_reserva(r, cache):
     # Consulta los datos de la reserva
@@ -30,8 +35,6 @@ def armar_reserva(r, cache):
     entradas_api = obtener(f"/reservas/{r['id']}/entradas?_limit=100", cache).get('entradas', [])
     entradas = [{
         'butaca': butacas.get(entrada['butaca_id'], SIN_DATO),
-        'codigo_qr': entrada.get('codigo_qr') or '',
-        'qr': None,  # el back no expone la imagen del QR; el template muestra un texto de reemplazo
         'fecha_uso': formatear_fecha(entrada.get('fecha_uso'), '%d/%m/%Y %H:%M', None),
     } for entrada in entradas_api]
 
@@ -65,6 +68,6 @@ def parsear_fecha(valor):
         return None
 
 
-def formatear_fecha(valor, formato, SIN_DATO):
+def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
     fecha = parsear_fecha(valor)
-    return fecha.strftime(formato) if fecha else SIN_DATO
+    return fecha.strftime(formato) if fecha else sin_dato

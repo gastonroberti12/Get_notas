@@ -251,6 +251,7 @@ paths:
       parameters:
       - $ref: '#/components/parameters/TituloFilter'
       - $ref: '#/components/parameters/GeneroFilter'
+      - $ref: '#/components/parameters/SucursalIdFilter'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
       responses:
@@ -334,6 +335,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -352,6 +355,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /funciones:
