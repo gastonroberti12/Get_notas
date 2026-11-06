@@ -115,6 +115,12 @@
 
         </form>
 
+        <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}">
+            <button type="submit" class="checkout-cancelar"
+                    onclick="return confirm('¿Querés cancelar esta reserva y salir del pago?');">
+                Cancelar reserva
+            </button>
+        </form>
         <a class="checkout-volver" href="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion.id, reserva_id=reserva.id) }}">← Volver a mis butacas reservadas</a>
 
     </section>

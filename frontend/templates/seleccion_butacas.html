@@ -77,6 +77,12 @@
             <input type="hidden" name="funcion_id" value="{{ funcion_id }}">
             <button type="submit" class="btn-continuar">Continuar al pago</button>
         </form>
+        <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva_pendiente.id) }}">
+            <button type="submit" class="btn-cancelar-reserva"
+                    onclick="return confirm('¿Querés cancelar esta reserva?');">
+                Cancelar reserva
+            </button>
+        </form>
     </div>
     {% else %}
     <div class="seleccion">

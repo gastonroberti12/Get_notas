@@ -231,6 +231,23 @@
     color: var(--gold);
 }
 
+.checkout-cancelar {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 9px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.checkout-cancelar:hover {
+    background: rgba(255, 106, 96, .1);
+}
+
 .checkout-plazo {
     grid-column: 1 / -1;
     display: flex;
