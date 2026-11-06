@@ -65,31 +65,32 @@
 
     <!-- RESUMEN DE LA SELECCIÓN  -->
 
+    {% if reserva_pendiente %}
     <div class="seleccion">
-
+        <h2>Tu reserva está activa</h2>
+        <p>Butacas reservadas: {{ asientos_reservados | join(", ") }}</p>
+        <p>El plazo vence a las {{ reserva_pendiente.fecha_expiracion[11:16] }}.</p>
+        <form method="get" action="{{ url_for('purchases.checkout') }}">
+            <input type="hidden" name="reserva_id" value="{{ reserva_pendiente.id }}">
+            <input type="hidden" name="funcion_id" value="{{ funcion_id }}">
+            <button type="submit" class="btn-continuar">Continuar al pago</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="seleccion">
         <h2>Tu selección</h2>
-
         <form method="post" action="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion_id) }}">
-
-            <!-- Butacas elegidas (lo completa el JS) -->
             <input type="hidden" name="butacas" id="butacas-input">
-
-            <!-- Lista de butacas elegidas con su precio (la arma el JS) -->
             <ul id="seleccion-lista"></ul>
-            <p id="seleccion-vacia">Seleccioná hasta 8 butacas.</p>
-
-            <!-- Cantidad de entradas y total -->
+            <p id="seleccion-vacia">Seleccioná hasta 5 butacas.</p>
             <div class="seleccion-total">
                 <span id="seleccion-cantidad">0 entrada(s)</span>
                 <strong id="seleccion-monto">$ 0</strong>
             </div>
-
-            <!-- Botón: deshabilitado hasta elegir al menos una butaca -->
             <button type="submit" class="btn-continuar" id="btn-continuar" disabled>Continuar al pago</button>
-
         </form>
-
     </div>
+    {% endif %}
 
 </div>
 

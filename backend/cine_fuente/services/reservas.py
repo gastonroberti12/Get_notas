@@ -25,11 +25,13 @@ def normalizar_fecha_local(valor):
 
 def reserva_api(fila):
     """Adapta una reserva al JSON."""
+    fecha_compra = fila["fecha_compra"]
     return {
         "id": int(fila["id"]),
         "usuario_id": int(fila["usuario_id"]),
         "funcion_id": int(fila["funcion_id"]),
-        "fecha_compra": formatear_fecha_hora(fila["fecha_compra"]),
+        "fecha_compra": formatear_fecha_hora(fecha_compra),
+        "fecha_expiracion": formatear_fecha_hora(fecha_compra + timedelta(minutes=10)),
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
