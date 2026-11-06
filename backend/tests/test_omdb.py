@@ -328,15 +328,17 @@ def test_integrity_error_no_duplicado_se_propaga(_insertar_mock):
 
 @patch("cine_fuente.repositories.peliculas.ahora_gmt3")
 @patch("cine_fuente.repositories.peliculas.ejecutar_consulta")
-def test_consultar_peliculas_aplica_vigencia_sin_activa(consulta_mock, ahora_mock):
+def test_consultar_peliculas_sin_activa_muestra_actuales_y_futuras(consulta_mock, ahora_mock):
     ahora = datetime(2026, 11, 5, 10)
     ahora_mock.return_value = ahora.replace(tzinfo=timezone(timedelta(hours=-3)))
     from cine_fuente.repositories.peliculas import consultar_peliculas
     consultar_peliculas()
     sql = consulta_mock.call_args.args[0]
     parametros = consulta_mock.call_args.args[1] if len(consulta_mock.call_args.args) > 1 else ()
-    assert "fecha_inicio_cartelera <= %s" in sql
-    assert parametros == (ahora, ahora)
+    assert "WHERE activa = TRUE" in sql
+    assert "fecha_fin_cartelera >= %s" in sql
+    assert "fecha_inicio_cartelera" not in sql
+    assert parametros == (ahora,)
 
 
 @patch("cine_fuente.repositories.peliculas.ejecutar_consulta")
@@ -346,7 +348,7 @@ def test_consultar_peliculas_activas_no_aplica_vigencia(consulta_mock):
     sql = consulta_mock.call_args.args[0]
     parametros = consulta_mock.call_args.args[1] if len(consulta_mock.call_args.args) > 1 else ()
     assert "fecha_inicio_cartelera" not in sql
-    assert parametros == ()
+    assert "fecha_fin_cartelera >= %s" in sql
 
 
 def test_post_rechaza_body_no_objeto():
