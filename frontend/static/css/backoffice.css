@@ -801,12 +801,13 @@
 
 @media (max-width: 480px) {
     .admin-stats { grid-template-columns: 1fr; }
-    .dash-filtros { flex-direction: column; align-items: stretch; }
+    .dash-filtros { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
     .dash-filtros .admin-btn-primary,
-    .dash-filtros .admin-btn-secondary { width: 100%; text-align: center; }
+    .dash-filtros .admin-btn-secondary { width: 100%; box-sizing: border-box; text-align: center; }
     .dash-barras-texto { flex-direction: column; gap: 2px; }
     .dash-barras-texto span:last-child { text-align: left; }
 }
+
 
 .admin-form-check {
     display: flex;
@@ -870,6 +871,22 @@
     }
 }
 
+.admin-section-heading a { color: var(--gold); font-weight: 600; }
+
+/* Menú lateral responsive */
+@media (max-width: 1000px) {
+    .admin-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 16px; }
+}
+
+@media (max-width: 760px) {
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-sidebar { padding: 12px; }
+    .admin-sidebar h2,
+    .admin-menu-note { display: none; }
+
+    /* Botones compactos en filas que se acomodan solos: el activo siempre queda a la vista */
+    .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
+    .admin-menu li a { padding: 11px 14px; font-size: 14px; }
 /* Botón activo del menú lateral */
 .admin-menu li a.admin-menu-active,
 .admin-menu li a.admin-menu-active:hover {
