@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
 {% endblock %}
 
+{% from "backadmin/componentes_dashboard.html" import tarjeta, barras_horizontales, columnas %}
 {% block content %}
 
 <section class="admin-panel">
@@ -33,80 +34,21 @@
 
             <div class="admin-section-heading">
                 <h2>Estadísticas</h2>
+                <a href="{{url_for('backoffice.estadisticas_admin') }}">Ver estadísticas completas</a>
             </div>
+            
+            <p class="admin-description">Resumen de la actividad de Cine Paradiso.</p>
 
-            <p class="admin-description">
-                Resumen de la actividad de Cine Paradiso.
-                Los indicadores se mostrarán cuando estén
-                conectados al backend.
-            </p>
-
-            <!--tarjetas de estadisticas-->
             <div class="admin-stats">
-
-                <article class="admin-stat">
-                    <h3>Ocupación</h3>
-                    <p>—</p>
-                    <small>Porcentaje de butacas ocupadas</small>
-                </article>
-
-                <article class="admin-stat">
-                    <h3>Entradas</h3>
-                    <p>—</p>
-                    <small>Entradas vendidas</small>
-                </article>
-
-                <article class="admin-stat">
-                    <h3>Ventas</h3>
-                    <p>—</p>
-                    <small>Importe total</small>
-                </article>
-
-                <article class="admin-stat">
-                    <h3>Cancelaciones</h3>
-                    <p>—</p>
-                    <small>Reservas canceladas</small>
-                </article>
-
+                {{ tarjeta("Ocupación", d.ocupacion) }}
+                {{ tarjeta("Entradas", d.entradas) }}
+                {{ tarjeta("Ventas", d.importe) }}
+                {{ tarjeta("Cancelaciones", d.cancelaciones) }}
             </div>
 
-            <!--grafficos-->
             <div class="admin-charts">
-
-                <section class="admin-chart">
-
-                    <h3>Ventas por género</h3>
-
-                    <div class="admin-empty-chart">
-                        <span class="admin-chart-icon">▥</span>
-
-                        <p>Sin datos para mostrar</p>
-
-                        <small>
-                            El gráfico se completará al integrar
-                            las estadísticas del backend.
-                        </small>
-                    </div>
-
-                </section>
-
-                <section class="admin-chart">
-
-                    <h3>Franjas horarias más vendidas</h3>
-
-                    <div class="admin-empty-chart">
-                        <span class="admin-chart-icon">▥</span>
-
-                        <p>Sin datos para mostrar</p>
-
-                        <small>
-                            El gráfico se completará al integrar
-                            las estadísticas del backend.
-                        </small>
-                    </div>
-
-                </section>
-
+                {{ barras_horizontales("Ventas por género", d.generos, "No hay ventas registradas.") }}
+                {{ columnas("Franjas horarias más vendidas", d.franjas, "No hay ventas registradas.") }}
             </div>
 
         </div>
