@@ -42,7 +42,7 @@
             <div class="admin-form-card">
 
                 {% if error_alta %}
-                    <p>{{ error_alta }}</p>
+                    <p class="admin-msg admin-msg-error">{{ error_alta }}</p>
                 {% endif %}
 
                 <form class="admin-form" method="POST" action="{{ url_for('backoffice.servicios_admin') }}">
@@ -96,7 +96,7 @@
                     </div>
                     
                     <div class="admin-form-group">
-                        <label for="activo">
+                        <label for="activo" class="admin-form-check">
                             <input type="checkbox" id="activo" name="activo" checked>
                             Servicio activo
                         </label>
@@ -146,10 +146,12 @@
             <div class="admin-form-card">
 
                 {% if error %}
-                    <p>{{ error }}</p>
+                    <p class="admin-msg admin-msg-error">{{ error }}</p>
 
                 {% elif servicios %}
-                    <table>
+                    
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
@@ -167,17 +169,23 @@
                                 <td>${{ s.precio }}</td>
                                 <td>{{ "Activo" if s.activo else "Inactivo" }}</td>
                                 <td>
-                                    <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
-                                        class="admin-btn-secondary">Editar</a>
-                                    <form method="POST"
-                                          action="{{ url_for('backoffice.servicios_eliminar', servicio_id=s.id) }}">
-                                        <button type="submit" class="admin-btn-secondary">Dar de baja</button>
-                                    </form>
+                                    <div class="admin-actions">
+                                        <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
+                                           class="admin-btn-secondary">Editar</a>
+
+                                        {% if s.activo %}
+                                            <form method="POST"
+                                                  action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}">
+                                                <button type="submit" class="admin-btn-secondary">Dar de baja</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
 
                 {% else %}
                     <div class="admin-empty-chart">
@@ -188,121 +196,7 @@
                 {% endif %}
 
             </div>
-
-            <div class="admin-section-heading admin-list-heading">
-                <h2>Modificar servicio</h2>
-            </div>
-
-            <p class="admin-description">
-                Seleccioná un servicio para modificar su información
-                o cambiar su disponibilidad.
-            </p>
-
-            <div class="admin-form-card">
-
-                <form class="admin-form">
-
-                    <div class="admin-form-group">
-
-                        <label for="servicio_id">Servicio</label>
-
-                        <select
-                            id="servicio_id"
-                            name="servicio_id"
-                            disabled
-                        >
-                            <option value="">
-                                Seleccionar servicio
-                            </option>
-                        </select>
-
-                    </div>
-
-                    <div class="admin-form-group">
-
-                        <label for="editar_nombre">Nombre</label>
-
-                        <input
-                            type="text"
-                            id="editar_nombre"
-                            name="nombre"
-                            placeholder="Nombre del servicio"
-                            disabled
-                        >
-
-                    </div>
-
-                    <div class="admin-form-group">
-
-                        <label for="editar_descripcion">Descripción</label>
-
-                        <input
-                            type="text"
-                            id="editar_descripcion"
-                            name="descripcion"
-                            placeholder="Descripción del servicio"
-                            disabled
-                        >
-
-                    </div>
-
-                    <div class="admin-form-group">
-
-                        <label for="editar_precio">Precio ($)</label>
-
-                        <input
-                            type="number"
-                            id="editar_precio"
-                            name="precio"
-                            min="0.01"
-                            step="0.01"
-                            disabled
-                        >
-
-                    </div>
-
-                    <div class="admin-form-group">
-
-                        <label for="activo">Estado del servicio</label>
-
-                        <select
-                            id="activo"
-                            name="activo"
-                            disabled
-                        >
-                            <option value="true">Activo</option>
-                            <option value="false">Inactivo</option>
-                        </select>
-
-                        <small>
-                            Los servicios inactivos no estarán disponibles
-                            para nuevas reservas.
-                        </small>
-
-                    </div>
-
-                    <div class="admin-form-actions">
-
-                        <button
-                            type="button"
-                            class="admin-btn-secondary"
-                            disabled>
-                            Dar de baja
-                        </button>
-
-                        <button
-                            type="submit"
-                            class="admin-btn-primary"
-                            disabled>
-                            Guardar cambios
-                        </button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
+            
         </div>
 
     </div>

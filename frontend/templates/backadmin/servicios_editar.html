@@ -28,7 +28,7 @@
             <div class="admin-form-card">
 
                 {% if error %}
-                    <p>{{ error }}</p>
+                    <p class="admin-msg admin-msg-error">{{ error }}</p>
                 {% endif %}
 
                 <form class="admin-form" method="POST">
@@ -52,7 +52,7 @@
                     </div>
 
                     <div class="admin-form-group">
-                        <label for="activo">
+                        <label for="activo" class="admin-form-check">
                             <input type="checkbox" id="activo" name="activo"
                                    {% if servicio.activo %}checked{% endif %}>
                             Servicio activo

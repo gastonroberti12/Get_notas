@@ -39,12 +39,12 @@ def servicios_admin(): # tiene este nombre por que  el url_for en el template ba
         error_alta=error_alta
     )
 
-@backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/eliminar", methods=["POST"])
-def servicios_eliminar(servicio_id):
+@backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/baja", methods=["POST"])
+def servicios_baja(servicio_id):
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
 
-    llamar_api("DELETE", f"/servicios/{servicio_id}")
+    llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": False})
 
     return redirect(url_for("backoffice.servicios_admin"))
 
