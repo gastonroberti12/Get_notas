@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, url_for, render_template, flash, request, abort
 from api_cliente import llamar_api, mensaje_error
-from datos_perfil import formatear_total
+from datos_perfil import formatear_total, formatear_fecha
 from routes.roles import esta_logueado
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -136,6 +136,8 @@ def seleccion_butacas(funcion_id):
         "seleccion_butacas.html",
         funcion_id=funcion_id,
         funcion=funcion,
+        fecha_funcion=formatear_fecha(funcion.get("fecha_hora"), "%d/%m/%Y"),
+        hora_funcion=formatear_fecha(funcion.get("fecha_hora"), "%H:%M"),
         filas=filas,
         butacas=todas,
         butacas_por_fila=butacas_por_fila,
