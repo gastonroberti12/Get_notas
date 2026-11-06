@@ -135,3 +135,36 @@ Caso 18 - Baja de película inexistente:
 DELETE /peliculas/999999
 Authorization: Bearer {{adminToken}}
 Esperado: 404.
+
+Caso 19 - PATCH actualiza fechas sin offset:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fecha_inicio_cartelera": "2026-11-05T10:00:00.000000-03:00",
+  "fecha_fin_cartelera": "2026-11-06T10:00:00.000000-03:00"
+}
+Esperado: 204. Verificar con SELECT que fecha_inicio_cartelera y fecha_fin_cartelera
+se guarden como 2026-11-05 10:00:00 y 2026-11-06 10:00:00, respectivamente.
+
+Caso 20 - Baja con reserva pendiente vencida:
+Crear una reserva pendiente para una función futura de la película y con fecha_compra
+de más de diez minutos. Luego:
+DELETE /peliculas/{{peliculaConReservaPendienteVencidaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 204; procesar_expiraciones() cambia la reserva a expirada antes de validar
+las reservas activas.
+
+Caso 21 - Baja con reserva activa:
+DELETE /peliculas/{{peliculaConReservaActivaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS y activa permanece true.
+
+Caso 22 - PATCH combinado rechazado sin cambios parciales:
+PATCH /peliculas/{{peliculaConReservaActivaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "titulo": "Título que no debe persistirse",
+  "activa": false
+}
+Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS; verificar que el título no
+cambió y que activa permanece true.

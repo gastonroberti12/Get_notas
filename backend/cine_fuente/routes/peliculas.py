@@ -40,6 +40,12 @@ from cine_fuente.validators.peliculas import (
 peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/peliculas")
 
 
+def normalizar_fecha_cartelera(valor):
+    if valor is None:
+        return None
+    return datetime.fromisoformat(valor).replace(tzinfo=None)
+
+
 @peliculas_bp.route("", methods=["GET"])
 # Lista las películas locales disponibles.
 def listar_peliculas():
@@ -104,8 +110,8 @@ def crear_pelicula():
         ), 502)
 
     pelicula.update({
-        "fecha_inicio_cartelera": datetime.fromisoformat(fecha_inicio).replace(tzinfo=None),
-        "fecha_fin_cartelera": datetime.fromisoformat(fecha_fin).replace(tzinfo=None),
+        "fecha_inicio_cartelera": normalizar_fecha_cartelera(fecha_inicio),
+        "fecha_fin_cartelera": normalizar_fecha_cartelera(fecha_fin),
         "activa": True,
     })
     pelicula_id = insertar_pelicula(pelicula)
@@ -139,6 +145,12 @@ def modificar_pelicula(pelicula_id):
                     "La película debe tener fecha de inicio y fecha de fin.",
                 ), 400)
             validar_rango_cartelera(fecha_inicio, fecha_fin)
+        cambios["fecha_inicio_cartelera"] = normalizar_fecha_cartelera(
+            cambios.get("fecha_inicio_cartelera")
+        )
+        cambios["fecha_fin_cartelera"] = normalizar_fecha_cartelera(
+            cambios.get("fecha_fin_cartelera")
+        )
     if cambios.get("activa") is False:
         if not dar_de_baja(pelicula_id):
             return respuesta_error_api(construir_error_api(

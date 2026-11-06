@@ -1,4 +1,4 @@
-﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 from cine_fuente.utils import ahora_gmt3
 
 

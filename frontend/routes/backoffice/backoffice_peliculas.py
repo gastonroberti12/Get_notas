@@ -56,6 +56,16 @@ def pelicula_buscar():
         if status == 200:
             resultados = datos.get("resultados", [])
             total = datos.get("total_resultados", 0)
+            locales_status, locales = llamar_api("GET", "/peliculas?_limit=100")
+            if locales_status == 200:
+                estado_por_imdb = {
+                    pelicula["id_externo"]: pelicula["activa"]
+                    for pelicula in locales.get("peliculas", [])
+                }
+                for resultado in resultados:
+                    if resultado["id_externo"] in estado_por_imdb:
+                        resultado["cargada"] = True
+                        resultado["activa"] = estado_por_imdb[resultado["id_externo"]]
         else:
             error = mensaje_error(status, datos, "No se pudo consultar OMDb.")
 
@@ -80,15 +90,11 @@ def pelicula_nueva():
         valores["id_externo"] = request.form.get("id_externo", "").strip()
         inicio = request.form.get("fecha_inicio_cartelera", "")
         fin = request.form.get("fecha_fin_cartelera", "")
-        datos = {campo: valor for campo, valor in valores.items() if valor}
-        if "duracion_min" in datos:
-            datos["duracion_min"] = (
-                int(datos["duracion_min"]) if datos["duracion_min"].isdigit() else 0
-            )
-        datos.update(
-            fecha_inicio_cartelera=a_iso_gmt3(inicio),
-            fecha_fin_cartelera=a_iso_gmt3(fin),
-        )
+        datos = {
+            "id_externo": valores["id_externo"],
+            "fecha_inicio_cartelera": a_iso_gmt3(inicio),
+            "fecha_fin_cartelera": a_iso_gmt3(fin),
+        }
 
         status, cuerpo = llamar_api("POST", "/peliculas", datos)
         if status == 201:
@@ -113,9 +119,10 @@ def pelicula_nueva():
         else:
             aviso = (
                 mensaje_error(status, detalle, "No se pudieron traer los datos.")
-                + " Podés cargar la película a mano."
             )
-        valores["id_externo"] = imdb_id
+            valores = {}
+        if valores:
+            valores["id_externo"] = imdb_id
     return render_template("backadmin/pelicula_form.html", v=valores, aviso=aviso)
 
 
@@ -187,29 +194,6 @@ def pelicula_editar(pelicula_id):
         accion=accion,
         volver=url_listado(),
         error=mensaje_error(status, cuerpo, "No se pudo guardar la película."),
-    )
-
-
-@backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/baja", methods=["GET", "POST"])
-def pelicula_baja(pelicula_id):
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-
-    pelicula = traer_pelicula(pelicula_id)
-    error = None
-    if request.method == "POST":
-        status, cuerpo = llamar_api("DELETE", f"/peliculas/{pelicula_id}")
-        if status == 204:
-            return redirect(url_listado())
-        if status == 401:
-            session.clear()
-            return redirect(url_for("users.login"))
-        error = mensaje_error(status, cuerpo, "No se pudo dar de baja la película.")
-    return render_template(
-        "backadmin/pelicula_baja.html",
-        pelicula=pelicula,
-        error=error,
-        volver=url_listado(),
     )
 
 

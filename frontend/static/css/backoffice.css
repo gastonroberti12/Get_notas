@@ -560,6 +560,11 @@
     font-weight: 600;
 }
 
+.admin-alert-info {
+    background: rgba(91, 157, 189, 0.1);
+    border-color: rgba(91, 157, 189, 0.35);
+}
+
 .admin-empty-results {
     display: flex;
     flex-direction: column;

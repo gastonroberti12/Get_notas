@@ -58,7 +58,9 @@
                     <div class="admin-result-info">
                         <strong>{{ resultado.titulo }}</strong>
                         <span>{{ resultado.anio }}</span>
-                        {% if resultado.cargada %}<span>Ya cargada</span>{% endif %}
+                        {% if resultado.cargada %}
+                        <span>{{ 'Ya cargada' if resultado.activa else 'Dada de baja' }}</span>
+                        {% endif %}
                     </div>
                 </a>
                 {% endfor %}

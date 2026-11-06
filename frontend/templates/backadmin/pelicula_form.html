@@ -25,10 +25,17 @@
             <div class="admin-section-heading">
                 <h2>{{ 'Editar película' if editando else 'Agregar película' }}</h2>
             </div>
-            <p class="admin-description">Todos los campos se pueden editar antes de guardar.</p>
+            <p class="admin-description">
+                {{ 'Los datos provienen de OMDb; solo se definen las fechas de cartelera.' if not editando
+                   else 'Todos los campos se pueden editar antes de guardar.' }}
+            </p>
 
             {% if error %}<div class="admin-alert" role="alert">{{ error }}</div>{% endif %}
+            {% if aviso %}
+            <div class="admin-alert admin-alert-info" role="status">{{ aviso }}</div>
+            {% endif %}
 
+            {% if v.titulo %}
             <div class="admin-form-card">
                 <form class="admin-form" method="post"
                       action="{{ url_for('backoffice.pelicula_editar', pelicula_id=v.id) if editando else url_for('backoffice.pelicula_nueva') }}">
@@ -46,33 +53,33 @@
                         <div class="admin-form-fields">
                             <div class="admin-form-group">
                                 <label for="titulo">Título *</label>
-                                <input type="text" id="titulo" name="titulo" value="{{ v.titulo or '' }}" maxlength="200" required>
+                                <input type="text" id="titulo" name="titulo" value="{{ v.titulo or '' }}" maxlength="200" required {% if not editando %}readonly{% endif %}>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="sinopsis">Sinopsis</label>
-                                <textarea id="sinopsis" name="sinopsis" rows="5">{{ v.sinopsis or '' }}</textarea>
+                                <textarea id="sinopsis" name="sinopsis" rows="5" {% if not editando %}readonly{% endif %}>{{ v.sinopsis or '' }}</textarea>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="poster_url">URL del póster</label>
-                                <input type="url" id="poster_url" name="poster_url" value="{{ v.poster_url or '' }}" maxlength="500">
+                                <input type="url" id="poster_url" name="poster_url" value="{{ v.poster_url or '' }}" maxlength="500" {% if not editando %}readonly{% endif %}>
                             </div>
 
                             <div class="admin-form-dates">
                                 <div class="admin-form-group">
                                     <label for="duracion_min">Duración (min)</label>
-                                    <input type="number" id="duracion_min" name="duracion_min" min="1" value="{{ v.duracion_min or '' }}">
+                                    <input type="number" id="duracion_min" name="duracion_min" min="1" value="{{ v.duracion_min or '' }}" {% if not editando %}readonly{% endif %}>
                                 </div>
                                 <div class="admin-form-group">
                                     <label for="clasificacion">Clasificación</label>
-                                    <input type="text" id="clasificacion" name="clasificacion" maxlength="20" value="{{ v.clasificacion or '' }}">
+                                    <input type="text" id="clasificacion" name="clasificacion" maxlength="20" value="{{ v.clasificacion or '' }}" {% if not editando %}readonly{% endif %}>
                                 </div>
                             </div>
 
                             <div class="admin-form-group">
                                 <label for="genero">Género</label>
-                                <input type="text" id="genero" name="genero" maxlength="100" value="{{ v.genero or '' }}">
+                                <input type="text" id="genero" name="genero" maxlength="100" value="{{ v.genero or '' }}" {% if not editando %}readonly{% endif %}>
                             </div>
                         </div>
                     </div>
@@ -101,6 +108,9 @@
                     </div>
                 </form>
             </div>
+            {% elif aviso %}
+            <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-secondary">Volver al buscador</a>
+            {% endif %}
         </div>
     </div>
 </section>
