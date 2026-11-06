@@ -18,7 +18,7 @@
         <div class="admin-content">
             <div class="admin-section-heading">
                 <h2>Películas cargadas</h2>
-                <a href="{{ url_for('backoffice.nueva_pelicula') }}" class="admin-btn-primary">Agregar película</a>
+                <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-primary">Agregar película</a>
             </div>
 
             {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}

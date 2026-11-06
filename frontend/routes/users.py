@@ -16,6 +16,7 @@ def login():
         if status == 200:
             session['token'] = cuerpo['token']
             session['usuario'] = cuerpo['usuario'] # incluye el rol
+            session.pop('sucursal_id', None) # al loguearse vuelve a la sucursal principal
             flash('Sesión iniciada con éxito.', 'exito') # flash: mensaje que se muestra en la siguiente página
             return redirect('/')
         
