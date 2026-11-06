@@ -4,6 +4,7 @@ from werkzeug.exceptions import HTTPException
 from cine_fuente.services import funciones as service
 from cine_fuente.repositories.butacas import consultar_butacas_por_sala
 from cine_fuente.repositories.reservas import obtener_butacas_ocupadas
+from cine_fuente.services.reservas import procesar_expiraciones
 from cine_fuente.validators import funciones as validator
 from cine_fuente.utils import (
     construir_error_api,
@@ -42,6 +43,7 @@ def obtener_butacas_disponibles(funcion_id):
             'funcion.not.found', 'Función no encontrada',
             'La función solicitada no existe.',
         ))
+    procesar_expiraciones()
     butacas = consultar_butacas_por_sala(funcion['sala_id'])
     ocupadas = set(obtener_butacas_ocupadas(
         funcion_id,

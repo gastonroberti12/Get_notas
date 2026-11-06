@@ -23,13 +23,22 @@ Trabajo final de la cátedra Lanzillotta.
 
 ---
 
-## 1. Levantar la base de datos con Docker
+## 1. Levantar todo el proyecto con Docker
 
 Desde la raíz del proyecto:
 
 ```powershell
 docker compose up -d
 ```
+
+Para construir o reconstruir las imágenes después de actualizar el código:
+
+```powershell
+git pull
+docker compose up -d --build frontend backend
+```
+
+Docker levantará MySQL, el backend Flask en el puerto 5001 y el frontend Flask en el puerto 5000.
 
 Comprobar el contenedor:
 
@@ -179,7 +188,12 @@ La API queda disponible en:
 http://localhost:5001
 ```
 
-Docker Compose levanta solamente MySQL. La API Flask se ejecuta localmente dentro del entorno virtual.
+Con Docker Compose, no es necesario activar un entorno virtual ni ejecutar Flask manualmente.
+Los servicios pueden levantarse o actualizarse con:
+
+```powershell
+docker compose up -d --build frontend backend
+```
 
 ---
 
@@ -282,12 +296,11 @@ GET /salas?_limit=10&_offset=0
 
 ## 7. Pruebas con Postman
 
-1. Levantar MySQL con `docker compose up -d`.
-2. Configurar el entorno virtual.
-3. Ejecutar Flask con `python app.py` desde `backend`.
-4. Crear una colección de Postman o importar la colección del repositorio si está disponible.
-5. Usar `http://localhost:5001` como URL base.
-6. Para endpoints `POST` o `PATCH`, seleccionar `Body > raw > JSON` y agregar el header:
+1. Levantar el proyecto con `docker compose up -d`.
+2. Usar el frontend o ejecutar una consulta de prueba.
+3. Crear una colección de Postman o importar la colección del repositorio si está disponible.
+4. Usar `http://localhost:5001` como URL base.
+5. Para endpoints `POST` o `PATCH`, seleccionar `Body > raw > JSON` y agregar el header:
 
 ```text
 Content-Type: application/json

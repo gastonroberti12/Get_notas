@@ -125,5 +125,5 @@ def obtener_detalle_pelicula(imdb_id):
         "poster_url": valor_opcional(data.get("Poster")),
         "duracion_min": int(runtime_match.group(1)) if runtime_match else None,
         "clasificacion": valor_opcional(data.get("Rated")),
-        "genero": valor_opcional(data.get("Genre")),
+        "genero": (valor_opcional(data.get("Genre")) or "").split(",")[0].strip() or None,
     }

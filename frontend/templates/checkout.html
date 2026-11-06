@@ -12,6 +12,16 @@
 
 <div class="checkout">
 
+    {% if reserva.estado == "pendiente" %}
+    <div class="checkout-plazo" id="plazo-pago" data-expira-en="{{ reserva.fecha_expiracion }}">
+        <span>Tiempo para completar el pago</span>
+        <strong id="tiempo-restante" role="timer" aria-live="polite">10:00</strong>
+        <p id="plazo-vencido" hidden>
+            El plazo venció. <a href="{{ url_for('purchases.seleccion_butacas', funcion_id=reserva.funcion_id) }}">Volvé a elegir tus butacas.</a>
+        </p>
+    </div>
+    {% endif %}
+
     <!-- cantidad de entradas y precio de cada una -->
     <input type="hidden" id="entradas" value="{{ entradas }}">
     <input type="hidden" id="precio-entrada" value="{{ precio_entrada }}">
@@ -105,7 +115,13 @@
 
         </form>
 
-        <a class="checkout-volver" href="javascript:history.back()">← Volver a butacas</a>
+        <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}">
+            <button type="submit" class="checkout-cancelar"
+                    onclick="return confirm('¿Querés cancelar esta reserva y salir del pago?');">
+                Cancelar reserva
+            </button>
+        </form>
+        <a class="checkout-volver" href="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion.id, reserva_id=reserva.id) }}">← Volver a mis butacas reservadas</a>
 
     </section>
 

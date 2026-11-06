@@ -29,6 +29,26 @@ def seleccion_butacas(funcion_id):
     if status != 200:
         abort(503)
 
+    reserva_id = request.args.get("reserva_id", type=int)
+    reserva_pendiente = None
+    asientos_ids = set()
+
+    if request.method == "GET" and not reserva_id:
+        status_pendientes, datos_pendientes = llamar_api(
+            "GET", "/usuarios/me/reservas?estado=pendiente&_limit=100"
+        )
+        if status_pendientes == 200:
+            reserva_actual = next(
+                (
+                    reserva
+                    for reserva in datos_pendientes.get("reservas", [])
+                    if int(reserva["funcion_id"]) == funcion_id
+                ),
+                None,
+            )
+            if reserva_actual is not None:
+                reserva_id = int(reserva_actual["id"])
+
     if request.method == "POST":
         texto_ids = request.form.get("butacas", "").strip()
         try:
@@ -56,6 +76,33 @@ def seleccion_butacas(funcion_id):
         flash(mensaje_error(status_reserva, reserva, "No se pudo crear la reserva."), "error")
         return redirect(url_for("purchases.seleccion_butacas", funcion_id=funcion_id))
 
+    if reserva_id:
+        status_reserva, reserva = llamar_api("GET", f"/reservas/{reserva_id}")
+        if status_reserva == 403:
+            abort(403)
+        if status_reserva == 404:
+            flash("La reserva ya no está disponible. Elegí las butacas nuevamente.", "error")
+        elif status_reserva != 200:
+            abort(status_reserva or 503)
+        elif int(reserva["funcion_id"]) != funcion_id:
+            abort(404)
+        elif reserva["estado"] == "pendiente":
+            status_entradas, datos_entradas = llamar_api(
+                "GET", f"/reservas/{reserva_id}/entradas?_limit=100"
+            )
+            if status_entradas != 200:
+                abort(status_entradas or 503)
+            asientos_ids = {
+                int(entrada["butaca_id"])
+                for entrada in datos_entradas.get("entradas", [])
+            }
+            reserva_pendiente = reserva
+        elif reserva["estado"] == "expirada":
+            flash("Venció el plazo de pago. Las butacas quedaron disponibles para volver a elegirlas.", "error")
+        else:
+            flash("La reserva ya no está pendiente de pago.", "error")
+            return redirect(url_for("users.profile"))
+
     status_butacas, disponibles = llamar_api(
         "GET", f"/funciones/{funcion_id}/butacas"
     )
@@ -79,6 +126,11 @@ def seleccion_butacas(funcion_id):
         for fila in filas
     }
     ocupadas_ids = {int(b["id"]) for b in todas if int(b["id"]) not in disponibles_ids}
+    asientos_reservados = [
+        f"{butaca['fila']}{butaca['numero']}"
+        for butaca in todas
+        if reserva_pendiente and int(butaca["id"]) in asientos_ids
+    ]
 
     return render_template(
         "seleccion_butacas.html",
@@ -88,6 +140,8 @@ def seleccion_butacas(funcion_id):
         butacas=todas,
         butacas_por_fila=butacas_por_fila,
         ocupadas_ids=ocupadas_ids,
+        reserva_pendiente=reserva_pendiente,
+        asientos_reservados=asientos_reservados,
         precio=float(funcion["precio"]),
     )
 
@@ -133,6 +187,13 @@ def checkout():
         if status == 200:
             flash("Pago confirmado. La reserva quedó creada.", "exito")
             return redirect(url_for("users.profile"))
+        status_reserva, reserva_actual = llamar_api("GET", f"/reservas/{reserva_id}")
+        if status_reserva == 200 and reserva_actual["estado"] == "expirada":
+            flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+            return redirect(url_for(
+                "purchases.seleccion_butacas",
+                funcion_id=reserva_actual["funcion_id"],
+            ))
         flash(mensaje_error(status, cuerpo, "No se pudo confirmar el pago."), "error")
         return redirect(url_for(
             "purchases.checkout",
@@ -143,6 +204,15 @@ def checkout():
     status_reserva, reserva = llamar_api("GET", f"/reservas/{reserva_id}")
     if status_reserva != 200:
         abort(status_reserva or 503)
+    if reserva["estado"] == "expirada":
+        flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+        return redirect(url_for(
+            "purchases.seleccion_butacas",
+            funcion_id=reserva["funcion_id"],
+        ))
+    if reserva["estado"] != "pendiente":
+        flash("La reserva ya no está pendiente de pago.", "error")
+        return redirect(url_for("users.profile"))
 
     status_funcion, funcion = llamar_api("GET", f"/funciones/{reserva['funcion_id']}")
     if status_funcion != 200:

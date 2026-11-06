@@ -258,6 +258,23 @@
     background: var(--red-hover);
 }
 
+.btn-cancelar-reserva {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 9px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-cancelar-reserva:hover {
+    background: rgba(255, 106, 96, .1);
+}
+
 .btn-continuar:disabled {
     background: var(--border-input);
     color: var(--text-faint);
