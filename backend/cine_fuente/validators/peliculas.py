@@ -2,11 +2,78 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from cine_fuente.utils import construir_error_api
+from cine_fuente.utils import ahora_gmt3
 
 
 PATRON_FECHA_CARTELERA = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$"
 )
+LONGITUDES_PELICULA = {
+    "titulo": 200,
+    "poster_url": 500,
+    "clasificacion": 20,
+    "genero": 100,
+}
+
+
+def error_pelicula(campo, mensaje):
+    raise ValueError(construir_error_api(
+        f"pelicula.{campo}.invalid",
+        "Datos de película inválidos",
+        mensaje,
+    ), 400)
+
+
+def validar_modificacion_pelicula(datos):
+    if not isinstance(datos, dict) or not datos:
+        error_pelicula("body", "Se debe enviar un objeto con campos para modificar.")
+
+    permitidos = set(LONGITUDES_PELICULA) | {
+        "sinopsis", "duracion_min", "fecha_inicio_cartelera",
+        "fecha_fin_cartelera", "activa",
+    }
+    desconocidos = set(datos) - permitidos
+    if desconocidos:
+        error_pelicula(
+            "campo",
+            f"Campo(s) no permitido(s): {', '.join(sorted(desconocidos))}.",
+        )
+
+    cambios = {}
+    for campo, valor in datos.items():
+        if campo in LONGITUDES_PELICULA or campo == "sinopsis":
+            if valor is not None and not isinstance(valor, str):
+                error_pelicula(campo, f"{campo} debe ser un texto o null.")
+            if campo == "titulo" and valor is None:
+                error_pelicula(campo, "titulo es obligatorio.")
+            if isinstance(valor, str):
+                valor = valor.strip() or None
+                if campo == "titulo" and valor is None:
+                    error_pelicula(campo, "titulo es obligatorio.")
+                maximo = LONGITUDES_PELICULA.get(campo)
+                if maximo is not None and valor is not None and len(valor) > maximo:
+                    error_pelicula(
+                        campo,
+                        f"{campo} no puede superar los {maximo} caracteres.",
+                    )
+        elif campo == "duracion_min":
+            if valor is not None and (
+                type(valor) is not int or valor <= 0
+            ):
+                error_pelicula(
+                    campo,
+                    "duracion_min debe ser un número entero mayor que cero o null.",
+                )
+        elif campo == "activa" and type(valor) is not bool:
+            error_pelicula(campo, "activa debe ser true o false.")
+        elif campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
+            if valor is not None and not isinstance(valor, str):
+                error_pelicula(campo, f"{campo} debe ser una fecha o null.")
+            cambios[campo] = convertir_fecha_existente(valor)
+            continue
+        cambios[campo] = valor
+
+    return cambios
 
 
 def parsear_fecha_cartelera(valor, campo):
@@ -54,6 +121,16 @@ def validar_rango_cartelera(inicio, fin):
         ), 400)
 
     return inicio, fin
+
+
+def validar_inicio_no_pasado(inicio):
+    ahora = ahora_gmt3().replace(second=0, microsecond=0)
+    if inicio < ahora:
+        raise ValueError(construir_error_api(
+            "pelicula.fecha.pasada",
+            "Fecha de cartelera inválida",
+            "fecha_inicio_cartelera no puede estar en el pasado.",
+        ), 400)
 
 
 def convertir_fecha_existente(valor):

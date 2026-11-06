@@ -2,7 +2,7 @@
 from flask import Blueprint, g, jsonify, request
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.services import entradas as entradas_service
-
+from cine_fuente.validators.reservas import validar_estado_propio
 from cine_fuente.validators.entradas import (
     validar_filtros_listado,
     validar_id_entrada,
@@ -35,6 +35,22 @@ def obtener_entradas():
         return respuesta_error_interno(error)
 
 
+# GET /usuarios/me/entradas: solo las entradas del cliente autenticado.
+@entradas_bp.route("/usuarios/me/entradas", methods=["GET"])
+@requiere_rol("cliente")
+def obtener_mis_entradas():
+    try:
+        estado = validar_estado_propio(request.args)
+        limit, offset = validar_paginacion(request.args)
+        filtros = {"reserva_id": None, "estado": estado, "usuario_id": int(g.usuario["id"])}
+        entradas, total = entradas_service.listar_entradas(filtros, limit, offset)
+        return respuesta_paginada("entradas", entradas, total, limit, offset)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception as error:
+        return respuesta_error_interno(error)
+
+    
 # GET /entradas/{id}: solo el administrador o el dueño de la reserva.
 @entradas_bp.route("/entradas/<int:entrada_id>", methods=["GET"])
 @requiere_rol("cliente", "administrador")
@@ -62,3 +78,4 @@ def post_validacion_entrada(entrada_id):
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error)
+

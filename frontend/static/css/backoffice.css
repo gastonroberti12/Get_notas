@@ -560,6 +560,11 @@
     font-weight: 600;
 }
 
+.admin-alert-info {
+    background: rgba(91, 157, 189, 0.1);
+    border-color: rgba(91, 157, 189, 0.35);
+}
+
 .admin-empty-results {
     display: flex;
     flex-direction: column;
@@ -714,4 +719,50 @@
     margin: 0;
     accent-color: var(--gold);
     cursor: pointer;
+}
+/* Edición y baja de películas */
+
+.admin-btn-danger {
+    display: inline-block;
+    padding: 12px 20px;
+    background: transparent;
+    color: #e5645a;
+    border: 1px solid #e5645a;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-btn-danger:hover {
+    background: #e5645a;
+    color: var(--bg);
+}
+
+.admin-confirm {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.admin-confirm img {
+    width: 120px;
+    border-radius: 10px;
+}
+
+.admin-confirm h3 {
+    margin: 0 0 8px;
+}
+
+.admin-confirm p {
+    margin: 0 0 20px;
+    color: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+            .admin-confirm {
+        flex-direction: column;
+    }
 }

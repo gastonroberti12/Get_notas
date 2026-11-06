@@ -244,14 +244,17 @@ paths:
   /peliculas:
     get:
       summary: Listar películas en cartelera
-      description: Devuelve solo las películas activas y vigentes en cartelera. 
-        **Rol autorizado:** Público general.
+      description: Devuelve películas según los filtros. Sin `activa` ni `sucursal_id`,
+        devuelve películas activas y vigentes; con `activa=true`, todas las activas;
+        con `activa=false`, las inactivas. Con `sucursal_id`, devuelve solo películas
+        vigentes con funciones futuras en esa sucursal. **Rol autorizado:** Público general.
       tags:
       - Películas
       parameters:
       - $ref: '#/components/parameters/TituloFilter'
       - $ref: '#/components/parameters/GeneroFilter'
       - $ref: '#/components/parameters/SucursalIdFilter'
+      - $ref: '#/components/parameters/ActivaFilter'
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
       responses:

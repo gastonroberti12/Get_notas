@@ -12,9 +12,15 @@ def construir_filtros(filtros):
     if filtros["estado"] is not None:
         condiciones.append("r.estado = %(estado)s")
         parametros["estado"] = filtros["estado"]
+        
+    if filtros.get("usuario_id") is not None:
+            condiciones.append("r.usuario_id = %(usuario_id)s")
+            parametros["usuario_id"] = filtros["usuario_id"]
 
     where = " WHERE " + " AND ".join(condiciones) if condiciones else ""
     return where, parametros
+    
+
 
 
 def listar_entradas(filtros, limit, offset):
