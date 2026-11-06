@@ -77,3 +77,20 @@ def tarjeta_importe(d):
 def tarjeta_cancelaciones(d):
     return {"valor": numero(d["reservas_canceladas"]),
             "detalle": f"{numero(d['porcentaje_cancelacion'], 1)} % de {numero(d['reservas_totales'])} reservas"}
+
+
+def grafico_generos(d):
+    return barras(d["generos"], lambda f: f["genero"], lambda f: f["entradas_vendidas"],
+                  lambda f: f"{numero(f['entradas_vendidas'])} entradas · {pesos(f['monto_total'])}")
+
+
+def grafico_franjas(d):
+    return barras(d["franjas"], lambda f: f"{f['hora']:02d}:00", lambda f: f["entradas_vendidas"],
+                  lambda f: f"{f['hora']:02d}:00 hs · {numero(f['entradas_vendidas'])} entradas")
+
+
+def grafico_salas(d):
+    return barras(d["salas"], lambda f: f["sala_nombre"], lambda f: f["porcentaje_ocupacion"],
+                  lambda f: (f"{numero(f['porcentaje_ocupacion'], 1)} % · "
+                             f"{numero(f['entradas_vendidas'])}/{numero(f['capacidad_total'])}"),
+                  tope=100)
