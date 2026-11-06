@@ -58,3 +58,22 @@ def barras(filas, etiqueta, valor, detalle, tope=None):
         "ancho": min(100, round(valor(f) * 100 / maximo)) if maximo else 0,
         "destacada": maximo > 0 and valor(f) == maximo,
     } for f in filas]
+
+
+def tarjeta_ocupacion(d):
+    return {"valor": numero(d["porcentaje_ocupacion"], 1) + " %",
+            "detalle": f"{numero(d['entradas_vendidas'])} de {numero(d['capacidad_total'])} butacas"}
+
+
+def tarjeta_entradas(d):
+    return {"valor": numero(d["entradas_vendidas"]), "detalle": "Entradas vendidas"}
+
+
+def tarjeta_importe(d):
+    return {"valor": pesos(d["monto_total"]),
+            "detalle": f"Entradas {pesos(d['monto_entradas'])} · Servicios {pesos(d['monto_servicios'])}"}
+
+
+def tarjeta_cancelaciones(d):
+    return {"valor": numero(d["reservas_canceladas"]),
+            "detalle": f"{numero(d['porcentaje_cancelacion'], 1)} % de {numero(d['reservas_totales'])} reservas"}
