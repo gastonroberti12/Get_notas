@@ -869,3 +869,11 @@
         flex-direction: column;
     }
 }
+
+/* Botón activo del menú lateral */
+.admin-menu li a.admin-menu-active,
+.admin-menu li a.admin-menu-active:hover {
+    color: var(--bg);
+    background: var(--gold);
+    font-weight: 700;
+}
