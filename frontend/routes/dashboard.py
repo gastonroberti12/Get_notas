@@ -94,3 +94,33 @@ def grafico_salas(d):
                   lambda f: (f"{numero(f['porcentaje_ocupacion'], 1)} % · "
                              f"{numero(f['entradas_vendidas'])}/{numero(f['capacidad_total'])}"),
                   tope=100)
+
+
+
+# nombre de sección -> (endpoint que la alimenta, función que prepara los datos para la vista)
+SECCIONES = {
+    "ocupacion": ("general", tarjeta_ocupacion),
+    "entradas": ("ventas", tarjeta_entradas),
+    "importe": ("ventas", tarjeta_importe),
+    "cancelaciones": ("cancelaciones", tarjeta_cancelaciones),
+    "generos": ("generos", grafico_generos),
+    "franjas": ("franjas", grafico_franjas),
+    "salas": ("salas", grafico_salas),
+}
+
+
+def procesar(respuesta, preparar):
+    datos, error = respuesta
+    if datos is not None:
+        try:
+            datos = preparar(datos)
+        except (KeyError, TypeError, ValueError):
+            datos, error = None, "La respuesta del servidor no tiene el formato esperado."
+    return {"datos": datos, "error": error}
+
+
+def armar_dashboard(filtros, nombres):
+    """Devuelve {sección: {"datos": ..., "error": ...}}; cada sección falla de forma independiente."""
+    endpoints = list(dict.fromkeys(SECCIONES[n][0] for n in nombres))
+    respuestas = consultar(filtros, endpoints)
+    return {n: procesar(respuestas[SECCIONES[n][0]], SECCIONES[n][1]) for n in nombres}
