@@ -32,7 +32,7 @@ def inicio():
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
         "peliculas",
-        "&activa=true" + filtro_sucursal()
+        filtro_sucursal()
     )
 
     # Primeras cinco películas para el carrusel
@@ -62,7 +62,7 @@ def listado_peliculas():
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
         "peliculas",
-        "&activa=true" + filtro_sucursal()
+        filtro_sucursal()
     )
 
     return render_template(
