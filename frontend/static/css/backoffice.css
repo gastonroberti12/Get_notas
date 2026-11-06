@@ -887,6 +887,7 @@
     /* Botones compactos en filas que se acomodan solos: el activo siempre queda a la vista */
     .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
     .admin-menu li a { padding: 11px 14px; font-size: 14px; }
+}
 /* Botón activo del menú lateral */
 .admin-menu li a.admin-menu-active,
 .admin-menu li a.admin-menu-active:hover {
