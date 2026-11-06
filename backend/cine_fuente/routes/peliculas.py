@@ -1,12 +1,10 @@
 from datetime import datetime
 
-import pymysql
 from flask import Blueprint, jsonify, request
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.peliculas import (
     consultar_pelicula_por_id as obtener_pelicula,
     consultar_pelicula_por_imdb as obtener_pelicula_por_imdb,
-    insertar_pelicula,
     actualizar_pelicula,
 )
 from cine_fuente.utils import (
@@ -27,12 +25,15 @@ from cine_fuente.services.omdb_service import (
 from cine_fuente.services.peliculas_service import (
     dar_de_baja,
     formatear_pelicula,
+    insertar_pelicula_segura,
     obtener_peliculas,
 )
 
 from cine_fuente.validators.peliculas import (
     convertir_fecha_existente,
+    parsear_fecha_cartelera,
     validar_modificacion_pelicula,
+    validar_inicio_no_pasado,
     validar_rango_cartelera,
     validar_filtros,
 )
@@ -106,6 +107,9 @@ def crear_pelicula():
         datos["fecha_inicio_cartelera"],
         datos["fecha_fin_cartelera"],
     )
+    validar_inicio_no_pasado(parsear_fecha_cartelera(
+        fecha_inicio, "fecha_inicio_cartelera"
+    ))
 
     try:
         pelicula = obtener_detalle_pelicula(imdb_id.strip())
@@ -123,14 +127,7 @@ def crear_pelicula():
         "fecha_fin_cartelera": normalizar_fecha_cartelera(fecha_fin),
         "activa": True,
     })
-    try:
-        pelicula_id = insertar_pelicula(pelicula)
-    except pymysql.err.IntegrityError as causa:
-        return respuesta_error_api(construir_error_api(
-            "pelicula.already.exists",
-            "Película duplicada",
-            "La película ya existe en la cartelera.",
-        ), 409)
+    pelicula_id = insertar_pelicula_segura(pelicula)
     return jsonify(formatear_pelicula(obtener_pelicula(pelicula_id))), 201
 
 
@@ -161,6 +158,19 @@ def modificar_pelicula(pelicula_id):
                     "La película debe tener fecha de inicio y fecha de fin.",
                 ), 400)
             validar_rango_cartelera(fecha_inicio, fecha_fin)
+            inicio_enviado = "fecha_inicio_cartelera" in cambios
+            reactivando = cambios.get("activa") is True and not pelicula_actual["activa"]
+            if inicio_enviado:
+                inicio_dt = parsear_fecha_cartelera(
+                    convertir_fecha_existente(cambios["fecha_inicio_cartelera"]),
+                    "fecha_inicio_cartelera",
+                )
+                inicio_guardado = parsear_fecha_cartelera(
+                    convertir_fecha_existente(pelicula_actual["fecha_inicio_cartelera"]),
+                    "fecha_inicio_cartelera",
+                )
+                if reactivando or inicio_dt != inicio_guardado:
+                    validar_inicio_no_pasado(inicio_dt)
         normalizar_cambios_fecha(cambios)
     if cambios.get("activa") is False:
         if not dar_de_baja(pelicula_id):

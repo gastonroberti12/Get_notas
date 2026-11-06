@@ -20,9 +20,11 @@ def url_listado():
 def peliculas_locales():
     activas_status, activas = llamar_api("GET", "/peliculas?_limit=100&activa=true")
     inactivas_status, inactivas = llamar_api("GET", "/peliculas?_limit=100&activa=false")
-    if activas_status != 200 or inactivas_status != 200:
+    if activas_status not in (200, 204) or inactivas_status not in (200, 204):
         return None
-    return activas.get("peliculas", []) + inactivas.get("peliculas", [])
+    activas = activas.get("peliculas", []) if activas_status == 200 else []
+    inactivas = inactivas.get("peliculas", []) if inactivas_status == 200 else []
+    return sorted(activas + inactivas, key=lambda pelicula: pelicula["id"])
 
 
 def a_iso_gmt3(valor):
@@ -184,6 +186,12 @@ def pelicula_editar(pelicula_id):
             ) or None
     if not valores["activa"] and request.form.get("reactivar") == "true":
         cambios["activa"] = True
+        cambios["fecha_inicio_cartelera"] = a_iso_gmt3(
+            enviados["fecha_inicio_cartelera"]
+        )
+        cambios["fecha_fin_cartelera"] = a_iso_gmt3(
+            enviados["fecha_fin_cartelera"]
+        )
 
     valores_formulario = {**enviados, "id": pelicula_id, "activa": valores["activa"]}
     if not cambios:

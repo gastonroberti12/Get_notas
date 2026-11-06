@@ -106,13 +106,6 @@ def validar_rango_cartelera(inicio, fin):
     inicio_dt = parsear_fecha_cartelera(inicio, "fecha_inicio_cartelera")
     fin_dt = parsear_fecha_cartelera(fin, "fecha_fin_cartelera")
 
-    if inicio_dt < ahora_gmt3():
-        raise ValueError(construir_error_api(
-            "pelicula.fecha.pasada",
-            "Fecha de cartelera inválida",
-            "fecha_inicio_cartelera no puede estar en el pasado.",
-        ), 400)
-
     if fin_dt <= inicio_dt:
         raise ValueError(construir_error_api(
             "pelicula.fecha.rango",
@@ -128,6 +121,16 @@ def validar_rango_cartelera(inicio, fin):
         ), 400)
 
     return inicio, fin
+
+
+def validar_inicio_no_pasado(inicio):
+    ahora = ahora_gmt3().replace(second=0, microsecond=0)
+    if inicio < ahora:
+        raise ValueError(construir_error_api(
+            "pelicula.fecha.pasada",
+            "Fecha de cartelera inválida",
+            "fecha_inicio_cartelera no puede estar en el pasado.",
+        ), 400)
 
 
 def convertir_fecha_existente(valor):
