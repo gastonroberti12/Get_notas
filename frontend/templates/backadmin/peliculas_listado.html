@@ -21,10 +21,6 @@
                 <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-primary">Agregar película</a>
             </div>
 
-            {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
-            <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
-            {% endfor %}
-
             {% if error %}
             <p class="admin-msg admin-msg-error">{{ error }}</p>
             {% elif not peliculas %}
@@ -52,15 +48,23 @@
                             <td>{{ p.clasificacion or '—' }}</td>
                             <td>{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
                             <td class="admin-actions">
-                                <a href="/backoffice/peliculas/{{ p.id }}/editar" class="admin-btn-secondary">Editar</a>
+                                <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
+                                   class="admin-btn-secondary">Editar</a>
+                                {% if p.activa %}
                                 <form method="post"
-                                    action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
-                                    data-confirmar="{{ '¿Dar de baja esta película?' if p.activa else '¿Dar de alta esta película?' }}"
-                                    onsubmit="return confirm(this.dataset.confirmar)">
+                                      action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
+                                      data-confirmar="¿Dar de baja esta película?"
+                                      onsubmit="return confirm(this.dataset.confirmar)">
                                     <input type="hidden" name="activa" value="{{ 'false' if p.activa else 'true' }}">
-                                    <button type="submit" class="admin-btn-secondary">{{ 'Dar de baja' if p.activa else
-                                        'Dar de alta' }}</button>
+                                    <button type="submit" class="admin-btn-danger">
+                                        Dar de baja
+                                    </button>
                                 </form>
+                                {% endif %}
+                                {% if not p.activa %}
+                                <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
+                                   class="admin-btn-secondary">Definir fechas y dar de alta</a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

@@ -1,4 +1,4 @@
-﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 from cine_fuente.utils import ahora_gmt3
 
 
@@ -16,9 +16,23 @@ def consultar_pelicula_por_imdb(imdb_id):
 
 # Consulta las películas almacenadas; con activa, filtra por ese estado.
 def consultar_peliculas(activa=None):
-    if activa is None:
-        return ejecutar_consulta("SELECT * FROM pelicula ORDER BY id")
-    return ejecutar_consulta("SELECT * FROM pelicula WHERE activa = %s ORDER BY id", (activa,))
+    if activa is False:
+        return ejecutar_consulta(
+            "SELECT * FROM pelicula WHERE activa = FALSE ORDER BY id"
+        )
+    if activa is True:
+        return ejecutar_consulta(
+            "SELECT * FROM pelicula WHERE activa = TRUE ORDER BY id"
+        )
+    ahora = ahora_gmt3().replace(tzinfo=None)
+    return ejecutar_consulta(
+        "SELECT * FROM pelicula "
+        "WHERE activa = TRUE "
+        "AND fecha_inicio_cartelera <= %s "
+        "AND fecha_fin_cartelera >= %s "
+        "ORDER BY id",
+        (ahora, ahora),
+    )
 
 
 # Guarda los datos básicos de una película.
@@ -57,11 +71,15 @@ def tiene_reservas_activas(pelicula_id):
 
 # Consulta las películas activas con funciones futuras en una sucursal.
 def consultar_peliculas_por_sucursal(sucursal_id, desde):
+    ahora = ahora_gmt3().replace(tzinfo=None)
     return ejecutar_consulta(
         "SELECT p.* FROM pelicula p "
         "JOIN funcion f ON f.pelicula_id = p.id "
         "JOIN salas s ON s.id = f.sala_id "
-        "WHERE p.activa = TRUE AND s.sucursal_id = %s AND f.fecha_hora > %s "
+        "WHERE p.activa = TRUE "
+        "AND p.fecha_inicio_cartelera <= %s "
+        "AND p.fecha_fin_cartelera >= %s "
+        "AND s.sucursal_id = %s AND f.fecha_hora > %s "
         "GROUP BY p.id ORDER BY p.id",
-        (sucursal_id, desde),
+        (ahora, ahora, sucursal_id, desde),
     )
