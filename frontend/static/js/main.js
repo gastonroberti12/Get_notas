@@ -1,3 +1,24 @@
+// Menú hamburguesa (pantallas chicas): abre y cierra la barra de navegación
+const barra = document.getElementsByClassName('navbar')[0];
+const botonMenu = document.getElementsByClassName('nav-toggle')[0];
+
+if (barra && botonMenu) {
+  botonMenu.addEventListener('click', () => {
+    const abierto = barra.classList.toggle('menu-abierto');
+    botonMenu.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    botonMenu.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
+  });
+
+  // Al pasar a pantalla ancha el menú vuelve a su estado normal
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 860) {
+      barra.classList.remove('menu-abierto');
+      botonMenu.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+
 // Sublista de sucursales: al hacer click en "Cines" se abre o se cierra
 const menu = document.getElementsByClassName('nav-dropdown')[0];
 
