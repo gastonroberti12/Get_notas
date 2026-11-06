@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion_butacas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cartel_cancelar.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -19,7 +20,7 @@
         <!-- título y datos de la función -->
         <h1>Elegí tus butacas</h1>
         <p class="butacas-funcion">
-            {{ funcion.pelicula }} · {{ funcion.sala }} · {{ fecha_nofuncion }} · {{ hora_funcion }} hs
+            {{ funcion.pelicula }} · {{ funcion.sala }} · {{ fecha_funcion }} · {{ hora_funcion }} hs
         </p>
 
         <div class="sala-scroll">
@@ -77,13 +78,23 @@
             <input type="hidden" name="funcion_id" value="{{ funcion_id }}">
             <button type="submit" class="btn-continuar">Continuar al pago</button>
         </form>
-        <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva_pendiente.id) }}">
-            <button type="submit" class="btn-cancelar-reserva"
-                    onclick="return confirm('¿Querés cancelar esta reserva?');">
-                Cancelar reserva
-            </button>
+        <form method="post" id="form-cancelar-{{ reserva_pendiente.id }}" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva_pendiente.id) }}" class="form-cancelar-reserva">
+            <button type="button" class="btn-cancelar-reserva">Cancelar reserva</button>
         </form>
     </div>
+
+    <!-- mensaje de confirmación para cancelar una reserva -->
+    <div class="modal-fondo oculto" id="modal-cancelar">
+        <div class="modal">
+            <h3>¿Cancelar esta reserva?</h3>
+            <p>Se liberan las butacas y no podrás recuperarlas.</p>
+            <div class="modal_botones">
+                <button type="button" class="modal_volver">Volver</button>
+                <button type="submit" class="modal_confirmar">Sí, cancelar reserva</button>
+            </div>
+        </div>
+    </div>
+
     {% else %}
     <div class="seleccion">
         <h2>Tu selección</h2>
@@ -106,4 +117,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/seleccion_butacas.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cartel_cancelar.js') }}"></script>
 {% endblock %}

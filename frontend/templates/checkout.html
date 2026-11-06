@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cartel_cancelar.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -115,11 +116,8 @@
 
         </form>
 
-        <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}">
-            <button type="submit" class="checkout-cancelar"
-                    onclick="return confirm('¿Querés cancelar esta reserva y salir del pago?');">
-                Cancelar reserva
-            </button>
+        <form method="post" id="form-cancelar-{{ reserva.id }}" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
+            <button type="button" class="checkout-cancelar">Cancelar reserva</button>
         </form>
         <a class="checkout-volver" href="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion.id, reserva_id=reserva.id) }}">← Volver a mis butacas reservadas</a>
 
@@ -127,8 +125,21 @@
 
 </div>
 
+<!-- mensaje de confirmación para cancelar una reserva -->
+<div class="modal-fondo oculto" id="modal-cancelar">
+    <div class="modal">
+        <h3>¿Cancelar esta reserva y salir del pago?</h3>
+        <p>Se liberan las butacas y no podrás recuperarlas.</p>
+        <div class="modal_botones">
+            <button type="button" class="modal_volver">Volver</button>
+            <button type="submit" class="modal_confirmar">Sí, cancelar reserva</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cartel_cancelar.js') }}"></script>
 {% endblock %}

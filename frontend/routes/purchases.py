@@ -16,7 +16,7 @@ def cancelar_reserva(reserva_id):
         flash('Reserva cancelada con éxito.', 'exito')
     else:
         flash(mensaje_error(status, cuerpo, 'No se pudo cancelar la reserva.'), 'error')
-    return redirect(url_for('users.profile'))
+    return redirect(url_for('peliculas.inicio'))
 
 @purchases_bp.route("/funciones/<int:funcion_id>/butacas", methods=["GET", "POST"])
 def seleccion_butacas(funcion_id):
@@ -155,7 +155,7 @@ def checkout():
 
     reserva_id = request.args.get("reserva_id", type=int)
     if not reserva_id:
-        return redirect(url_for("movies.index"))
+        return redirect(url_for("peliculas.inicio"))
 
     if request.method == "POST":
         for clave, cantidad_texto in request.form.items():
