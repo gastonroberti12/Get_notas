@@ -894,3 +894,5 @@
     background: var(--gold);
     font-weight: 700;
 }
+
+.admin-section-heading a.admin-btn-primary { color: var(--bg); }
