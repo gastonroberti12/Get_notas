@@ -76,9 +76,9 @@ def profile():
     if es_cliente():
         status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
         reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
-    cache = {}  # cache compartido por todas las reservas de este request
-    proximas = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
-    historial = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
+   
+    proximas = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
+    historial = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
 
     return render_template('perfil.html', perfil=perfil, reservas_proximas=proximas, reservas_historial=historial)
 

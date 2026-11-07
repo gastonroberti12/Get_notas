@@ -120,7 +120,7 @@ paths:
       - $ref: '#/components/parameters/Offset'
       responses:
         '200':
-          $ref: '#/components/responses/GetReservasList200'
+          $ref: '#/components/responses/GetMisReservasList200'
         '204':
           $ref: '#/components/responses/NoContent'
         '400':
@@ -2357,6 +2357,54 @@ components:
             $ref: '#/components/schemas/Reserva'
         _links:
           $ref: '#/components/schemas/Links'
+    MisReservasListResponse:
+    type: object
+    properties:
+       reservas:
+        type: array
+        items:
+          $ref: '#/components/schemas/ReservaPerfil'
+       _links:
+          $ref: '#/components/schemas/Links'
+
+    ReservaPerfil:
+    allOf:
+      - $ref: '#/components/schemas/Reserva'
+      - type: object
+        properties:
+          pelicula:
+           type: string
+        poster_url:
+          type: string
+          nullable: true
+        fecha_hora:
+          type: string
+          format: date-time
+        sala:
+          type: string
+        sucursal:
+          type: string
+        entradas:
+          type: array
+          items:
+            type: object
+            properties:
+              butaca:
+                type: string
+              fecha_uso:
+                type: string
+                format: date-time
+                nullable: true
+        servicios:
+          type: array
+          items:
+            type: object
+            properties:
+              nombre:
+                type: string
+              cantidad:
+                type: integer
+
     EntradasListResponse:
       type: object
       properties:
@@ -2635,6 +2683,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ReservasListResponse'
+    GetMisReservasList200:
+    description: Reservas del usuario con sus detalles
+    content:
+         application/json:
+           schema:
+            $ref: '#/components/schemas/MisReservasListResponse'
     GetEntradasList200:
       description: OK
       content:

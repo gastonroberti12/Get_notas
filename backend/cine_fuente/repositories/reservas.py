@@ -79,6 +79,103 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     return consultar(sql, parametros)
 
 
+"""obtiene las reservas del usuario con los datos de la funcion y el cine"""
+def listar_reservas_perfil(filtros, limit, offset, usuario_id):
+
+    where, parametros = _construir_filtros(filtros, usuario_id)
+    parametros.update({"limit": limit, "offset": offset})
+
+    sql = f"""
+        SELECT
+            r.id,
+            r.usuario_id,
+            r.funcion_id,
+            r.fecha_compra,
+            r.estado,
+            r.fecha_cancelacion,
+            {TOTAL_RESERVA_SQL},
+            f.fecha_hora,
+            p.titulo AS pelicula,
+            p.poster_url,
+            s.nombre AS sala,
+            su.nombre AS sucursal
+
+        FROM reservas r
+
+        INNER JOIN funcion f
+            ON r.funcion_id = f.id
+
+        INNER JOIN pelicula p
+            ON f.pelicula_id = p.id
+
+        INNER JOIN salas s
+            ON f.sala_id = s.id
+
+        INNER JOIN sucursales su
+            ON s.sucursal_id = su.id
+
+        {where}
+
+        ORDER BY r.fecha_compra DESC, r.id DESC
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    return consultar(sql, parametros)
+
+"""obtiene las entradas y sus butacas para varias reservas"""
+def listar_entradas_perfil(reserva_ids):
+
+    if not reserva_ids:
+        return []
+
+    marcadores, parametros = clausula_in(reserva_ids, "reserva")
+
+    sql = f"""
+        SELECT
+            e.reserva_id,
+            e.fecha_uso,
+            b.fila,
+            b.numero
+
+        FROM entrada e
+
+        INNER JOIN butacas b
+            ON e.butaca_id = b.id
+
+        WHERE e.reserva_id IN ({marcadores})
+
+        ORDER BY e.reserva_id, e.id
+    """
+
+    return consultar(sql, parametros)
+
+"""obtiene los servicios asociados a varias reservas"""
+def listar_servicios_perfil(reserva_ids):
+
+    if not reserva_ids:
+        return []
+
+    marcadores, parametros = clausula_in(reserva_ids, "reserva")
+
+    sql = f"""
+        SELECT
+            rs.reserva_id,
+            rs.cantidad,
+            s.nombre
+
+        FROM reserva_servicios rs
+
+        INNER JOIN servicios s
+            ON rs.servicio_id = s.id
+
+        WHERE rs.reserva_id IN ({marcadores})
+
+        ORDER BY rs.reserva_id, rs.id
+    """
+
+    return consultar(sql, parametros)
+
+
 def contar_reservas(filtros, usuario_propio_id=None):
     """Cuenta registros para la paginación."""
     where, parametros = _construir_filtros(filtros, usuario_propio_id)

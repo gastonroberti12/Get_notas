@@ -64,6 +64,58 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     total = compras_repo.contar_reservas(filtros, usuario_propio_id)
     return [reserva_api(reserva) for reserva in reservas], total
 
+#obtiene las reservas del usuario con todos sus detalles
+def listar_reservas_perfil(filtros, limit, offset, usuario_id):
+
+    procesar_expiraciones()
+
+    #obtenemos las reservas
+    reservas = compras_repo.listar_reservas_perfil(
+        filtros, limit, offset, usuario_id
+    )
+
+    total = compras_repo.contar_reservas(filtros, usuario_id)
+
+    reserva_ids = [reserva["id"] for reserva in reservas]
+
+    #consultamos entradas y servicios
+    entradas = compras_repo.listar_entradas_perfil(reserva_ids)
+    servicios = compras_repo.listar_servicios_perfil(reserva_ids)
+
+    resultado = []
+
+    for reserva in reservas:
+        datos = reserva_api(reserva)
+
+        datos["pelicula"] = reserva["pelicula"]
+        datos["poster_url"] = reserva["poster_url"]
+        datos["fecha_hora"] = formatear_fecha_hora(reserva["fecha_hora"])
+        datos["sala"] = reserva["sala"]
+        datos["sucursal"] = reserva["sucursal"]
+
+        datos["entradas"] = []
+        datos["servicios"] = []
+
+        # asociamos las entradas
+        for entrada in entradas:
+            if entrada["reserva_id"] == reserva["id"]:
+                datos["entradas"].append({
+                    "butaca": f"{entrada['fila']}{entrada['numero']}",
+                    "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
+                })
+
+        # asociamos los servicios que corresponden
+        for servicio in servicios:
+            if servicio["reserva_id"] == reserva["id"]:
+                datos["servicios"].append({
+                    "nombre": servicio["nombre"],
+                    "cantidad": servicio["cantidad"]
+                })
+
+        resultado.append(datos)
+
+    return resultado, total
+
 
 def obtener_reserva(reserva_id, usuario, exige_titular_o_admin=True):
     """Consulta una reserva y verifica titularidad o rol administrador."""
