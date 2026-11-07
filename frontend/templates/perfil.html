@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cartel_cancelar.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -137,4 +138,5 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 <script src="{{ url_for('static', filename='js/perfil.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cartel_cancelar.js') }}"></script>
 {% endblock %}

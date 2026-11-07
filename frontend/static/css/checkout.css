@@ -230,3 +230,60 @@
 .checkout-volver:hover {
     color: var(--gold);
 }
+
+.checkout-cancelar {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 9px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.checkout-cancelar:hover {
+    background: rgba(255, 106, 96, .1);
+}
+
+.checkout-plazo {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+}
+
+.checkout-plazo strong {
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 20px;
+}
+
+.checkout-plazo p {
+    margin: 0 0 0 auto;
+    color: var(--danger);
+    font-size: 13px;
+}
+
+.checkout-plazo p[hidden] {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .checkout-plazo {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .checkout-plazo p {
+        margin-left: 0;
+    }
+}

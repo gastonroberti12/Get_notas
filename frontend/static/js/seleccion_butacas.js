@@ -5,9 +5,31 @@ const monto = document.getElementById('seleccion-monto');
 const boton = document.getElementById('btn-continuar');
 const campo = document.getElementById('butacas-input');
 const PRECIO = Number(document.getElementById('precio').value);
+const avisos = document.getElementById('avisos-butacas');
 
 // Formatea un número como precio: 9500 -> "$ 9.500"
 const formatear = (n) => '$ ' + n.toLocaleString('es-AR');
+
+function mostrarAvisoLimite() {
+  const notificacion = document.createElement('div');
+  notificacion.className = 'notificacion notificacion-error';
+  notificacion.innerHTML = `
+    <span class="notificacion_icono">!</span>
+    <p class="notificacion_texto">Solo puedes seleccionar 5 butacas por reserva.</p>
+    <button type="button" class="notificacion_cerrar" aria-label="Cerrar aviso">×</button>
+    <span class="notificacion_barra"></span>`;
+
+  avisos.appendChild(notificacion);
+
+  const cerrar = () => {
+    if (notificacion.classList.contains('saliendo')) return;
+    notificacion.classList.add('saliendo');
+    setTimeout(() => notificacion.remove(), 300);
+  };
+
+  notificacion.querySelector('.notificacion_cerrar').addEventListener('click', cerrar);
+  setTimeout(cerrar, 5000);
+}
 
 
 // Resumen de la selección 
@@ -38,6 +60,7 @@ for (const butaca of document.getElementsByClassName('butaca')) {
     if (butaca.classList.contains('ocupada')) return;
     if (!butaca.classList.contains('seleccionada') &&
         document.getElementsByClassName('seleccionada').length >= 5) {
+      mostrarAvisoLimite();
       return;
     }
 
