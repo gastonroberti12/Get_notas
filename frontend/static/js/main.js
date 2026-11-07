@@ -1,11 +1,19 @@
 // Menú hamburguesa (pantallas chicas): abre y cierra la barra de navegación
-const barra = document.getElementsByClassName('navbar')[0];
-const botonMenu = document.getElementsByClassName('nav-toggle')[0];
+function iniciarMenuHamburguesa() {
+  const barra = document.getElementsByClassName('navbar')[0];
+  const botonMenu = document.getElementsByClassName('nav-toggle')[0];
+  if (!barra || !botonMenu) return;
 
-if (barra && botonMenu) {
   botonMenu.addEventListener('click', () => {
-    const abierto = barra.classList.toggle('menu-abierto');
-    botonMenu.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    const abierto = !barra.classList.contains('menu-abierto');
+
+    if (abierto) {
+      barra.classList.add('menu-abierto');
+    } else {
+      barra.classList.remove('menu-abierto');
+    }
+
+    botonMenu.setAttribute('aria-expanded', abierto);
     botonMenu.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
   });
 
@@ -18,11 +26,11 @@ if (barra && botonMenu) {
   });
 }
 
-
 // Sublista de sucursales: al hacer click en "Cines" se abre o se cierra
-const menu = document.getElementsByClassName('nav-dropdown')[0];
+function iniciarMenuSucursales() {
+  const menu = document.getElementsByClassName('nav-dropdown')[0];
+  if (!menu) return;
 
-if (menu) {
   const boton = document.getElementsByClassName('boton-cines')[0];
 
   boton.addEventListener('click', () => {
@@ -38,6 +46,9 @@ if (menu) {
     if (!menu.contains(evento.target)) menu.classList.remove('abierto');
   });
 }
+
+iniciarMenuHamburguesa();
+iniciarMenuSucursales();
 
 // Cierra una notificacion en dos pasos: primero la anima y despues la saca de la pagina
 function cerrarNotificacion(notificacion) {

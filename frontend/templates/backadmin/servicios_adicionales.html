@@ -162,18 +162,28 @@
                             </tr>
                         </thead>
 
-                        <!-- ACÁ va el <tbody> nuevo, en lugar del viejo -->
                         <tbody>
                             {% for s in servicios %}
                             <tr>
                                 <td data-label="Nombre">{{ s.nombre }}</td>
-                                ...
+                                <td data-label="Descripción">{{ s.descripcion or "—" }}</td>
+                                <td data-label="Precio">${{ s.precio }}</td>
+                                <td data-label="Estado">{{ "Activo" if s.activo else "Inactivo" }}</td>
+                                <td data-label="Acciones" class="admin-actions">
+                                    <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
+                                       class="admin-btn-secondary">Editar</a>
+
+                                    {% if s.activo %}
+                                    <form method="POST"
+                                          action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}">
+                                        <button type="submit" class="admin-btn-secondary">Dar de baja</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-
                     </table>
-</div>
                 </div>
 
                 {% else %}

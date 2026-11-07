@@ -251,17 +251,12 @@
 @media (max-width: 760px) {
 
     .admin-panel {
-        width: min(100% - 28px, 560px);
         margin-top: 24px;
     }
 
     .admin-header {
         align-items: flex-start;
         flex-direction: column;
-    }
-
-    .admin-layout {
-        grid-template-columns: 1fr;
     }
 
     .admin-menu {
@@ -415,10 +410,6 @@
 /*responsive */
 
 @media (max-width: 760px) {
-
-    .admin-form-card {
-        padding: 20px;
-    }
 
     .admin-form-dates {
         grid-template-columns: 1fr;
@@ -887,6 +878,9 @@
     /* Botones compactos en filas que se acomodan solos: el activo siempre queda a la vista */
     .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
     .admin-menu li a { padding: 11px 14px; font-size: 14px; }
+}
+
+
 /* Botón activo del menú lateral */
 .admin-menu li a.admin-menu-active,
 .admin-menu li a.admin-menu-active:hover {
@@ -923,10 +917,8 @@
     .admin-table-wrap { overflow-x: visible; }
 
     .admin-table,
-    .admin-table thead,
     .admin-table tbody,
-    .admin-table tr,
-    .admin-table td { display: block; width: 100%; }
+    .admin-table tr { display: block; width: 100%; }
 
     .admin-table thead {
         position: absolute;
