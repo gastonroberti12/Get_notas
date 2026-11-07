@@ -100,7 +100,15 @@
             </p>
             <div class="admin-form-card">
                 {% if resultado %}
-                <p>{{ "✔" if resultado.ok else "✖" }} {{ resultado.mensaje }}</p>
+                <div class="validacion-resultado {{ 'valida' if resultado.ok else 'rechazada' }}">
+                    <h3>{{ "✔ Entrada válida" if resultado.ok else "✖ Entrada rechazada" }}</h3>
+                    <p>{{ resultado.mensaje }}</p>
+                    {% if resultado.detalle %}
+                    <p>{{ resultado.detalle.pelicula }}</p>
+                    <p>{{ resultado.detalle.sala }} · butaca {{ resultado.detalle.butaca }}</p>
+                    <p>Función: {{ resultado.detalle.funcion }}</p>
+                    {% endif %}
+                </div>
                 {% else %}
                 <div class="admin-empty-chart">
                     <span class="admin-chart-icon">▥</span>
