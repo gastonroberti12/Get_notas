@@ -18,6 +18,8 @@
 
     <!-- Formulario -->
     <form method="post" action="{{ url_for('users.login') }}" class="formulario-login">
+        <input type="hidden" name="next" value="{{ siguiente or '' }}">
+
         <label class="formulario_campo">
             <span>Email *</span>
             <input type="email" name="email" required maxlength="150" autocomplete="email" value="{{ email or '' }}">

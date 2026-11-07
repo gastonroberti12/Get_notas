@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+      {{ estilos }}
+</head>
+<body>
+  <div class="contenedor">
+    <div class="header">🎬 Cine Paradiso</div>
+    <div class="contenido">
+      <h2>¡Reserva confirmada!</h2>
+      <p class="subtitulo">Hola {{ d.nombre }}, esta es tu reserva #{{ d.id }}.</p>
+
+      <div class="funcion">
+        <span class="titulo">{{ d.pelicula }}</span><br>
+        📅 {{ fecha }}<br>
+        📍 {{ d.sucursal }} ({{ d.sucursal_direccion }}) - {{ d.sala }}
+      </div>
+
+      <h3>Detalle</h3>
+      <table class="detalle">
+        {% for nombre, cant, precio in items %}
+        <tr><td>{{ cant }} x {{ nombre }}</td><td class="derecha">${{ cant * precio }}</td></tr>
+        {% endfor %}
+        <tr class="total"><td>Total</td><td class="derecha">${{ d.total }}</td></tr>
+      </table>
+
+      <h3>Tus entradas</h3>
+      <p class="nota">Presentá cada QR en el ingreso a la sala.</p>
+      <table width="100%"><tr>
+        {% for e in d.entradas %}
+        <td class="qr">
+          <img src="cid:{{ cids[loop.index0][1:-1] }}" alt="QR butaca {{ e.fila }}{{ e.numero }}">
+          <div><b>Butaca {{ e.fila }}{{ e.numero }}</b></div>
+          <div class="codigo">Código: {{ e.codigo_qr }}</div>
+        </td>
+        {% endfor %}
+      </tr></table>
+
+      {% if url %}
+      <p class="centrado"><a class="boton" href="{{ url }}">Cancelar reserva</a></p>
+      <p class="centrado aclaracion">Podés cancelar hasta 60 minutos antes de la función.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

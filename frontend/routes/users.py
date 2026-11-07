@@ -6,25 +6,32 @@ from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_re
 
 users_bp = Blueprint("users", __name__)
 
+def destino_seguro(destino):
+    """Solo rutas internas del sitio (evita open redirect)."""
+    if destino and destino.startswith('/') and not destino.startswith('//') and '\\' not in destino:
+        return destino
+    return '/'
+
 @users_bp.route("/login", methods=['GET', 'POST'])
 def login():
+    siguiente = request.values.get('next', '')  # viene por URL (GET) o por campo oculto (POST)
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
-        
+
         status, cuerpo = llamar_api('POST', '/auth/login', {'email': email, 'contrasenia': password})
         if status == 200:
             session['token'] = cuerpo['token']
             session['usuario'] = cuerpo['usuario'] # incluye el rol
             session.pop('sucursal_id', None) # al loguearse vuelve a la sucursal principal
             flash('Sesión iniciada con éxito.', 'exito') # flash: mensaje que se muestra en la siguiente página
-            return redirect('/')
-        
-        error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
-        return render_template('login.html', error=error, email=email)
-    
-    return render_template("login.html")
+            return redirect(destino_seguro(siguiente))
 
+        error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
+        return render_template('login.html', error=error, email=email, siguiente=siguiente)
+
+    return render_template("login.html", siguiente=siguiente)
+    
 
 @users_bp.route("/registro", methods=['GET', 'POST']) # el back no loguea al registrar, por eso redirigimos al login
 def registro():
