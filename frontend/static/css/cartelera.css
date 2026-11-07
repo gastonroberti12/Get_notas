@@ -259,3 +259,21 @@
         padding: 20px;
     }
 }
+
+@media (max-width: 768px) {
+    .cartelera { padding: 28px 0 56px; }
+    .cartelera-header { margin-bottom: 32px; }
+    .cartelera-filtros { padding: 20px; margin-bottom: 32px; }
+    .cartelera-grid { gap: 16px; }
+    .cartelera-card-info { padding: 14px; }
+    .cartelera-card-info h3 { font-size: 19px; }
+    .cartelera-listado-header { flex-wrap: wrap; gap: 6px 16px; }
+    .cartelera-listado-header h2 { font-size: 24px; }
+}
+
+@media (max-width: 480px) {
+    .cartelera-filtros { padding: 16px; }
+    .cartelera-etiqueta { letter-spacing: 2px; }
+    .cartelera-card-info h3 { font-size: 21px; }
+    .filtro-genero { padding: 8px 14px; font-size: 14px; }
+}
