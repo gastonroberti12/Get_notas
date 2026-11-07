@@ -29,3 +29,26 @@ async function buscarQr(detector) {
     requestAnimationFrame(() => buscarQr(detector));
 }
 
+
+async function activarCamara() {
+    if (flujo) {
+        detenerCamara();
+        return;
+    }
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices) {
+        aviso.textContent = 'Este navegador no puede leer QR. Ingresá el código a mano.';
+        return;
+    }
+    try {
+        flujo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = flujo;
+        video.hidden = false;
+        await video.play();
+        botonCamara.textContent = 'Cancelar cámara';
+        aviso.textContent = 'Apuntá al código QR.';
+        buscarQr(new BarcodeDetector({ formats: ['qr_code'] }));
+    } catch (error) {
+        detenerCamara();
+        aviso.textContent = 'No se pudo usar la cámara. Ingresá el código a mano.';
+    }
+}
