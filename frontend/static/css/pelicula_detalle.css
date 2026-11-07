@@ -192,7 +192,6 @@
 
 /*  Responsive  */
 
-
 @media (max-width: 900px) {
     .detalle { gap: 28px; }
     .detalle-poster { width: 240px; }

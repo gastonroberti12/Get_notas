@@ -297,10 +297,12 @@
 }
 
 
+.butacas-sala { min-width: 0; }
 .sala-scroll { -webkit-overflow-scrolling: touch; }
 
 @media (max-width: 860px) {
-    .butacas-layout { gap: 20px; }
+    .butacas-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .seleccion { position: static; }
     .butacas-sala h1 { font-size: 28px; }
     .butacas-funcion { margin-bottom: 18px; }
 }
@@ -318,13 +320,5 @@
 }
 
 @media (max-width: 380px) {
-    .butaca { width: 24px; height: 24px; font-size: 9px; }
     .fila { gap: 3px; }
-}
-
-/* La columna de la sala puede encogerse: el scroll queda dentro de .sala-scroll */
-.butacas-sala { min-width: 0; }
-
-@media (max-width: 860px) {
-    .butacas-layout { grid-template-columns: minmax(0, 1fr); }
 }
