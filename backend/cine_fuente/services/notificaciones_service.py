@@ -1,8 +1,14 @@
 import os
 import smtplib
 from email.message import EmailMessage
+from html import escape
 
 from cine_fuente.services.qr_service import generar_qr_png
+
+
+def _url_cancelacion(datos_reserva):
+    base = os.getenv("FRONTEND_URL")
+    return f"{base}/reservas/{datos_reserva['id']}/cancelar" if base else None
 
 
 def enviar_confirmacion_pago(datos_reserva):
@@ -24,7 +30,16 @@ def enviar_confirmacion_pago(datos_reserva):
     mensaje["Subject"] = f"Confirmación de reserva #{datos_reserva['id']}"
     mensaje["From"] = remitente
     mensaje["To"] = destinatario
-    mensaje.set_content(_crear_cuerpo(datos_reserva))
+    cuerpo = _crear_cuerpo(datos_reserva)
+    mensaje.set_content(cuerpo)
+    url = _url_cancelacion(datos_reserva)
+    if url:
+        mensaje.add_alternative(
+            f"<div>{escape(cuerpo).replace(chr(10), '<br>')}"
+            f"<p><a href='{url}' style='background:#c9a227;color:#000;padding:10px 18px;"
+            f"border-radius:6px;text-decoration:none'>Cancelar reserva</a></p></div>",
+            subtype="html",
+        )
 
     for entrada in datos_reserva.get("entradas", []):
         codigo_qr = entrada.get("codigo_qr")
@@ -54,12 +69,8 @@ def _crear_cuerpo(datos_reserva):
         f"- Butaca {entrada['butaca_id']}: {entrada.get('codigo_qr')}"
         for entrada in entradas
     )
-    base = os.getenv("FRONTEND_URL")
-    enlace = (
-        f"\nCancelar (hasta 60 min antes de la función): "
-        f"{base}/reservas/{datos_reserva['id']}/cancelar\n"
-        if base else ""
-    )
+    url = _url_cancelacion(datos_reserva)
+    enlace = f"\nCancelar (hasta 60 min antes de la función): {url}\n" if url else ""
     return (
         f"Hola {datos_reserva.get('nombre', '')} {datos_reserva.get('apellido', '')},\n\n"
         f"Tu reserva #{datos_reserva['id']} fue confirmada.\n"
