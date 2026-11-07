@@ -48,21 +48,15 @@ def contar_entradas(filtros):
     filas = ejecutar_consulta(sql, parametros)
     return int(filas[0]["total"])
 
+def _una(where, params):
+    filas = ejecutar_consulta(SQL_ENTRADA + where, params)
+    return filas[0] if filas else None
 
 def obtener_entrada_por_id(entrada_id):
-    """Incluye los datos necesarios para comprobar titularidad y horario."""
-    sql = """
-        SELECT e.id, e.reserva_id, e.butaca_id, e.codigo_qr, e.fecha_uso,
-               r.usuario_id, r.estado AS estado_reserva,
-               f.fecha_hora, p.duracion_min
-        FROM entrada AS e
-        INNER JOIN reservas AS r ON r.id = e.reserva_id
-        INNER JOIN funcion AS f ON f.id = r.funcion_id
-        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
-        WHERE e.id = %(entrada_id)s
-    """
-    filas = ejecutar_consulta(sql, {"entrada_id": entrada_id})
-    return filas[0] if filas else None
+    return _una(" WHERE e.id = %(v)s", {"v": entrada_id})
+
+def obtener_entrada_por_codigo_qr(codigo_qr):
+    return _una(" WHERE e.codigo_qr = %(v)s", {"v": codigo_qr})
 
 def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
     """Solo registra un uso si la entrada sigue siendo válida al escribir."""

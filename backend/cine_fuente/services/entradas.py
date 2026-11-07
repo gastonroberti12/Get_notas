@@ -66,3 +66,10 @@ def validar_entrada(entrada_id, codigo_qr):
 
     entrada["fecha_uso"] = fecha_uso
     return entrada_api(entrada)
+
+
+def validar_por_qr(codigo_qr):
+    entrada = entradas_repo.obtener_entrada_por_codigo_qr(codigo_qr)
+    if entrada is None:
+        error_entrada("ENTRADA_NO_ENCONTRADA", "Entrada no encontrada", 404)
+    return validar_entrada(entrada["id"], codigo_qr)
