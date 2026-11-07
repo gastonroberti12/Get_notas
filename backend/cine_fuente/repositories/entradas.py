@@ -1,6 +1,8 @@
 from cine_fuente.db import ejecutar_consulta, obtener_conexion
 
 
+
+
 def construir_filtros(filtros):
     condiciones = []
     parametros = {}
@@ -48,23 +50,30 @@ def contar_entradas(filtros):
     filas = ejecutar_consulta(sql, parametros)
     return int(filas[0]["total"])
 
+SQL_ENTRADA = """
+    SELECT e.id, e.reserva_id, e.butaca_id, e.codigo_qr, e.fecha_uso,
+           r.usuario_id, r.estado AS estado_reserva,
+           f.fecha_hora, p.duracion_min, p.titulo AS pelicula_titulo,
+           s.nombre AS sala_nombre, b.fila, b.numero
+    FROM entrada AS e
+    INNER JOIN reservas AS r ON r.id = e.reserva_id
+    INNER JOIN funcion AS f ON f.id = r.funcion_id
+    INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+    INNER JOIN salas AS s ON s.id = f.sala_id
+    INNER JOIN butacas AS b ON b.id = e.butaca_id
+"""
 
-def obtener_entrada_por_id(entrada_id):
-    """Incluye los datos necesarios para comprobar titularidad y horario."""
-    sql = """
-        SELECT e.id, e.reserva_id, e.butaca_id, e.codigo_qr, e.fecha_uso,
-               r.usuario_id, r.estado AS estado_reserva,
-               f.fecha_hora, p.duracion_min
-        FROM entrada AS e
-        INNER JOIN reservas AS r ON r.id = e.reserva_id
-        INNER JOIN funcion AS f ON f.id = r.funcion_id
-        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
-        WHERE e.id = %(entrada_id)s
-    """
-    filas = ejecutar_consulta(sql, {"entrada_id": entrada_id})
+def _una(where, params):
+    filas = ejecutar_consulta(SQL_ENTRADA + where, params)
     return filas[0] if filas else None
 
-def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
+def obtener_entrada_por_id(entrada_id):
+    return _una(" WHERE e.id = %(v)s", {"v": entrada_id})
+
+def obtener_entrada_por_codigo_qr(codigo_qr):
+    return _una(" WHERE e.codigo_qr = %(v)s", {"v": codigo_qr})
+
+def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, tolerancia):
     """Solo registra un uso si la entrada sigue siendo válida al escribir."""
     sql = """
         UPDATE entrada AS e
@@ -77,13 +86,14 @@ def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
           AND e.fecha_uso IS NULL
           AND r.estado = 'confirmada'
           AND p.duracion_min > 0
-          AND f.fecha_hora <= %(fecha_uso)s
+          AND DATE_SUB(f.fecha_hora, INTERVAL %(tolerancia)s MINUTE) <= %(fecha_uso)s
           AND %(fecha_uso)s < DATE_ADD(f.fecha_hora, INTERVAL p.duracion_min MINUTE)
     """
     parametros = {
         "entrada_id": entrada_id,
         "codigo_qr": codigo_qr,
         "fecha_uso": fecha_uso,
+        "tolerancia": tolerancia,
     }
 
     # ejecutar_escritura devuelve lastrowid, no las filas modificadas.

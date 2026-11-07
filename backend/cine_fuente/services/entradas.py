@@ -2,7 +2,8 @@ from datetime import timedelta
 
 from cine_fuente.repositories import entradas as entradas_repo
 from cine_fuente.services.reservas import entrada_api, normalizar_fecha_local
-from cine_fuente.utils import ahora_gmt3, construir_error_api
+from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
+from constants import TOLERANCIA_INGRESO_MIN
 
 
 def error_entrada(codigo, mensaje, estado):
@@ -51,12 +52,12 @@ def validar_entrada(entrada_id, codigo_qr):
     ahora = ahora_gmt3()
     inicio = normalizar_fecha_local(entrada["fecha_hora"])
     fin = inicio + timedelta(minutes=int(duracion))
-    if ahora < inicio or ahora >= fin:
-        error_entrada("FUNCION_FUERA_DE_HORARIO", "La función no está en curso", 409)
+    if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora >= fin:
+        error_entrada("FUNCION_FUERA_DE_HORARIO", "La entrada aún no está habilitada o la función ya terminó", 409)
 
     # MySQL guarda DATETIME sin zona horaria; mantenemos la hora local GMT-3.
     fecha_uso = ahora.replace(tzinfo=None)
-    registrada = entradas_repo.registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso)
+    registrada = entradas_repo.registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, TOLERANCIA_INGRESO_MIN)
     if not registrada:
         error_entrada(
             "ENTRADA_NO_VALIDABLE",
@@ -65,4 +66,18 @@ def validar_entrada(entrada_id, codigo_qr):
         )
 
     entrada["fecha_uso"] = fecha_uso
-    return entrada_api(entrada)
+    resultado = entrada_api(entrada)
+    resultado["detalle"] = {
+        "pelicula": entrada["pelicula_titulo"],
+        "funcion": formatear_fecha_hora(entrada["fecha_hora"]),
+        "sala": entrada["sala_nombre"],
+        "butaca": f"{entrada['fila']}{entrada['numero']}",
+    }
+    return resultado   
+
+
+def validar_por_qr(codigo_qr):
+    entrada = entradas_repo.obtener_entrada_por_codigo_qr(codigo_qr)
+    if entrada is None:
+        error_entrada("ENTRADA_NO_ENCONTRADA", "Entrada no encontrada", 404)
+    return validar_entrada(entrada["id"], codigo_qr)

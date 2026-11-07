@@ -79,6 +79,103 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     return consultar(sql, parametros)
 
 
+"""obtiene las reservas del usuario con los datos de la funcion y el cine"""
+def listar_reservas_perfil(filtros, limit, offset, usuario_id):
+
+    where, parametros = _construir_filtros(filtros, usuario_id)
+    parametros.update({"limit": limit, "offset": offset})
+
+    sql = f"""
+        SELECT
+            r.id,
+            r.usuario_id,
+            r.funcion_id,
+            r.fecha_compra,
+            r.estado,
+            r.fecha_cancelacion,
+            {TOTAL_RESERVA_SQL},
+            f.fecha_hora,
+            p.titulo AS pelicula,
+            p.poster_url,
+            s.nombre AS sala,
+            su.nombre AS sucursal
+
+        FROM reservas r
+
+        INNER JOIN funcion f
+            ON r.funcion_id = f.id
+
+        INNER JOIN pelicula p
+            ON f.pelicula_id = p.id
+
+        INNER JOIN salas s
+            ON f.sala_id = s.id
+
+        INNER JOIN sucursales su
+            ON s.sucursal_id = su.id
+
+        {where}
+
+        ORDER BY r.fecha_compra DESC, r.id DESC
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    return consultar(sql, parametros)
+
+"""obtiene las entradas y sus butacas para varias reservas"""
+def listar_entradas_perfil(reserva_ids):
+
+    if not reserva_ids:
+        return []
+
+    marcadores, parametros = clausula_in(reserva_ids, "reserva")
+
+    sql = f"""
+        SELECT
+            e.reserva_id,
+            e.fecha_uso,
+            b.fila,
+            b.numero
+
+        FROM entrada e
+
+        INNER JOIN butacas b
+            ON e.butaca_id = b.id
+
+        WHERE e.reserva_id IN ({marcadores})
+
+        ORDER BY e.reserva_id, e.id
+    """
+
+    return consultar(sql, parametros)
+
+"""obtiene los servicios asociados a varias reservas"""
+def listar_servicios_perfil(reserva_ids):
+
+    if not reserva_ids:
+        return []
+
+    marcadores, parametros = clausula_in(reserva_ids, "reserva")
+
+    sql = f"""
+        SELECT
+            rs.reserva_id,
+            rs.cantidad,
+            s.nombre
+
+        FROM reserva_servicios rs
+
+        INNER JOIN servicios s
+            ON rs.servicio_id = s.id
+
+        WHERE rs.reserva_id IN ({marcadores})
+
+        ORDER BY rs.reserva_id, rs.id
+    """
+
+    return consultar(sql, parametros)
+
+
 def contar_reservas(filtros, usuario_propio_id=None):
     """Cuenta registros para la paginación."""
     where, parametros = _construir_filtros(filtros, usuario_propio_id)
@@ -252,11 +349,17 @@ def obtener_datos_notificacion(reserva_id):
     """Obtiene email y datos necesarios para el comprobante y sus QR."""
     sql = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+        f.precio AS precio_entrada, f.fecha_hora,
+        p.titulo AS pelicula, sa.nombre AS sala,
+        su.nombre AS sucursal, su.direccion AS sucursal_direccion,
         {TOTAL_RESERVA_SQL},
         u.nombre, u.apellido, u.email
         FROM reservas AS r
         INNER JOIN usuarios AS u ON u.id = r.usuario_id
         INNER JOIN funcion AS f ON f.id = r.funcion_id
+        INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+        INNER JOIN salas AS sa ON sa.id = f.sala_id
+        INNER JOIN sucursales AS su ON su.id = sa.sucursal_id
         WHERE r.id = %(reserva_id)s
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
@@ -265,11 +368,26 @@ def obtener_datos_notificacion(reserva_id):
 
     datos = filas[0]
     datos["entradas"] = consultar(
-        "SELECT id, butaca_id, codigo_qr FROM entrada WHERE reserva_id = %(reserva_id)s ORDER BY id",
+        """
+        SELECT e.id, e.butaca_id, e.codigo_qr, b.fila, b.numero
+        FROM entrada AS e
+        INNER JOIN butacas AS b ON b.id = e.butaca_id
+        WHERE e.reserva_id = %(reserva_id)s
+        ORDER BY e.id
+        """,
+        {"reserva_id": reserva_id},
+    )
+    datos["servicios"] = consultar(
+        """
+        SELECT s.nombre, rs.cantidad, rs.precio_unitario
+        FROM reserva_servicios AS rs
+        INNER JOIN servicios AS s ON s.id = rs.servicio_id
+        WHERE rs.reserva_id = %(reserva_id)s
+        ORDER BY rs.id
+        """,
         {"reserva_id": reserva_id},
     )
     return datos
-
 
 def crear_reserva_con_entradas(datos, butaca_ids):
     """Transacción única: bloquea la función, valida butacas e inserta reserva y entradas.

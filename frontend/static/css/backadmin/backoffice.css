@@ -427,6 +427,18 @@
 /* El botón primario dentro de un encabezado conserva su texto oscuro */
 .admin-section-heading a.admin-btn-primary { color: var(--bg); }
 
+
+/* Validación de entradas */
+.validacion-resultado { padding: 18px 20px; border-radius: 12px; color: #fff; }
+.validacion-resultado h3 { margin: 0 0 8px; font-size: 1.2rem; }
+.validacion-resultado p { margin: 4px 0; }
+.validacion-resultado.valida { background: #1f8a4c; }
+.validacion-resultado.rechazada { background: #b3261e; }
+
+/*Estilos del boton y video de la camara*/
+.admin-camara { margin-top: 12px; }
+.admin-camara video { display: block; width: 100%; max-width: 420px; margin-top: 10px; border-radius: 12px; background: #000; }
+
 /* ============ RESPONSIVE ============ */
 
 /* Tablets */

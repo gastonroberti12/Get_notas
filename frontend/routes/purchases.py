@@ -6,10 +6,12 @@ from routes.roles import esta_logueado
 purchases_bp = Blueprint("purchases", __name__)
 
 
-@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['POST'])
+@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['GET', 'POST'])
 def cancelar_reserva(reserva_id):
     if not esta_logueado():
-        return redirect(url_for('users.login'))
+        return redirect(url_for('users.login', next=request.path))
+    if request.method == 'GET':
+        return render_template('cancelar_reserva.html', reserva_id=reserva_id)
     # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
     status, cuerpo = llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
     if status in (200, 204):
@@ -173,7 +175,7 @@ def checkout():
                 f"/reservas/{reserva_id}/servicios",
                 {"servicio_id": servicio_id, "cantidad": cantidad},
             )
-            if status_servicio not in (201, 409):
+            if status_servicio != 201:
                 flash("No se pudo agregar un servicio adicional.", "error")
                 return redirect(url_for(
                     "purchases.checkout",
