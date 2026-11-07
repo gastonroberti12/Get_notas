@@ -52,3 +52,6 @@ async function activarCamara() {
         aviso.textContent = 'No se pudo usar la cámara. Ingresá el código a mano.';
     }
 }
+
+
+botonCamara.addEventListener('click', activarCamara);
