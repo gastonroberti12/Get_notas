@@ -12,33 +12,40 @@
 .perfil_datos {
   position: sticky;
   top: 90px;
-  padding: 28px 24px;
+  padding: 35px 24px;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 1px solid var(--gold);
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(233, 180, 76, 0.08);
+  text-align: center;
 }
 
 .perfil_avatar {
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   display: grid;
   place-items: center;
+  margin: 0 auto;
   border-radius: 50%;
   background: var(--gold);
   color: var(--bg);
   font-family: var(--font-title);
-  font-size: 28px;
+  font-size: 38px;
+  box-shadow: 0 0 30px rgba(233, 180, 76, 0.25);
 }
 
 .perfil_nombre {
-  margin: 14px 0 2px;
+  margin: 22px 0 8px;
   font-family: var(--font-title);
   font-weight: 400;
-  font-size: 28px;
+  font-size: 30px;
+  color: var(--text);
 }
 
 .perfil_desde {
-  margin: 0 0 22px;
+  margin: 0 0 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
   color: var(--text-muted);
 }
 
@@ -48,7 +55,7 @@
   gap: 14px;
 }
 
-/* ===== Campos, alerta y boton del formulario ===== */
+/* ===== Campos, alerta y botón del formulario ===== */
 .formulario_campo {
   display: flex;
   flex-direction: column;
@@ -74,17 +81,17 @@
   font-size: 15px;
 }
 
-.formulario_campo input:hover { 
-  border-color: var(--text-faint); 
+.formulario_campo input:hover {
+  border-color: var(--text-faint);
 }
 
-.formulario_campo input:focus { 
-  outline: none; 
-  border-color: var(--gold); 
+.formulario_campo input:focus {
+  outline: none;
+  border-color: var(--gold);
 }
 
-.formulario_campo input:user-invalid { 
-  border-color: var(--danger); 
+.formulario_campo input:user-invalid {
+  border-color: var(--danger);
 }
 
 .boton {
@@ -98,13 +105,14 @@
   font-size: 16px;
   cursor: pointer;
 }
-.boton:hover:not(:disabled) { 
-  background: var(--red-hover); 
+
+.boton:hover:not(:disabled) {
+  background: var(--red-hover);
 }
 
-.boton:disabled { 
-  opacity: .6; 
-  cursor: default; 
+.boton:disabled {
+  opacity: .6;
+  cursor: default;
 }
 
 .formulario_alerta {
@@ -115,9 +123,9 @@
   font-size: 14px;
 }
 
-.formulario-perfil small { 
-  font-weight: 400; 
-  color: var(--text-faint); 
+.formulario-perfil small {
+  font-weight: 400;
+  color: var(--text-faint);
 }
 
 /* Los inputs se ven como texto */
@@ -129,27 +137,30 @@
   -webkit-text-fill-color: var(--text);
 }
 
-/* Solo existen en modo edicion */
-.solo-edicion { 
-  display: none; 
-}
-.formulario-perfil.editando .solo-edicion { 
-  display: flex; 
-}
-.formulario-perfil.editando .perfil_editar { 
-  display: none; 
+/* Solo existen en modo edición */
+.solo-edicion {
+  display: none;
 }
 
-.perfil_acciones { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 10px; 
-  margin-top: 4px; 
+.formulario-perfil.editando .solo-edicion {
+  display: flex;
 }
-.perfil_acciones .boton { 
-  padding: 10px 28px; 
-  border-radius: 999px; 
-  font-size: 15px; 
+
+.formulario-perfil.editando .perfil_editar {
+  display: none;
+}
+
+.perfil_acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.perfil_acciones .boton {
+  padding: 10px 28px;
+  border-radius: 999px;
+  font-size: 15px;
 }
 
 /* Botones de contorno */
@@ -167,11 +178,21 @@
   cursor: pointer;
 }
 
-.perfil_editar:hover,
+/* Botón editar datos */
+.perfil_editar {
+  background: var(--gold);
+  color: var(--bg);
+  transition: background 0.2s;
+}
+
+.perfil_editar:hover {
+  background: var(--gold-hover);
+}
+
 .perfil_cancelar:hover,
-.reserva_ver_entradas:hover { 
-  background: var(--gold); 
-  color: var(--bg); 
+.reserva_ver_entradas:hover {
+  background: var(--gold);
+  color: var(--bg);
 }
 
 .perfil_logout {
@@ -185,11 +206,12 @@
   font-size: 14px;
   cursor: pointer;
 }
-.perfil_logout:hover { 
-  color: var(--danger); 
+
+.perfil_logout:hover {
+  color: var(--danger);
 }
 
-/* Tabs */
+/* ===== Tabs ===== */
 .tabs {
   display: flex;
   gap: 6px;
@@ -209,22 +231,22 @@
   cursor: pointer;
 }
 
-.tab:hover { 
-  color: var(--text); 
+.tab:hover {
+  color: var(--text);
 }
 
-.tab.activa { 
-  color: var(--gold); 
-  border-bottom-color: var(--gold); 
+.tab.activa {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
 }
 
-.panel-tab { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 16px; 
+.panel-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* Tarjeta de reserva */
+/* ===== Tarjeta de reserva ===== */
 .reserva {
   display: flex;
   gap: 18px;
@@ -242,16 +264,17 @@
   background: var(--surface-dark);
   overflow: hidden;
 }
-.reserva_poster img { 
-  display: block; 
-  width: 100%; 
-  height: 100%; 
-  object-fit: cover; 
+
+.reserva_poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.reserva_info { 
-  flex: 1; 
-  min-width: 0; 
+.reserva_info {
+  flex: 1;
+  min-width: 0;
 }
 
 .reserva_cabecera {
@@ -268,15 +291,14 @@
   font-size: 22px;
 }
 
-.reserva_detalle { 
-  margin: 4px 0 0; 
-  color: var(--text-muted); 
+.reserva_detalle {
+  margin: 4px 0 0;
+  color: var(--text-muted);
 }
 
-.reserva_servicio { 
-  color: var(--text-faint); 
+.reserva_servicio {
+  color: var(--text-faint);
 }
-
 
 /* Estados */
 .estado {
@@ -289,16 +311,17 @@
   letter-spacing: .03em;
   text-transform: uppercase;
 }
-.estado_confirmada { 
-  color: var(--ok); 
+
+.estado_confirmada {
+  color: var(--ok);
 }
 
-.estado_finalizada { 
-  color: var(--text-soft); 
+.estado_finalizada {
+  color: var(--text-soft);
 }
 
-.estado_cancelada  { 
-  color: var(--danger); 
+.estado_cancelada {
+  color: var(--danger);
 }
 
 .reserva_pie {
@@ -308,21 +331,22 @@
   gap: 8px 16px;
   margin-top: 14px;
 }
-.reserva_total { 
-  font-size: 18px; 
-  color: var(--gold); 
+
+.reserva_total {
+  font-size: 18px;
+  color: var(--gold);
 }
 
-.reserva_botones { 
-  display: flex; 
-  gap: 8px; 
-  margin-left: auto; 
+.reserva_botones {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .reserva_ver_entradas,
-.reserva_cancelar { 
-  padding: 6px 16px; 
-  font-size: 14px; 
+.reserva_cancelar {
+  padding: 6px 16px;
+  font-size: 14px;
 }
 
 .reserva_cancelar {
@@ -334,8 +358,9 @@
   font-weight: 600;
   cursor: pointer;
 }
-.reserva_cancelar:hover { 
-  background: var(--danger); 
+
+.reserva_cancelar:hover {
+  background: var(--danger);
   color: var(--bg);
 }
 
@@ -350,6 +375,7 @@
   text-align: center;
   color: var(--text-muted);
 }
+
 .vacio a {
   color: var(--gold);
   font-weight: 600;
@@ -358,4 +384,3 @@
 .oculto {
   display: none;
 }
-
