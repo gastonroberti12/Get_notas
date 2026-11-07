@@ -1,0 +1,516 @@
+/* Estilos comunes a todas las pantallas del backoffice */
+
+/* Contenedor principal */
+
+.admin-panel {
+    width: min(1180px, calc(100% - 40px));
+    margin: 40px auto 72px;
+}
+
+/* ENCABEZADO*/
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.admin-eyebrow {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    margin: 0 0 8px;
+}
+
+.admin-header h1 {
+    font-family: var(--font-title);
+    font-weight: 400;
+    font-size: clamp(30px, 4vw, 44px);
+    margin: 0 0 8px;
+}
+
+.admin-subtitle {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.admin-role {
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    padding: 8px 16px;
+
+    color: var(--gold);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* DISTRIBUCIÓN PRINCIPAL*/
+.admin-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+/* MENÚ LATERAL*/
+
+.admin-sidebar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 14px;
+}
+
+.admin-sidebar h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    margin: 0 10px 16px;
+}
+
+.admin-menu {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+    display: grid;
+    gap: 6px;
+}
+
+.admin-menu li span {
+    display: block;
+    padding: 11px 12px;
+    border-radius: 8px;
+
+    color: var(--text-soft);
+    background: var(--surface-dark);
+}
+
+.admin-menu li .admin-menu-active {
+    color: var(--bg);
+    background: var(--gold);
+    font-weight: 700;
+}
+
+.admin-menu-note {
+    color: var(--text-faint);
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 18px 10px 0;
+}
+
+/*CONTENIDO*/
+
+.admin-content {
+    min-width: 0;
+}
+
+.admin-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-section-heading h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.admin-pending {
+    font-size: 12px;
+    color: var(--gold);
+
+    background: rgba(233, 180, 76, 0.1);
+    border: 1px solid rgba(233, 180, 76, 0.35);
+    border-radius: 99px;
+
+    padding: 7px 12px;
+}
+
+.admin-description {
+    margin: 10px 0 22px;
+    max-width: 720px;
+    color: var(--text-muted);
+}
+
+.admin-chart {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 20px;
+    min-width: 0;
+}
+
+.admin-chart h3 {
+    font-size: 17px;
+    margin: 0 0 12px;
+}
+
+.admin-empty-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+    min-height: 260px;
+
+    border: 1px dashed var(--border-input);
+    border-radius: 8px;
+
+    padding: 18px;
+    background: var(--surface-dark);
+}
+
+.admin-empty-chart p {
+    font-weight: 600;
+    margin: 8px 0 4px;
+}
+
+.admin-empty-chart small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.admin-chart-icon {
+    font-size: 36px;
+    color: var(--gold);
+}
+
+/*formularios backoffice*/
+
+.admin-form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-form-group label {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-form-group input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+
+    background: var(--surface-dark);
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.admin-form-group input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.admin-form-group small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/*fechas*/
+
+.admin-form-dates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.admin-form-help {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: -12px 0 0;
+}
+
+/*info*/
+
+.admin-form-info {
+    background: var(--surface-dark);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.admin-form-info h3 {
+    color: var(--gold);
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.admin-form-info p {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/*botones*/
+
+.admin-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-btn-primary,
+.admin-btn-secondary {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-btn-primary {
+    background: var(--gold);
+    color: var(--bg);
+    border: 1px solid var(--gold);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+    background: var(--gold-hover);
+}
+
+.admin-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-btn-secondary {
+    background: var(--surface-dark);
+    color: var(--text);
+    border: 1px solid var(--border-input);
+}
+
+.admin-btn-secondary:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+}
+
+.admin-menu li a {
+    display: block;
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: var(--text-soft);
+    background: var(--surface-dark);
+    text-decoration: none;
+}
+
+.admin-menu li a:hover {
+    color: var(--gold);
+    background: var(--border);
+}
+
+/* Selectores de formularios */
+
+.admin-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+
+    background: var(--surface-dark);
+    color: var(--text);
+
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.admin-form-group select:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+/* Listados del backoffice */
+
+.admin-list-heading {
+    margin-top: 32px;
+}
+
+.admin-table-wrap {
+    overflow-x: auto;
+ }
+
+.admin-table { 
+    width: 100%; border-collapse: collapse; background: var(--card);
+ }
+
+.admin-table th, .admin-table td {
+    padding: .6rem .8rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle;
+ }
+
+.admin-table th {
+     color: var(--gold);
+     white-space: nowrap; 
+ } 
+
+.admin-actions {
+    display: flex; gap: .5rem;
+    flex-wrap: wrap; align-items: center; 
+ }
+
+.admin-msg { 
+    padding: .6rem .8rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 1rem;
+ }
+
+.admin-msg-error { 
+    color: #e57373; 
+ }
+
+.admin-msg-ok {
+     color: var(--gold); 
+ }
+
+.admin-form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.admin-form-group .admin-form-check input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--gold);
+    cursor: pointer;
+}
+
+.admin-section-heading a { color: var(--gold); font-weight: 600; }
+
+/* Botón activo del menú lateral */
+.admin-menu li a.admin-menu-active,
+.admin-menu li a.admin-menu-active:hover {
+    color: var(--bg);
+    background: var(--gold);
+    font-weight: 700;
+}
+
+/* El botón primario dentro de un encabezado conserva su texto oscuro */
+.admin-section-heading a.admin-btn-primary { color: var(--bg); }
+
+
+/* Validación de entradas */
+.validacion-resultado { padding: 18px 20px; border-radius: 12px; color: #fff; }
+.validacion-resultado h3 { margin: 0 0 8px; font-size: 1.2rem; }
+.validacion-resultado p { margin: 4px 0; }
+.validacion-resultado.valida { background: #1f8a4c; }
+.validacion-resultado.rechazada { background: #b3261e; }
+
+/*Estilos del boton y video de la camara*/
+.admin-camara { margin-top: 12px; }
+.admin-camara video { display: block; width: 100%; max-width: 420px; margin-top: 10px; border-radius: 12px; background: #000; }
+
+/* ============ RESPONSIVE ============ */
+
+/* Tablets */
+@media (max-width: 1000px) {
+    .admin-panel { width: min(1180px, calc(100% - 32px)); }
+    .admin-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 16px; }
+}
+
+/* Celulares */
+@media (max-width: 760px) {
+    /* Estructura general */
+    .admin-panel { width: calc(100% - 4px); margin-top: 24px; margin-bottom: 40px; }
+    .admin-header { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-section-heading h2 { font-size: 21px; }
+
+    /* Menú lateral: botones compactos en filas que se acomodan solos */
+    .admin-sidebar { padding: 12px; }
+    .admin-sidebar h2,
+    .admin-menu-note { display: none; }
+    .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
+    .admin-menu li a { padding: 11px 14px; font-size: 14px; }
+
+    /* Tarjeta de "sin datos" */
+    .admin-chart { padding: 16px; }
+
+    /* Formularios y botones */
+    .admin-form-card { padding: 16px; }
+    .admin-form-dates { grid-template-columns: 1fr; }
+    .admin-form-actions { flex-direction: column; }
+    .admin-btn-primary,
+    .admin-btn-secondary { width: 100%; text-align: center; }
+    .admin-form-group input,
+    .admin-form-group select { font-size: 16px; }
+
+    /* Tablas: cada fila se convierte en una tarjeta "campo: valor" */
+    .admin-table-wrap { overflow-x: visible; }
+    .admin-table,
+    .admin-table tbody,
+    .admin-table tr { display: block; width: 100%; }
+    .admin-table { background: none; }
+    .admin-table thead {
+        position: absolute;
+        width: 1px; height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+    .admin-table tr {
+        margin-bottom: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .admin-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 14px;
+        text-align: right;
+    }
+    .admin-table td:last-child { border-bottom: 0; }
+    .admin-table td::before {
+        content: attr(data-label);
+        flex: none;
+        color: var(--gold);
+        font-weight: 700;
+        text-align: left;
+    }
+    .admin-table td.admin-actions,
+    .admin-table td:has(> .admin-actions) { flex-wrap: wrap; justify-content: flex-end; }
+    .admin-table td .admin-actions { justify-content: flex-end; }
+    .admin-actions form { width: 100%; }
+}
