@@ -57,7 +57,7 @@
                             El código debe coincidir con el QR
                             generado al confirmar la compra.
                         </small>
-                        
+
                         <div class="admin-camara">
                             <button type="button" id="btn-camara" class="admin-btn-secondary">
                                 Escanear con la cámara
@@ -133,3 +133,9 @@
 </section>
 
 {% endblock %}
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/qr_scanner.js') }}"></script>
+{% endblock %}
+
