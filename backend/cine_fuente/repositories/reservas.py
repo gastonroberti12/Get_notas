@@ -252,6 +252,7 @@ def obtener_datos_notificacion(reserva_id):
     """Obtiene email y datos necesarios para el comprobante y sus QR."""
     sql = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+        f.precio AS precio_entrada,
         {TOTAL_RESERVA_SQL},
         u.nombre, u.apellido, u.email
         FROM reservas AS r
@@ -268,6 +269,17 @@ def obtener_datos_notificacion(reserva_id):
         "SELECT id, butaca_id, codigo_qr FROM entrada WHERE reserva_id = %(reserva_id)s ORDER BY id",
         {"reserva_id": reserva_id},
     )
+    datos["servicios"] = consultar(
+        """
+        SELECT s.nombre, rs.cantidad, rs.precio_unitario
+        FROM reserva_servicios AS rs
+        INNER JOIN servicios AS s ON s.id = rs.servicio_id
+        WHERE rs.reserva_id = %(reserva_id)s
+        ORDER BY rs.id
+        """,
+        {"reserva_id": reserva_id},
+    )
+    
     return datos
 
 
