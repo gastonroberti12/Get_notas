@@ -628,3 +628,19 @@ html {
 @media (max-width: 400px) {
     .home-cartelera .pelicula-poster { height: 360px; }
 }
+
+
+/* Carrusel: slides apiladas en la misma celda, sin saltos de altura */
+.carousel-container { display: grid; height: auto; min-height: 0; }
+
+.carousel-slide {
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 440px;
+}
+
+@media (max-width: 768px) {
+    .carousel-slide { min-height: 0; }
+}
