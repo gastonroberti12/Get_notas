@@ -34,16 +34,16 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody>
+                    <tbody>
             {% for f in funciones %}
             <tr>
-              <td>{{ f.pelicula }}</td>
-              <td>{{ f.sala }}</td>
-              <td>{{ f.sucursal }}</td>
-              <td>{{ f.fecha_texto }}</td>
-              <td>${{ f.precio }}</td>
-              <td>{{ 'Activa' if f.activa else 'Dada de baja' }}</td>
-              <td class="admin-actions">
+              <td data-label="Película">{{ f.pelicula }}</td>
+              <td data-label="Sala">{{ f.sala }}</td>
+              <td data-label="Local">{{ f.sucursal }}</td>
+              <td data-label="Fecha y hora">{{ f.fecha_texto }}</td>
+              <td data-label="Precio">${{ f.precio }}</td>
+              <td data-label="Estado">{{ 'Activa' if f.activa else 'Dada de baja' }}</td>
+              <td data-label="Acciones" class="admin-actions">
                 <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
                   class="admin-btn-secondary">Editar</a>
                 <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"
