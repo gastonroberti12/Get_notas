@@ -3,7 +3,8 @@
 {% block title %}{{ 'Editar película' if editando else 'Alta de película' }} | Cine Paradiso{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backoffice.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice_peliculas.css') }}">
 {% endblock %}
 
 {% block content %}
