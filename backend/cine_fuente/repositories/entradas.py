@@ -1,6 +1,8 @@
 from cine_fuente.db import ejecutar_consulta, obtener_conexion
 
 
+
+
 def construir_filtros(filtros):
     condiciones = []
     parametros = {}
@@ -47,6 +49,16 @@ def contar_entradas(filtros):
     """
     filas = ejecutar_consulta(sql, parametros)
     return int(filas[0]["total"])
+
+SQL_ENTRADA = """
+    SELECT e.id, e.reserva_id, e.butaca_id, e.codigo_qr, e.fecha_uso,
+           r.usuario_id, r.estado AS estado_reserva,
+           f.fecha_hora, p.duracion_min
+    FROM entrada AS e
+    INNER JOIN reservas AS r ON r.id = e.reserva_id
+    INNER JOIN funcion AS f ON f.id = r.funcion_id
+    INNER JOIN pelicula AS p ON p.id = f.pelicula_id
+"""
 
 def _una(where, params):
     filas = ejecutar_consulta(SQL_ENTRADA + where, params)
