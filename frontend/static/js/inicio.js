@@ -169,6 +169,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     actualizarIndicadores();
+    
+    // Cambio automatico cada 5 segundos
+    const INTERVALO = 10000;
+
+    if (peliculas.length > 1) {
+        setInterval(() => {
+            mostrarPelicula(indiceActual + 1, 1);
+        }, INTERVALO);
+    }
 
 });
 // ===================================

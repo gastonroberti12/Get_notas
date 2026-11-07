@@ -1,11 +1,11 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import es_admin
 from routes.backoffice.backoffice import backoffice_bp
 
 
 @backoffice_bp.route("/backoffice/servicios", methods=["GET", "POST"]) # asocio servicios_admin al bp backoffice
-def servicios_admin(): # tiene este nombre por que  el url_for en el template barralateral.html busca la funcion con este nombre
+def servicios_admin(): 
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
 
@@ -43,9 +43,11 @@ def servicios_admin(): # tiene este nombre por que  el url_for en el template ba
 def servicios_baja(servicio_id):
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
-
-    llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": False})
-
+    status, cuerpo = llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": False})
+    if status == 204:
+        flash("Servicio dado de baja.", "ok")
+    else:
+        flash(mensaje_error(status, cuerpo, "No se pudo dar de baja el servicio."), "error")
     return redirect(url_for("backoffice.servicios_admin"))
 
 

@@ -59,7 +59,7 @@ def profile():
     
     #pedir datos del usuario y sus reservas al backend
     status, usuario = llamar_api('GET', '/usuarios/me')
-    if status == 401:  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
+    if status in (401, 404):  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
         session.clear()
         return redirect(url_for('users.login'))
     if status != 200:
