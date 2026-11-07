@@ -5,7 +5,7 @@ from routes.backoffice.backoffice import backoffice_bp
 
 
 @backoffice_bp.route("/backoffice/servicios", methods=["GET", "POST"]) # asocio servicios_admin al bp backoffice
-def servicios_admin(): # tiene este nombre por que  el url_for en el template barralateral.html busca la funcion con este nombre
+def servicios_admin(): 
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
 
