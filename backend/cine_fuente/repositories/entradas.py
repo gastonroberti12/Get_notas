@@ -70,7 +70,7 @@ def obtener_entrada_por_id(entrada_id):
 def obtener_entrada_por_codigo_qr(codigo_qr):
     return _una(" WHERE e.codigo_qr = %(v)s", {"v": codigo_qr})
 
-def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
+def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, tolerancia):
     """Solo registra un uso si la entrada sigue siendo válida al escribir."""
     sql = """
         UPDATE entrada AS e
@@ -83,13 +83,14 @@ def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso):
           AND e.fecha_uso IS NULL
           AND r.estado = 'confirmada'
           AND p.duracion_min > 0
-          AND f.fecha_hora <= %(fecha_uso)s
+          AND DATE_SUB(f.fecha_hora, INTERVAL %(tolerancia)s MINUTE) <= %(fecha_uso)s
           AND %(fecha_uso)s < DATE_ADD(f.fecha_hora, INTERVAL p.duracion_min MINUTE)
     """
     parametros = {
         "entrada_id": entrada_id,
         "codigo_qr": codigo_qr,
         "fecha_uso": fecha_uso,
+        "tolerancia": tolerancia,
     }
 
     # ejecutar_escritura devuelve lastrowid, no las filas modificadas.

@@ -59,6 +59,10 @@ Caso 10 - QR correcto dentro del horario de la función:
 Repetir el Caso 9 durante el intervalo desde fecha_hora inclusive hasta
 fecha_hora + duracion_min. Esperado: 200 y fecha_uso informado.
 
+Caso 10b - QR correcto dentro de la tolerancia:
+Función que empieza en 20 min (con tolerancia 30). Esperado: 200.
+La misma con inicio en 40 min. Esperado: 409 FUNCION_FUERA_DE_HORARIO.
+
 Caso 11 - Reutilizar entrada ya validada:
 Repetir el QR después de una validación exitosa.
 Esperado: 409 ENTRADA_YA_UTILIZADA.
