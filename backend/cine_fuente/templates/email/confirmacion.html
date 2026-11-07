@@ -33,6 +33,7 @@
         <td class="qr">
           <img src="cid:{{ cids[loop.index0][1:-1] }}" alt="QR butaca {{ e.fila }}{{ e.numero }}">
           <div><b>Butaca {{ e.fila }}{{ e.numero }}</b></div>
+          <div class="codigo">Código: {{ e.codigo_qr }}</div>
         </td>
         {% endfor %}
       </tr></table>
