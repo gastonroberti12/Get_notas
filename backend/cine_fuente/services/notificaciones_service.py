@@ -40,12 +40,14 @@ def _crear_texto(d):
     butacas = ", ".join(_butaca(e) for e in d["entradas"])
     url = _url_cancelacion(d)
     cancelar = f"\nPodés cancelar hasta 60 min antes de la función: {url}\n" if url else ""
+    codigos = "\n".join(f"{_butaca(e)}: {e['codigo_qr']}" for e in d["entradas"])
     return (
         f"Hola {d['nombre']},\n\nTu reserva #{d['id']} fue confirmada.\n\n"
         f"Película: {d['pelicula']}\nFecha: {_fecha(d)}\n"
         f"Lugar: {d['sucursal']} - {d['sala']}\nButacas: {butacas}\n\n"
+        f"Códigos de ingreso:\n{codigos}\n\n"
         f"{items}\nTotal: ${d['total']}\n{cancelar}\n"
-        "Presentá los QR adjuntos al ingresar a la sala."
+        "Presentá los QR adjuntos (o el código) al ingresar a la sala."
     )
 
 
