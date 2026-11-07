@@ -41,13 +41,12 @@
                     <tbody>
                         {% for p in peliculas %}
                         <tr>
-                            <td>{% if p.poster_url %}<img src="{{ p.poster_url }}" alt="Póster de {{ p.titulo }}"
-                                    class="admin-poster">{% else %}—{% endif %}</td>
-                            <td>{{ p.titulo }}</td>
-                            <td>{{ p.duracion_min ~ ' min' if p.duracion_min else '—' }}</td>
-                            <td>{{ p.clasificacion or '—' }}</td>
-                            <td>{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
-                            <td class="admin-actions">
+                            <td data-label="Póster">{% if p.poster_url %}<img src="{{ p.poster_url }}" alt="Póster de {{ p.titulo }}" class="admin-poster">{% else %}—{% endif %}</td>
+                            <td data-label="Título">{{ p.titulo }}</td>
+                            <td data-label="Duración">{{ p.duracion_min ~ ' min' if p.duracion_min else '—' }}</td>
+                            <td data-label="Clasificación">{{ p.clasificacion or '—' }}</td>
+                            <td data-label="Estado">{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
+                            <td data-label="Acciones" class="admin-actions">
                                 <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
                                    class="admin-btn-secondary">Editar</a>
                                 {% if p.activa %}

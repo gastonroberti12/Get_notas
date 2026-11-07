@@ -251,17 +251,12 @@
 @media (max-width: 760px) {
 
     .admin-panel {
-        width: min(100% - 28px, 560px);
         margin-top: 24px;
     }
 
     .admin-header {
         align-items: flex-start;
         flex-direction: column;
-    }
-
-    .admin-layout {
-        grid-template-columns: 1fr;
     }
 
     .admin-menu {
@@ -415,10 +410,6 @@
 /*responsive */
 
 @media (max-width: 760px) {
-
-    .admin-form-card {
-        padding: 20px;
-    }
 
     .admin-form-dates {
         grid-template-columns: 1fr;
@@ -889,6 +880,9 @@
     .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
     .admin-menu li a { padding: 11px 14px; font-size: 14px; }
 }
+}
+
+
 /* Botón activo del menú lateral */
 .admin-menu li a.admin-menu-active,
 .admin-menu li a.admin-menu-active:hover {
@@ -898,3 +892,84 @@
 }
 
 .admin-section-heading a.admin-btn-primary { color: var(--bg); }
+
+.admin-actions { flex-wrap: wrap; align-items: center; }
+.admin-pager { flex-wrap: wrap; }
+.admin-table th { white-space: nowrap; }
+
+@media (max-width: 1000px) {
+    .admin-panel { width: min(1180px, calc(100% - 32px)); }
+    .admin-charts { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+    .admin-panel { width: calc(100% - 4px); margin-bottom: 40px; }
+    .admin-header { margin-bottom: 20px; gap: 12px; }
+    .admin-form-card { padding: 16px; }
+    .admin-section-heading h2 { font-size: 21px; }
+    .admin-stat { min-height: 0; }
+    .admin-chart { padding: 16px; }
+    .admin-alert { flex-direction: column; }
+    .admin-pager .admin-btn-primary,
+    .admin-pager .admin-btn-secondary { flex: 1 1 auto; }
+    .admin-form-group input,
+    .admin-form-group select,
+    .admin-form-group textarea,
+    .admin-search input { font-size: 16px; }
+
+    /* Tablas: cada fila se convierte en una tarjeta "campo: valor" */
+    .admin-table-wrap { overflow-x: visible; }
+
+    .admin-table,
+    .admin-table tbody,
+    .admin-table tr { display: block; width: 100%; }
+
+    .admin-table thead {
+        position: absolute;
+        width: 1px; height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .admin-table { background: none; }
+
+    .admin-table tr {
+        margin-bottom: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .admin-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 14px;
+        text-align: right;
+    }
+
+    .admin-table td:last-child { border-bottom: 0; }
+
+    .admin-table td::before {
+        content: attr(data-label);
+        flex: none;
+        color: var(--gold);
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .admin-table td.admin-actions,
+    .admin-table td:has(> .admin-actions) { flex-wrap: wrap; justify-content: flex-end; }
+
+    .admin-table td .admin-actions { justify-content: flex-end; }
+}
+
+/* El botón primario dentro de un encabezado conserva su texto oscuro */
+.admin-section-heading a.admin-btn-primary { color: var(--bg); }
+
+@media (max-width: 760px) {
+    .admin-actions form { width: 100%; }
+    .admin-btn-danger { width: 100%; text-align: center; }
+}

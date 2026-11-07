@@ -24,8 +24,22 @@
    --font-mono: 'DM Mono', monospace;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
+img, video, svg, canvas {
+  max-width: 100%;
+}
+
+h1, h2, h3, p {
+  overflow-wrap: break-word;
+}
  
 body {
   margin: 0;

@@ -82,6 +82,7 @@
 
 .catalogo-info {
     flex: 1;
+    min-width: 0;
 }
 
 .catalogo-info h2 {
@@ -139,4 +140,20 @@
         font-size: 32px;
     }
 
+}
+
+@media (max-width: 900px) {
+    .catalogo-item { gap: 22px; padding: 18px; }
+    .catalogo-info h2 { font-size: 25px; margin-bottom: 14px; }
+}
+
+@media (max-width: 600px) {
+    .catalogo { padding: 16px 0 40px; }
+    .catalogo-header { margin-bottom: 24px; }
+    .catalogo-header p { font-size: 15px; }
+    .catalogo-listado { gap: 16px; }
+    .catalogo-item { align-items: stretch; gap: 16px; padding: 16px; }
+    .catalogo-poster { width: 100%; max-width: 200px; }
+    .catalogo-info h2 { font-size: 24px; }
+    .catalogo-datos { gap: 8px; margin-bottom: 16px; }
 }
