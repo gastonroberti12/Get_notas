@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from cine_fuente.repositories import entradas as entradas_repo
 from cine_fuente.services.reservas import entrada_api, normalizar_fecha_local
-from cine_fuente.utils import ahora_gmt3, construir_error_api
+from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 from constants import TOLERANCIA_INGRESO_MIN
 
 
@@ -66,7 +66,14 @@ def validar_entrada(entrada_id, codigo_qr):
         )
 
     entrada["fecha_uso"] = fecha_uso
-    return entrada_api(entrada)
+    resultado = entrada_api(entrada)
+    resultado["detalle"] = {
+        "pelicula": entrada["pelicula_titulo"],
+        "funcion": formatear_fecha_hora(entrada["fecha_hora"]),
+        "sala": entrada["sala_nombre"],
+        "butaca": f"{entrada['fila']}{entrada['numero']}",
+    }
+    return resultado   
 
 
 def validar_por_qr(codigo_qr):
