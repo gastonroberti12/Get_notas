@@ -225,7 +225,7 @@ def checkout():
     )
     entradas = entradas_data.get("entradas", []) if status_entradas == 200 else []
 
-    status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100")
+    status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100&activo=true")
     servicios = servicios_data.get("servicios", []) if status_servicios == 200 else []
     for servicio in servicios:
         servicio["precio_formateado"] = formatear_total(servicio["precio"])
