@@ -236,12 +236,16 @@ main {
 /* ---------- Botón hamburguesa (oculto en pantallas anchas) ---------- */
 .nav-toggle {
   display: none;
+  flex: none;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   gap: 5px;
   width: 44px;
   height: 44px;
-  padding: 0 10px;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
   background: none;
   border: 1px solid var(--border-input);
   border-radius: 8px;
@@ -250,11 +254,14 @@ main {
 
 .nav-toggle span {
   display: block;
+  flex: none;
+  width: 22px;
   height: 2px;
-  background: var(--text);
+  background: #f4f1ea;
   border-radius: 2px;
   transition: transform .25s, opacity .25s;
 }
+
 
 .navbar.menu-abierto .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .navbar.menu-abierto .nav-toggle span:nth-child(2) { opacity: 0; }
