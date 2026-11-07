@@ -815,7 +815,7 @@
     accent-color: var(--gold);
     cursor: pointer;
 }
-=========
+
 /* Edición y baja de películas */
 
 .admin-btn-danger {
@@ -880,7 +880,7 @@
     .admin-menu { display: flex; flex-wrap: wrap; gap: 8px; }
     .admin-menu li a { padding: 11px 14px; font-size: 14px; }
 }
-}
+
 
 
 /* Botón activo del menú lateral */
