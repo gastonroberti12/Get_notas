@@ -123,3 +123,22 @@
 .formulario_link a:hover { 
     color: var(--gold-hover); 
 }
+
+@media (max-width: 600px) {
+    .section-login,
+    .section-registro { margin-top: 8px; padding: 28px 20px; border-radius: 14px; }
+
+    .section-login h1,
+    .section-registro h1 { font-size: 28px; }
+
+    .formulario_campo input { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+    .formulario_fila { flex-direction: column; gap: 18px; }
+}
+
+@media (max-width: 360px) {
+    .section-login,
+    .section-registro { padding: 24px 16px; }
+}
