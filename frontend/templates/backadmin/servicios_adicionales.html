@@ -144,6 +144,10 @@
             </p>
 
             <div class="admin-form-card">
+            
+                {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+                    <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
+                {% endfor %}
 
                 {% if error %}
                     <p class="admin-msg admin-msg-error">{{ error }}</p>
@@ -175,7 +179,8 @@
 
                                         {% if s.activo %}
                                             <form method="POST"
-                                                  action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}">
+                                                  action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}"
+                                                  onsubmit="return confirm('¿Dar de baja este servicio?')">
                                                 <button type="submit" class="admin-btn-secondary">Dar de baja</button>
                                             </form>
                                         {% endif %}
