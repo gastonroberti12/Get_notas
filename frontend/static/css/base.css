@@ -75,6 +75,13 @@
   color: var(--gold);
 }
 
+
+.boton-cines.bloqueado,
+.boton-cines.bloqueado:hover {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
 .nav-submenu {
   display: none;
   position: absolute;
