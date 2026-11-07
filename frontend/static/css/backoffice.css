@@ -964,3 +964,8 @@
 
 /* El botón primario dentro de un encabezado conserva su texto oscuro */
 .admin-section-heading a.admin-btn-primary { color: var(--bg); }
+
+@media (max-width: 760px) {
+    .admin-actions form { width: 100%; }
+    .admin-btn-danger { width: 100%; text-align: center; }
+}
