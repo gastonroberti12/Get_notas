@@ -155,7 +155,7 @@ def checkout():
 
     reserva_id = request.args.get("reserva_id", type=int)
     if not reserva_id:
-        return redirect(url_for("movies.index"))
+        return redirect(url_for("peliculas.inicio"))
 
     if request.method == "POST":
         for clave, cantidad_texto in request.form.items():

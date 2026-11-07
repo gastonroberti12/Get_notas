@@ -1,6 +1,6 @@
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 from constants import CAMPOS_SERVICIOS_PERMITIDOS
-
+from cine_fuente.utils import ahora_gmt3
 
 # Auxiliar para construir filtros de servicios
 def construir_filtros_servicios(nombre=None, activo=None):
@@ -155,14 +155,16 @@ def eliminar_servicio(servicio_id):
 
 
 #obtiene duenio, estado y si está dentro de los 10 minutos. Esta es la que podríamos reemplazar si tu compañero ya tiene una equivalente.
-def consultar_reserva_para_servicios(reserva_id, fecha_limite):
+def consultar_reserva_para_servicios(reserva_id):
     sql = """
         SELECT id, usuario_id, estado,
-               fecha_compra > %(fecha_limite)s AS vigente
-        FROM reservas WHERE id = %(reserva_id)s
+               fecha_compra + INTERVAL 10 MINUTE > %(ahora)s AS vigente
+        FROM reservas
+        WHERE id = %(reserva_id)s
     """
-
-    resultado = ejecutar_consulta(sql, {"reserva_id": reserva_id})
+    resultado = ejecutar_consulta(
+        sql, {"reserva_id": reserva_id, "ahora": ahora_gmt3().replace(tzinfo=None)}
+    )
     return resultado[0] if resultado else None
 
 

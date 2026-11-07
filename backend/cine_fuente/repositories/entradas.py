@@ -53,7 +53,7 @@ def contar_entradas(filtros):
 SQL_ENTRADA = """
     SELECT e.id, e.reserva_id, e.butaca_id, e.codigo_qr, e.fecha_uso,
            r.usuario_id, r.estado AS estado_reserva,
-           f.fecha_hora, p.duracion_min, p.titulo AS pelicula_titulo
+           f.fecha_hora, p.duracion_min, p.titulo AS pelicula_titulo,
            s.nombre AS sala_nombre, b.fila, b.numero
     FROM entrada AS e
     INNER JOIN reservas AS r ON r.id = e.reserva_id
