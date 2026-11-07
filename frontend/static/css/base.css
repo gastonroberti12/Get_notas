@@ -314,8 +314,10 @@ main {
     padding-top: 6px;
     border-top: 1px solid var(--border);
     white-space: normal;
+    max-height: calc(100vh - 88px);
+    overflow-y: auto;
   }
-
+  
   .navbar.menu-abierto nav { display: flex; }
 
   .navbar nav > a,

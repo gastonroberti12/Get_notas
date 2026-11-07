@@ -192,17 +192,6 @@
 
 /*  Responsive  */
 
-@media (max-width: 700px) {
-
-    .detalle {
-        flex-direction: column;
-    }
-
-    .detalle-poster {
-        width: 200px;
-    }
-
-}
 
 @media (max-width: 900px) {
     .detalle { gap: 28px; }
@@ -210,6 +199,7 @@
 }
 
 @media (max-width: 700px) {
+    .detalle { flex-direction: column; }
     .detalle-poster { width: min(240px, 70%); }
     .detalle-sin-poster { height: auto; aspect-ratio: 2 / 3; }
     .detalle-info { width: 100%; }
