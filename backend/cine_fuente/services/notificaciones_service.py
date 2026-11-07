@@ -6,6 +6,14 @@ from html import escape
 from cine_fuente.services.qr_service import generar_qr_png
 
 
+def _resumen_items(datos_reserva):
+    items = [("Entrada", len(datos_reserva.get("entradas", [])), datos_reserva["precio_entrada"])]
+    items += [
+        (s["nombre"], s["cantidad"], s["precio_unitario"])
+        for s in datos_reserva.get("servicios", [])
+    ]
+    return "\n".join(f"{c} x {nombre} ${p} = ${c * p}" for nombre, c, p in items)
+
 def _url_cancelacion(datos_reserva):
     base = os.getenv("FRONTEND_URL")
     return f"{base}/reservas/{datos_reserva['id']}/cancelar" if base else None
@@ -74,8 +82,9 @@ def _crear_cuerpo(datos_reserva):
     return (
         f"Hola {datos_reserva.get('nombre', '')} {datos_reserva.get('apellido', '')},\n\n"
         f"Tu reserva #{datos_reserva['id']} fue confirmada.\n"
-        f"Función: {datos_reserva['funcion_id']}\n"
-        f"Total: {datos_reserva.get('total', 0)}\n\n"
+        f"Función: {datos_reserva['funcion_id']}\n\n"
+        f"Detalle:\n{_resumen_items(datos_reserva)}\n"
+        f"Total: ${datos_reserva.get('total', 0)}\n\n"
         f"Códigos QR:\n{codigos_qr or '- No hay entradas asociadas.'}\n"
         f"{enlace}"
     )
