@@ -15,3 +15,17 @@ function detenerCamara() {
     video.hidden = true;
     botonCamara.textContent = 'Escanear con la cámara';
 }
+
+
+async function buscarQr(detector) {
+    if (!flujo) return;
+    const codigos = await detector.detect(video);
+    if (codigos.length > 0) {
+        campoCodigo.value = codigos[0].rawValue;
+        detenerCamara();
+        formulario.submit();
+        return;
+    }
+    requestAnimationFrame(() => buscarQr(detector));
+}
+
