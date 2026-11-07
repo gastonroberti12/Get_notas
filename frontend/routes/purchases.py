@@ -173,7 +173,7 @@ def checkout():
                 f"/reservas/{reserva_id}/servicios",
                 {"servicio_id": servicio_id, "cantidad": cantidad},
             )
-            if status_servicio not in (201, 409):
+            if status_servicio != 201:
                 flash("No se pudo agregar un servicio adicional.", "error")
                 return redirect(url_for(
                     "purchases.checkout",

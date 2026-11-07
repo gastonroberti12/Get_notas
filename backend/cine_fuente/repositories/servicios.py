@@ -155,12 +155,11 @@ def eliminar_servicio(servicio_id):
 
 
 #obtiene duenio, estado y si está dentro de los 10 minutos. Esta es la que podríamos reemplazar si tu compañero ya tiene una equivalente.
-def consultar_reserva_para_servicios(reserva_id):
+def consultar_reserva_para_servicios(reserva_id, fecha_limite):
     sql = """
         SELECT id, usuario_id, estado,
-               fecha_compra + INTERVAL 10 MINUTE > NOW() AS vigente
-        FROM reservas
-        WHERE id = %(reserva_id)s
+               fecha_compra > %(fecha_limite)s AS vigente
+        FROM reservas WHERE id = %(reserva_id)s
     """
 
     resultado = ejecutar_consulta(sql, {"reserva_id": reserva_id})
