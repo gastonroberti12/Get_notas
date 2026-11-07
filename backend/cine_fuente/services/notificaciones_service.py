@@ -54,10 +54,17 @@ def _crear_cuerpo(datos_reserva):
         f"- Butaca {entrada['butaca_id']}: {entrada.get('codigo_qr')}"
         for entrada in entradas
     )
+    base = os.getenv("FRONTEND_URL")
+    enlace = (
+        f"\nCancelar (hasta 60 min antes de la función): "
+        f"{base}/reservas/{datos_reserva['id']}/cancelar\n"
+        if base else ""
+    )
     return (
         f"Hola {datos_reserva.get('nombre', '')} {datos_reserva.get('apellido', '')},\n\n"
         f"Tu reserva #{datos_reserva['id']} fue confirmada.\n"
         f"Función: {datos_reserva['funcion_id']}\n"
         f"Total: {datos_reserva.get('total', 0)}\n\n"
         f"Códigos QR:\n{codigos_qr or '- No hay entradas asociadas.'}\n"
+        f"{enlace}"
     )

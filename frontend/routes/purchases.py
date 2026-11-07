@@ -6,10 +6,12 @@ from routes.roles import esta_logueado
 purchases_bp = Blueprint("purchases", __name__)
 
 
-@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['POST'])
+@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['GET', 'POST'])
 def cancelar_reserva(reserva_id):
     if not esta_logueado():
         return redirect(url_for('users.login'))
+    if request.method == 'GET':
+        return render_template('cancelar_reserva.html', reserva_id=reserva_id)
     # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
     status, cuerpo = llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
     if status in (200, 204):
