@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta, timezone
 from uuid import uuid4
 
+from constants import RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
 from cine_fuente.repositories.butacas import obtener_butacas
@@ -31,7 +32,9 @@ def reserva_api(fila):
         "usuario_id": int(fila["usuario_id"]),
         "funcion_id": int(fila["funcion_id"]),
         "fecha_compra": formatear_fecha_hora(fecha_compra),
-        "fecha_expiracion": formatear_fecha_hora(fecha_compra + timedelta(minutes=8)),
+        "fecha_expiracion": formatear_fecha_hora(
+            fecha_compra + timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
+        ),
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
@@ -251,7 +254,9 @@ def confirmar_pago(reserva_id, usuario):
         )
 
     codigos_qr = [(int(entrada["id"]), str(uuid4())) for entrada in entradas]
-    fecha_limite = (ahora - timedelta(minutes=10)).replace(tzinfo=None)
+    fecha_limite = (
+        ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
+    ).replace(tzinfo=None)
     actualizada = compras_repo.confirmar_reserva_con_qr(
         reserva_id, codigos_qr, fecha_limite
     )

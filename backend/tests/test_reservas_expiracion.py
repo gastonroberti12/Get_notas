@@ -2,8 +2,9 @@ from datetime import datetime
 
 from cine_fuente.services.reservas import reserva_api
 
-
-def test_reserva_expira_diez_minutos_despues_de_crearse():
+#define el tiempo de expiración de una reserva en minutos
+RESERVA_EXPIRACION_MINUTOS = 8
+def test_reserva_expiracion():
     reserva = reserva_api({
         "id": 12,
         "usuario_id": 4,
@@ -13,5 +14,5 @@ def test_reserva_expira_diez_minutos_despues_de_crearse():
         "fecha_cancelacion": None,
         "total": 7500,
     })
-
-    assert reserva["fecha_expiracion"] == "2026-11-06T10:10:00.000000-03:00"
+#la fecha de expiración esperada sumando 8 minutos a la fecha de compra
+    assert reserva["fecha_expiracion"] == "2026-11-06T10:08:00.000000-03:00"

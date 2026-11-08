@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from constants import RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion, ejecutar_actualizacion
 
 TOTAL_RESERVA_SQL = """
@@ -498,8 +499,10 @@ def eliminar_entradas_reserva(reserva_id):
 
 
 def procesar_reservas_vencidas(ahora):
-    """Expira reservas con diez minutos o más."""
-    fecha_limite = (ahora - timedelta(minutes=10)).replace(tzinfo=None)
+    """Expira reservas que superaron el plazo configurado."""
+    fecha_limite = (
+        ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
+    ).replace(tzinfo=None)
     sql = """
         UPDATE reservas
         SET estado = 'expirada'
