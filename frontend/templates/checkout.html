@@ -18,7 +18,7 @@
     {% if reserva.estado == "pendiente" %}
     <div class="checkout-plazo" id="plazo-pago" data-expira-en="{{ reserva.fecha_expiracion }}">
         <span>Tiempo para completar el pago</span>
-        <strong id="tiempo-restante" role="timer" aria-live="polite">10:00</strong>
+        <strong id="tiempo-restante" role="timer" aria-live="polite">8:00</strong>
         <p id="plazo-vencido" hidden>
             El plazo venció. <a href="{{ url_for('purchases.seleccion_butacas', funcion_id=reserva.funcion_id) }}">Volvé a elegir tus butacas.</a>
         </p>

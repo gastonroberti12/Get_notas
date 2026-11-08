@@ -31,7 +31,7 @@ def reserva_api(fila):
         "usuario_id": int(fila["usuario_id"]),
         "funcion_id": int(fila["funcion_id"]),
         "fecha_compra": formatear_fecha_hora(fecha_compra),
-        "fecha_expiracion": formatear_fecha_hora(fecha_compra + timedelta(minutes=10)),
+        "fecha_expiracion": formatear_fecha_hora(fecha_compra + timedelta(minutes=8)),
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
