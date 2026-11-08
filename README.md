@@ -31,11 +31,12 @@ Desde la raíz del proyecto:
 docker compose up -d
 ```
 
-Para construir o reconstruir las imágenes después de actualizar el código:
+Para construir o reconstruir las imágenes después de actualizar el código (Repo remoto):
 
 ```powershell
 git pull
-docker compose up -d --build frontend backend
+docker compose up -d --build 
+
 ```
 
 Docker levantará MySQL, el backend Flask en el puerto 5001 y el frontend Flask en el puerto 5000.
