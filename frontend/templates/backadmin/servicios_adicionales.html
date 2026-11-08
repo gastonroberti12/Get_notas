@@ -145,7 +145,7 @@
 
             <div class="admin-form-card">
             
-                <div class="admin-actions">
+                <div class="admin-actions admin-filtro">
                         <a href="{{ url_for('backoffice.servicios_admin') }}"
                             class="{{ 'admin-btn-secondary' if ver_inactivos else 'admin-btn-primary' }}">Activos</a>
                         
@@ -169,7 +169,6 @@
                                 <th>Nombre</th>
                                 <th>Descripción</th>
                                 <th>Precio</th>
-                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -180,18 +179,19 @@
                                 <td data-label="Nombre">{{ s.nombre }}</td>
                                 <td data-label="Descripción">{{ s.descripcion or "—" }}</td>
                                 <td data-label="Precio">${{ s.precio }}</td>
-                                <td data-label="Estado">{{ "Activo" if s.activo else "Inactivo" }}</td>
-                                <td data-label="Acciones" class="admin-actions">
-                                    <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
-                                    class="admin-btn-secondary">Editar</a>
-
-                                    {% if s.activo %}
-                                    <form method="POST"
-                                        action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}"
-                                        onsubmit="return confirm('¿Dar de baja este servicio?')">
-                                        <button type="submit" class="admin-btn-secondary">Dar de baja</button>
-                                    </form>
-                                    {% endif %}
+                                <td data-label="Acciones">
+                                    <div class="admin-actions">
+                                        <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
+                                           class="admin-btn-secondary">Editar</a>
+                                        <form method="POST"
+                                              action="{{ url_for('backoffice.servicios_estado', servicio_id=s.id) }}"
+                                              {% if s.activo %}onsubmit="return confirm('¿Dar de baja este servicio?')"{% endif %}>
+                                            <input type="hidden" name="activo" value="{{ 'false' if s.activo else 'true' }}">
+                                            <button type="submit" class="admin-btn-secondary">
+                                                {{ 'Dar de baja' if s.activo else 'Dar de alta' }}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -202,8 +202,12 @@
                 {% else %}
                     <div class="admin-empty-chart">
                         <span class="admin-chart-icon">▥</span>
-                        <p>Sin servicios para mostrar</p>
-                        <small>Agregá el primero con el formulario de arriba.</small>
+                        {% if ver_inactivos %}
+                            <p>No hay servicios dados de baja</p>
+                        {% else %}
+                            <p>Sin servicios para mostrar</p>
+                            <small>Agregá el primero con el formulario de arriba.</small>
+                        {% endif %}
                     </div>
                 {% endif %}
 

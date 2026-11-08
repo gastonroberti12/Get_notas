@@ -439,6 +439,9 @@
 .admin-camara { margin-top: 12px; }
 .admin-camara video { display: block; width: 100%; max-width: 420px; margin-top: 10px; border-radius: 12px; background: #000; }
 
+/* Botones para filtrar activos / dados de baja */
+.admin-filtro { margin-bottom: 16px; }
+
 /* ============ RESPONSIVE ============ */
 
 /* Tablets */

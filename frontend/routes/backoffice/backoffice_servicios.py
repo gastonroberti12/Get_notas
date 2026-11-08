@@ -42,17 +42,20 @@ def servicios_admin():
         ver_inactivos=ver_inactivos
     )
 
-@backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/baja", methods=["POST"])
-def servicios_baja(servicio_id):
+@backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/estado", methods=["POST"])
+def servicios_estado(servicio_id):
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
-    status, cuerpo = llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": False})
+    activo = request.form.get("activo") == "true"
+    accion = "dado de alta" if activo else "dado de baja"
+    status, cuerpo = llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": activo})
     if status == 204:
-        flash("Servicio dado de baja.", "ok")
+        flash(f"Servicio {accion}.", "ok")
     else:
-        flash(mensaje_error(status, cuerpo, "No se pudo dar de baja el servicio."), "error")
+        flash(mensaje_error(status, cuerpo, f"No se pudo dejar el servicio {accion}."), "error")
+    if activo:
+        return redirect(url_for("backoffice.servicios_admin", estado="inactivos"))
     return redirect(url_for("backoffice.servicios_admin"))
-
 
 @backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/editar", methods=["GET", "POST"])
 def servicios_editar(servicio_id):
