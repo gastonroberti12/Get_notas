@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.4
+    image: mariadb:10.11
     container_name: mysql-cine-paradiso
     restart: unless-stopped
     environment:
