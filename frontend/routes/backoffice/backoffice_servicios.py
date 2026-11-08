@@ -30,13 +30,16 @@ def servicios_admin():
 
             error_alta = mensaje_error(status, cuerpo, "No se pudo crear el servicio.")
 
-    status, datos = llamar_api("GET", "/servicios?_limit=100")
+    ver_inactivos = request.args.get("estado") == "inactivos"
+    filtro = "false" if ver_inactivos else "true"
+    status, datos = llamar_api("GET", f"/servicios?_limit=100&activo={filtro}")
 
     return render_template(
         "backadmin/servicios_adicionales.html",
         servicios=datos.get("servicios", []) if status in (200, 204) else [],
         error=None if status in (200, 204) else mensaje_error(status, datos, "No se pudieron obtener los servicios."),
-        error_alta=error_alta
+        error_alta=error_alta,
+        ver_inactivos=ver_inactivos
     )
 
 @backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/baja", methods=["POST"])
