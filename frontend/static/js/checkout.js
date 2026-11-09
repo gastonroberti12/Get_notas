@@ -3,6 +3,34 @@ const entradas = Number(document.getElementById('entradas').value);
 const precioEntrada = Number(document.getElementById('precio-entrada').value);
 const resumenServicios = document.getElementById('resumen-servicios');
 const errorBox = document.getElementById('checkout-error');
+const plazoPago = document.getElementById('plazo-pago');
+
+if (plazoPago) {
+  const vencimiento = Date.parse(plazoPago.dataset.expiraEn);
+  const tiempoRestante = document.getElementById('tiempo-restante');
+  const avisoVencido = document.getElementById('plazo-vencido');
+
+  function actualizarCuentaRegresiva() {
+    const milisegundos = vencimiento - Date.now();
+    if (!Number.isFinite(vencimiento) || milisegundos <= 0) {
+      tiempoRestante.textContent = '00:00';
+      avisoVencido.hidden = false;
+      form.hidden = true;
+      return false;
+    }
+
+    const segundos = Math.floor(milisegundos / 1000);
+    const minutos = Math.floor(segundos / 60);
+    const restoSegundos = segundos % 60;
+    tiempoRestante.textContent = `${String(minutos).padStart(2, '0')}:${String(restoSegundos).padStart(2, '0')}`;
+    return true;
+  }
+
+  const intervaloCuentaRegresiva = window.setInterval(() => {
+    if (!actualizarCuentaRegresiva()) window.clearInterval(intervaloCuentaRegresiva);
+  }, 1000);
+  actualizarCuentaRegresiva();
+}
 
 // Formatea un número como precio: 9500 -> "$ 9.500"
 const formatear = (n) => '$ ' + n.toLocaleString('es-AR');
@@ -82,6 +110,7 @@ form.addEventListener('submit', (e) => {
 
   errorBox.hidden = valido;
   errorBox.textContent = 'Revisá los datos de la tarjeta.';
+  if (!valido) e.preventDefault();
 
 });
 

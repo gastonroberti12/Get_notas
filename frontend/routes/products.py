@@ -1,13 +1,21 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort
 from api_cliente import llamar_api, mensaje_error
 from datos_perfil import parsear_fecha
+from sucursales import contexto_sucursales
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
 
+# Filtro de sucursal para el backend (vacío si no hay sucursales disponibles).
+def filtro_sucursal():
+    _, actual = contexto_sucursales()
+    if actual is None:
+        return ""
+    return f"&sucursal_id={actual['id']}"
+
 # Obtener listados del backend
-def obtener_listado(endpoint, clave):
-    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100")
+def obtener_listado(endpoint, clave, filtros=""):
+    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100{filtros}")
 
     if status not in (200, 204):
         return [], mensaje_error(status, datos, "No se pudieron obtener los datos.")
@@ -23,7 +31,8 @@ def inicio():
     # Obtener películas del backend
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
-        "peliculas"
+        "peliculas",
+        filtro_sucursal()
     )
 
     # Primeras cinco películas para el carrusel
@@ -52,7 +61,8 @@ def listado_peliculas():
 
     peliculas, error_peliculas = obtener_listado(
         "peliculas",
-        "peliculas"
+        "peliculas",
+        filtro_sucursal()
     )
 
     return render_template(
@@ -72,7 +82,7 @@ def detalle_pelicula(pelicula_id):
     if status != 200:
         abort(500)
 
-    status, datos = llamar_api("GET", f"/funciones?pelicula_id={pelicula_id}&activa=true")
+    status, datos = llamar_api("GET", f"/funciones?pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
     funciones = datos.get("funciones", []) if status == 200 else []
     for f in funciones:
         fecha = parsear_fecha(f.get("fecha_hora"))

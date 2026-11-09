@@ -4,10 +4,11 @@ from flask import Flask, render_template
 from routes.products import peliculas_bp
 from routes.cines import cines_bp
 from routes.users import users_bp
-from routes.backoffice import backoffice_bp
+from routes.backoffice.backoffice import backoffice_bp
 from routes.purchases import purchases_bp
 from routes.roles import esta_logueado, es_admin, es_cliente
 from manejo_errorers import registrar_error_handlers
+from sucursales import contexto_sucursales
 
 load_dotenv()
 
@@ -25,6 +26,8 @@ def create_app():
 
     registrar_error_handlers(app)
 
+    # Expone sucursales y sucursal_actual a todas las plantillas que se renderizan
+    app.context_processor(lambda: dict(zip(("sucursales", "sucursal_actual"), contexto_sucursales())))
     
     # Context processors para que las funciones de roles estén disponibles en todas las plantillas. esto le pasa al render_template el rol segun lo q tenga el template
     app.context_processor(lambda: {'esta_logueado': esta_logueado, 'es_admin': es_admin, 'es_cliente': es_cliente})

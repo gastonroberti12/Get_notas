@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Función | Cine Paradiso{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">{% endblock %}
+
+{% block content %}
+{% set editando = funcion and funcion.id %}
+<section class="admin-panel">
+  <div class="admin-header">
+    <div>
+      <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+      <h1>Gestión de funciones</h1>
+    </div>
+    <span class="admin-role">Administrador</span>
+  </div>
+  <div class="admin-layout">
+    {% include "backadmin/barralateral.html" %}
+    <div class="admin-content">
+      <div class="admin-section-heading"><h2>{{ 'Editar función' if editando else 'Agregar función' }}</h2></div>
+      {% include "backadmin/mensajes.html" %}
+      <div class="admin-form-card">
+        <form method="post" class="admin-form"
+              action="{{ url_for('backoffice.editar_funcion', funcion_id=funcion.id) if editando else url_for('backoffice.nueva_funcion') }}">
+
+          <div class="admin-form-group">
+            <label for="pelicula_id">Película</label>
+            <select id="pelicula_id" name="pelicula_id" required>
+              <option value="">Seleccioná una película</option>
+              {% for p in peliculas %}
+              <option value="{{ p.id }}" {{ 'selected' if funcion.pelicula_id|string == p.id|string }}>{{ p.titulo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="sala_id">Sala</label>
+            <select id="sala_id" name="sala_id" required>
+              <option value="">Seleccioná una sala</option>
+              {% for s in salas %}
+              <option value="{{ s.id }}" {{ 'selected' if funcion.sala_id|string == s.id|string }}>{{ s.sucursal }} · {{ s.nombre }} ({{ s.capacidad }} butacas)</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="fecha_hora">Fecha y hora</label>
+            <input type="datetime-local" id="fecha_hora" name="fecha_hora" value="{{ funcion.fecha_hora }}" required>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="precio">Precio</label>
+            <input type="number" id="precio" name="precio" min="1" step="1" value="{{ funcion.precio }}" required>
+          </div>
+
+          <div class="admin-form-actions">
+            <a href="{{ url_for('backoffice.funciones_admin') }}" class="admin-btn-secondary">Cancelar</a>
+            <button type="submit" class="admin-btn-primary">{{ 'Guardar cambios' if editando else 'Crear función' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

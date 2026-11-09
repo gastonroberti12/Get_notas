@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Validación de entradas | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-panel">
+
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+
+            <h1>Validación de entradas</h1>
+
+            <p class="admin-subtitle">
+                Verificá las entradas para permitir el ingreso a las salas.
+            </p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        {% include "backadmin/barralateral.html" %}
+
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Validar entrada</h2>
+            </div>
+
+            <p class="admin-description">
+                Ingresá los datos de la entrada para comprobar
+                su validez y autorizar el ingreso.
+            </p>
+
+            <div class="admin-form-card">
+
+                <form class="admin-form" method="post" id="form-validar" action="{{ url_for('backoffice.validar_qr_admin') }}">
+
+                    <!--CODIGOQR-->
+                    <div class="admin-form-group">
+
+                        <label for="codigo_qr">
+                            Código QR
+                        </label>
+
+                        <input type="text" id="codigo_qr" name="codigo_qr" autocomplete="off" autofocus
+                            placeholder="Escaneá o ingresá el código de la entrada" required>
+
+                        <small>
+                            El código debe coincidir con el QR
+                            generado al confirmar la compra.
+                        </small>
+
+                        <div class="admin-camara">
+                            <button type="button" id="btn-camara" class="admin-btn-secondary">
+                                Escanear con la cámara
+                            </button>
+                            <p id="camara-aviso" class="admin-form-help"></p>
+                            <video id="camara" playsinline muted hidden></video>
+                        </div>
+
+                    </div>
+
+                    <div class="admin-form-info">
+
+                        <h3>Verificación de ingreso</h3>
+
+                        <p>
+                            El sistema comprobará que la reserva esté
+                            confirmada, que la entrada no haya sido
+                            utilizada y que corresponda a una función
+                            en curso.
+                        </p>
+
+                    </div>
+
+                    <div class="admin-form-actions">
+
+                        <a href="{{ url_for('backoffice.panel') }}" class="admin-btn-secondary">
+                            Volver al panel
+                        </a>
+
+                        <button type="submit" class="admin-btn-primary">
+                            Validar entrada
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Resultado -->
+            <div class="admin-section-heading admin-list-heading">
+                <h2>Resultado de la validación</h2>
+            </div>
+
+            <p class="admin-description">
+                El resultado de la verificación aparecerá
+                en esta sección.
+            </p>
+            <div class="admin-form-card">
+                {% if resultado %}
+                <div class="validacion-resultado {{ 'valida' if resultado.ok else 'rechazada' }}">
+                    <h3>{{ "✔ Entrada válida" if resultado.ok else "✖ Entrada rechazada" }}</h3>
+                    <p>{{ resultado.mensaje }}</p>
+                    {% if resultado.detalle %}
+                    <p>{{ resultado.detalle.pelicula }}</p>
+                    <p>{{ resultado.detalle.sala }} · butaca {{ resultado.detalle.butaca }}</p>
+                    <p>Función: {{ resultado.detalle.funcion }}</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="admin-empty-chart">
+                    <span class="admin-chart-icon">▥</span>
+                    <p>Sin validaciones realizadas</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+
+</section>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/qr_scanner.js') }}"></script>
+{% endblock %}
+

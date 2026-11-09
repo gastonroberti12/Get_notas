@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Funciones | Cine Paradiso{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">{% endblock %}
+
+{% block content %}
+<section class="admin-panel">
+  <div class="admin-header">
+    <div>
+      <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+      <h1>Gestión de funciones</h1>
+    </div>
+    <span class="admin-role">Administrador</span>
+  </div>
+  <div class="admin-layout">
+    {% include "backadmin/barralateral.html" %}
+    <div class="admin-content">
+      <div class="admin-section-heading admin-heading-listado">
+        <h2>Funciones</h2>
+        <a href="{{ url_for('backoffice.nueva_funcion') }}" class="admin-btn-primary">Agregar función</a>
+      </div>
+      {% include "backadmin/mensajes.html" %}
+      {% if funciones %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Película</th>
+              <th>Sala</th>
+              <th>Local</th>
+              <th>Fecha y hora</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+                    <tbody>
+            {% for f in funciones %}
+            <tr>
+              <td data-label="Película">{{ f.pelicula }}</td>
+              <td data-label="Sala">{{ f.sala }}</td>
+              <td data-label="Local">{{ f.sucursal }}</td>
+              <td data-label="Fecha y hora">{{ f.fecha_texto }}</td>
+              <td data-label="Precio">${{ f.precio }}</td>
+              <td data-label="Estado">{{ 'Activa' if f.activa else 'Dada de baja' }}</td>
+              <td data-label="Acciones" class="admin-actions">
+                <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
+                  class="admin-btn-secondary">Editar</a>
+                <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"
+                  data-confirmar="{{ '¿Dar de baja esta función?' if f.activa else '¿Dar de alta esta función?' }}"
+                  onsubmit="return confirm(this.dataset.confirmar)">
+                  <input type="hidden" name="activa" value="{{ 'false' if f.activa else 'true' }}">
+                  <button type="submit" class="admin-btn-secondary">{{ 'Dar de baja' if f.activa else 'Dar de alta'
+                    }}</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% elif not error %}
+      <p class="admin-description">Todavía no hay funciones cargadas.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

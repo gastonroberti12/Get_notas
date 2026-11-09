@@ -37,18 +37,18 @@ Esperado: 404.
 Caso 7 - Cliente consulta entrada ajena:
 Esperado: 403.
 
--- POST /entradas/{id}/validacion (administrador)
+-- POST /entradas/validacion (administrador)
 
-Caso 8 - QR incorrecto:
-POST /entradas/{{entradaPruebaId}}/validacion
+Caso 8 - QR inexistente:
+POST /entradas/validacion
 Authorization: Bearer {{adminToken}}
 {
   "codigo_qr": "QR_INCORRECTO"
 }
-Esperado: 400.
+Esperado: 404 ENTRADA_NO_ENCONTRADA.
 
 Caso 9 - QR correcto antes del horario de la función:
-POST /entradas/{{entradaPruebaId}}/validacion
+POST /entradas/validacion
 Authorization: Bearer {{adminToken}}
 {
   "codigo_qr": "{{codigoQrPrueba}}"
@@ -59,18 +59,28 @@ Caso 10 - QR correcto dentro del horario de la función:
 Repetir el Caso 9 durante el intervalo desde fecha_hora inclusive hasta
 fecha_hora + duracion_min. Esperado: 200 y fecha_uso informado.
 
+Caso 10b - QR correcto dentro de la tolerancia:
+Función que empieza en 10 min (con tolerancia 15) Esperado: 200.
+La misma con inicio en 30 min. Esperado: 409 FUNCION_FUERA_DE_HORARIO.
+
 Caso 11 - Reutilizar entrada ya validada:
 Repetir el QR después de una validación exitosa.
 Esperado: 409 ENTRADA_YA_UTILIZADA.
 
 Caso 12 - Intentar validar con rol cliente:
-POST /entradas/{{entradaPruebaId}}/validacion
+POST /entradas/validacion
 Authorization: Bearer {{clienteToken}}
-Esperado: 403. El controlador actual exige administrador.
+{
+  "codigo_qr": "{{codigoQrPrueba}}"
+}
+Esperado: 403.
 
-Caso 13 - Body con campos adicionales o sin codigo_qr:
-Esperado: 400.
+Caso 13 - Body inválido:
+POST /entradas/validacion
+Authorization: Bearer {{adminToken}}
+{}
+Esperado: 400 ERROR_VALIDACION.
 
-La validación del QR es atómica y el código se compara con el QR generado
-por el pago. Para obtener el código, primero pagar la reserva y luego llamar
-GET /reservas/{id}/entradas.
+La validación busca la entrada por el código QR generado en el pago y
+registra el uso de forma atómica. Para obtener el código, primero pagar
+la reserva y luego llamar GET /reservas/{id}/entradas.

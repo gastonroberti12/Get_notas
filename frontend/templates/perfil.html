@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cartel_cancelar.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -29,10 +30,6 @@
             <label class="formulario_campo">
                 <span>Email</span>
                 <input type="email" name="email" value="{{ perfil.email }}" required disabled>
-            </label>
-            <label class="formulario_campo solo-edicion">
-                <span>Nueva contraseña <small>(opcional)</small></span>
-                <input type="password" name="password" minlength="8" disabled>
             </label>
 
             <p class="formulario_alerta oculto"></p>
@@ -65,76 +62,57 @@
             (reservas_historial, 'Todavía no tenés historial de compras.')] %}
         <div class="panel-tab">
 
-            <!-- Una tarjeta por reserva -->
+            <!-- Una caja por entrada -->
             {% for reserva in reservas %}
+            {% for entrada in reserva.entradas %}
             <article class="reserva">
                 <div class="reserva_poster">{% if reserva.poster %}<img src="{{ reserva.poster }}" alt="Póster de {{ reserva.pelicula }}">{% endif %}</div>
 
-                 <!-- Título y estado de la reserva -->
-                <div class="reserva_info">
-                    <div class="reserva_cabecera">
-                        <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
-                        {% if reserva.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
-                        {% elif reserva.estado == 'finalizada' %}<span class="estado estado_finalizada">finalizada</span>
-                        {% else %}<span class="estado estado_cancelada">cancelada</span>{% endif %}
-                    </div>
+                    <!-- Título y estado de la reserva -->
+                    <div class="reserva_info">
 
-                    <!-- Función y butacas -->
-                    <p class="reserva_detalle">{{ reserva.fecha_funcion }} · {{ reserva.hora_funcion }} hs</p>
-                    <p class="reserva_detalle">{{ reserva.sucursal }} · {{ reserva.sala }} · Butacas {{ reserva.butacas | join(', ') }}</p>
-                    
-                    <!-- Servicios adicionales contratados -->
-                    {% for servicio in reserva.servicios %}<p class="reserva_detalle reserva_servicio">{{ servicio }}</p>{% endfor %}
-
-                    <!-- Total y botones de acción -->
-                    <div class="reserva_pie">
-                        <strong class="reserva_total">${{ reserva.total }}</strong>
-                        <div class="reserva_botones">
-                            
-                            {% if reserva.entradas %}<button type="button" class="reserva_ver_entradas">Ver entradas</button>{% endif %}
-
-                            <!-- Cancelar reserva -->
-                            {% if reserva.cancelable %}
-                            <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
-                                <button type="submit" class="reserva_cancelar">Cancelar reserva</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- VISOR DE ENTRADAS -->
-                    {% if reserva.entradas %}
-                    <div class="visor oculto">
-                      <div class="visor_panel">
-                        <button type="button" class="visor_cerrar">X</button>
-                        <h3 class="visor_titulo">{{ reserva.pelicula }}</h3>
-
-                        <div class="visor_butacas">
-                            {% for entrada in reserva.entradas %}
-                            <button type="button" class="visor_butaca">Butaca {{ entrada.butaca }}</button>
-                            {% endfor %}
+                        <div class="reserva_cabecera">
+                            <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
+                            {% if reserva.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
+                            {% elif reserva.estado == 'finalizada' %}<span class="estado estado_finalizada">finalizada</span>
+                            {% else %}<span class="estado estado_cancelada">cancelada</span>{% endif %}
                         </div>
 
-                        <!-- Una entrada por butaca: QR, código y datos de la función -->
-                        {% for entrada in reserva.entradas %}
-                        <div class="visor_entrada">
-                            {% if entrada.qr %}<img class="visor_qr" src="{{ entrada.qr }}" alt="Código QR">
-                            {% else %}<p class="visor_sin_qr">Código QR</p>{% endif %}
-                            <p class="entrada_codigo">{{ entrada.codigo_qr }}</p>
-                            <div class="visor_datos">
-                                <div class="visor_dato"><span>Butaca</span><strong>{{ entrada.butaca }}</strong></div>
-                                <div class="visor_dato"><span>Sala</span><strong>{{ reserva.sala }}</strong></div>
-                                <div class="visor_dato"><span>Cine</span><strong>{{ reserva.sucursal }}</strong></div>
-                                <div class="visor_dato"><span>Función</span><strong>{{ reserva.fecha_funcion }} · {{ reserva.hora_funcion }} hs</strong></div>
-                            </div>
-                            <p class="entrada_estado">{% if entrada.fecha_uso %}Usada el {{ entrada.fecha_uso }}{% else %}Sin usar{% endif %}</p>
+                        <!-- Datos de la entrada -->
+                        <div class="entrada_datos">
+                            <div class="entrada_dato"><span>Butaca: </span><strong>{{ entrada.butaca }}</strong></div>
+                            <div class="entrada_dato"><span>Sala: </span><strong>{{ reserva.sala }}</strong></div>
+                            <div class="entrada_dato"><span>Cine: </span><strong>{{ reserva.sucursal }}</strong></div>
+                            <div class="entrada_dato"><span>Función: </span><strong>{{ reserva.fecha_funcion }} · {{ reserva.hora_funcion }} hs</strong></div>
                         </div>
+
+                        {% if entrada %}
+                        <!-- indicación de si ya fue usada -->
+                        <p class="entrada_estado">{% if entrada.fecha_uso %}Usada el {{ entrada.fecha_uso }}{% else %}Sin usar{% endif %}</p>
+                        {% endif %}
+
+
+                        <!-- Servicios, total y cancelar son de la reserva: solo en la primera caja -->
+                        {% if entrada == reserva.entradas[0] %}
+                        {% for servicio in reserva.servicios %}
+                        <p class="reserva_detalle reserva_servicio">{{ servicio }}</p>
                         {% endfor %}
-                      </div>
+
+                        <div class="reserva_pie">
+                            <strong class="reserva_total">${{ reserva.total }}</strong>
+                            <div class="reserva_botones">
+                                {% if reserva.cancelable %}
+                                <form method="post" id="form-cancelar-{{ reserva.id }}" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva.id) }}" class="form-cancelar-reserva">
+                                    <button type="button" class="reserva_cancelar">Cancelar reserva</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                </div>
             </article>
+            {% endfor %}
+
             {% else %}
             <p class="vacio">{{ mensaje_vacio }} <a href="{{ url_for('peliculas.cartelera') }}">Ver cartelera</a></p>
             {% endfor %}
@@ -142,9 +120,23 @@
         {% endfor %}
     </div>
 </section>
+
+<!-- mensaje de confirmación para cancelar una reserva -->
+<div class="modal-fondo oculto" id="modal-cancelar">
+    <div class="modal">
+        <h3>¿Cancelar esta reserva?</h3>
+        <p>Se liberan las butacas y no podrás recuperarlas.</p>
+        <div class="modal_botones">
+            <button type="button" class="modal_volver">Volver</button>
+            <button type="submit" class="modal_confirmar">Sí, cancelar reserva</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 <script src="{{ url_for('static', filename='js/perfil.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cartel_cancelar.js') }}"></script>
 {% endblock %}

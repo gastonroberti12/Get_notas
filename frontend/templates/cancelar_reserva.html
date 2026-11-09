@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Cancelar reserva | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cancelar_reserva.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="cancelar">
+    <h1>Cancelar reserva #{{ reserva_id }}</h1>
+    <p>
+        Solo se puede cancelar hasta 60 minutos antes de la función.<br>
+        ¿Querés cancelar esta reserva?
+    </p>
+    <form method="post" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva_id) }}"
+          class="cancelar-acciones">
+        <button type="submit" class="cancelar-confirmar">Sí, cancelar reserva</button>
+        <a href="{{ url_for('users.profile') }}" class="btn-gold">Volver al perfil</a>
+    </form>
+</section>
+{% endblock %}

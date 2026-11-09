@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Películas | Cine Paradiso{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice_peliculas.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-panel">
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+            <h1>Gestión de películas</h1>
+        </div>
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+        {% include "backadmin/barralateral.html" %}
+        <div class="admin-content">
+            <div class="admin-section-heading admin-heading-listado">
+                <h2>Películas cargadas</h2>
+                <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-primary">Agregar película</a>
+            </div>
+
+            {% if error %}
+            <p class="admin-msg admin-msg-error">{{ error }}</p>
+            {% elif not peliculas %}
+            <p class="admin-description">Todavía no hay películas cargadas.</p>
+            {% else %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Póster</th>
+                            <th>Título</th>
+                            <th>Duración</th>
+                            <th>Clasificación</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in peliculas %}
+                        <tr>
+                            <td data-label="Póster">{% if p.poster_url %}<img src="{{ p.poster_url }}" alt="Póster de {{ p.titulo }}" class="admin-poster">{% else %}—{% endif %}</td>
+                            <td data-label="Título">{{ p.titulo }}</td>
+                            <td data-label="Duración">{{ p.duracion_min ~ ' min' if p.duracion_min else '—' }}</td>
+                            <td data-label="Clasificación">{{ p.clasificacion or '—' }}</td>
+                            <td data-label="Estado">{{ 'Activa' if p.activa else 'Dada de baja' }}</td>
+                            <td data-label="Acciones" class="admin-actions">
+                                <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
+                                   class="admin-btn-secondary">Editar</a>
+                                {% if p.activa %}
+                                <form method="post"
+                                      action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
+                                      data-confirmar="¿Dar de baja esta película?"
+                                      onsubmit="return confirm(this.dataset.confirmar)">
+                                    <input type="hidden" name="activa" value="{{ 'false' if p.activa else 'true' }}">
+                                    <button type="submit" class="admin-btn-danger">
+                                        Dar de baja
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if not p.activa %}
+                                <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
+                                   class="admin-btn-secondary">Definir fechas y dar de alta</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

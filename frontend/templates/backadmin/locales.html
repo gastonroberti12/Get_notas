@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Locales | Cine Paradiso{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="admin-panel">
+
+    <!-- Encabezado -->
+    <div class="admin-header">
+        <div>
+            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+
+            <h1>Locales</h1>
+
+            <p class="admin-subtitle">
+                Consultá los establecimientos de Cine Paradiso.
+            </p>
+        </div>
+
+        <span class="admin-role">Administrador</span>
+    </div>
+
+    <div class="admin-layout">
+
+        <!-- Menú lateral -->
+        {% include "backadmin/barralateral.html" %}
+
+        <!-- Contenido principal -->
+        <div class="admin-content">
+
+            <div class="admin-section-heading">
+                <h2>Locales registrados</h2>
+            </div>
+
+            <p class="admin-description">
+                Cine Paradiso cuenta con tres locales.
+                En esta sección podrás consultar sus datos
+                y las salas correspondientes.
+            </p>
+
+            <!-- Listado de locales -->
+            <div class="admin-form-card">
+
+                <div class="admin-empty-chart">
+
+                    <span class="admin-chart-icon">▥</span>
+
+                    <p>Locales pendientes de carga</p>
+
+                    <small>
+                        Los establecimientos registrados aparecerán
+                        cuando se conecte esta sección al backend.
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

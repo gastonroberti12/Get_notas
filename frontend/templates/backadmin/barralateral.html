@@ -1,0 +1,31 @@
+<!-- Menú lateral del backoffice -->
+<aside class="admin-sidebar">
+
+    <h2>Administración</h2>
+
+    <nav aria-label="Menú del backoffice">
+        <ul class="admin-menu">
+            {% set secciones = [
+                ("Películas", "backoffice.peliculas_admin"),
+                ("Funciones", "backoffice.funciones_admin"),
+                ("Validar QR", "backoffice.validar_qr_admin"),
+                ("Locales", "backoffice.locales_admin"),
+                ("Salas", "backoffice.salas_admin"),
+                ("Servicios", "backoffice.servicios_admin"),
+                ("Estadísticas", "backoffice.estadisticas_admin"),
+            ] %}
+            {% for nombre, endpoint in secciones %}
+            {% set ruta = url_for(endpoint) %}
+            {# activo en la sección y también en sus subpáginas (ej. /backoffice/peliculas/nueva) #}
+            {% set activa = request.path == ruta or request.path.startswith(ruta ~ "/") %}
+            <li><a href="{{ ruta }}"{% if activa %} class="admin-menu-active" aria-current="page"{% endif %}>{{ nombre }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+
+    <p class="admin-menu-note">
+        Las secciones de gestión estarán disponibles
+        cuando se implementen sus respectivas vistas.
+    </p>
+
+</aside>

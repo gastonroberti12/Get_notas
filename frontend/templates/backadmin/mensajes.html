@@ -1,0 +1,4 @@
+{% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+  <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
+{% endfor %}
+{% if error %}<p class="admin-msg admin-msg-error">{{ error }}</p>{% endif %}

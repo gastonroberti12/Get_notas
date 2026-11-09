@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 
+{% set comprando = true %}
+
 {% block title %}Elegí tus butacas{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/seleccion_butacas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cartel_cancelar.css') }}">
 {% endblock %}
 
 {% block content %}
 
-{# Datos de muestra: más adelante los reemplaza el backend (filas, columnas, ocupadas, precio y datos de la función). #}
-{% set filas = filas or ['A', 'B', 'C', 'D', 'E', 'F'] %}
-{% set columnas = columnas or 10 %}
-{% set ocupadas = ocupadas or ['A3', 'A4', 'B5', 'C2', 'C7', 'D6', 'E1', 'F5', 'F6'] %}
-{% set precio = precio or 9500 %}
+<div class="notificaciones" id="avisos-butacas"></div>
 
 <div class="butacas-layout">
 
@@ -22,11 +21,12 @@
 
         <!-- título y datos de la función -->
         <h1>Elegí tus butacas</h1>
-        <p class="butacas-funcion">Película · Sala · Fecha y hora de la función</p>
+        <p class="butacas-funcion">
+            {{ funcion.pelicula }} · {{ funcion.sala }} · {{ fecha_funcion }} · {{ hora_funcion }} hs
+        </p>
 
         <div class="sala-scroll">
             <!-- butacas ya vendidas y precio de la entrada -->
-            <input type="hidden" id="ocupadas" value="{{ ocupadas | join(',') }}">
             <input type="hidden" id="precio" value="{{ precio }}">
 
             <div class="sala">
@@ -37,16 +37,19 @@
                 <div class="filas">
                     {% for fila in filas %}
                     <div class="fila">
-
                         <span class="fila-letra">{{ fila }}</span>
-
-                        {% for n in range(1, columnas + 1) %}
-
-                            {% if n == columnas // 2 + 1 %}<span class="pasillo"></span>{% endif %}
-
-                            <!-- Butaca -->
-                            <button type="button" class="butaca" id="{{ fila }}{{ n }}" title="{{ fila }}{{ n }}">{{ n }}</button>
-
+                        {% set separados = butacas_por_fila[fila] | length // 2 %}
+                        {% for butaca in butacas_por_fila[fila] %}
+                            {% if loop.index0 == separados %}<span class="pasillo"></span>{% endif %}
+                            <button
+                                type="button"
+                                class="butaca{% if butaca.id in ocupadas_ids %} ocupada{% endif %}"
+                                id="{{ fila }}{{ butaca.numero }}"
+                                data-butaca-id="{{ butaca.id }}"
+                                title="{{ fila }}{{ butaca.numero }}"
+                                {% if butaca.id in ocupadas_ids %}disabled{% endif %}>
+                                {{ butaca.numero }}
+                            </button>
                         {% endfor %}
                     </div>
                     {% endfor %}
@@ -67,31 +70,48 @@
 
     <!-- RESUMEN DE LA SELECCIÓN  -->
 
+    {% if reserva_pendiente %}
     <div class="seleccion">
-
-        <h2>Tu selección</h2>
-
+        <h2>Tu reserva está activa</h2>
+        <p>Butacas reservadas: {{ asientos_reservados | join(", ") }}</p>
+        <p>El plazo vence a las {{ reserva_pendiente.fecha_expiracion[11:16] }}.</p>
         <form method="get" action="{{ url_for('purchases.checkout') }}">
+            <input type="hidden" name="reserva_id" value="{{ reserva_pendiente.id }}">
+            <input type="hidden" name="funcion_id" value="{{ funcion_id }}">
+            <button type="submit" class="btn-continuar">Continuar al pago</button>
+        </form>
+        <form method="post" id="form-cancelar-{{ reserva_pendiente.id }}" action="{{ url_for('purchases.cancelar_reserva', reserva_id=reserva_pendiente.id) }}" class="form-cancelar-reserva">
+            <button type="button" class="btn-cancelar-reserva">Cancelar reserva</button>
+        </form>
+    </div>
 
-            <!-- Butacas elegidas (lo completa el JS) -->
+    <!-- mensaje de confirmación para cancelar una reserva -->
+    <div class="modal-fondo oculto" id="modal-cancelar">
+        <div class="modal">
+            <h3>¿Cancelar esta reserva?</h3>
+            <p>Se liberan las butacas y no podrás recuperarlas.</p>
+            <div class="modal_botones">
+                <button type="button" class="modal_volver">Volver</button>
+                <button type="submit" class="modal_confirmar">Sí, cancelar reserva</button>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="seleccion">
+        <h2>Tu selección</h2>
+        <form method="post" action="{{ url_for('purchases.seleccion_butacas', funcion_id=funcion_id) }}">
             <input type="hidden" name="butacas" id="butacas-input">
-
-            <!-- Lista de butacas elegidas con su precio (la arma el JS) -->
             <ul id="seleccion-lista"></ul>
-            <p id="seleccion-vacia">Seleccioná hasta 8 butacas.</p>
-
-            <!-- Cantidad de entradas y total -->
+            <p id="seleccion-vacia">Seleccioná hasta 5 butacas.</p>
             <div class="seleccion-total">
                 <span id="seleccion-cantidad">0 entrada(s)</span>
                 <strong id="seleccion-monto">$ 0</strong>
             </div>
-
-            <!-- Botón: deshabilitado hasta elegir al menos una butaca -->
             <button type="submit" class="btn-continuar" id="btn-continuar" disabled>Continuar al pago</button>
-
         </form>
-
     </div>
+    {% endif %}
 
 </div>
 
@@ -99,4 +119,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/seleccion_butacas.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cartel_cancelar.js') }}"></script>
 {% endblock %}

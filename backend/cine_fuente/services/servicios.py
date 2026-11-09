@@ -3,6 +3,7 @@ from cine_fuente.repositories.servicios import (
     consultar_reserva_para_servicios,
     existe_servicio_en_reserva
 )
+from constants import RESERVA_EXPIRACION_MINUTOS
 
 from cine_fuente.utils import construir_error_api
 
@@ -63,7 +64,7 @@ def verificar_reserva(reserva_id, usuario, modificar=False):
         return construir_error_api(
             "RESERVA_NO_MODIFICABLE",
             "Reserva no modificable",
-            "Solo se pueden modificar reservas pendientes dentro de los 10 minutos"
+            f"Solo se pueden modificar reservas pendientes dentro de los {RESERVA_EXPIRACION_MINUTOS} minutos"
         ), 409
     return None
 

@@ -6,7 +6,7 @@ from cine_fuente.repositories.funciones_repository import (
 )
 from cine_fuente.repositories.peliculas import consultar_pelicula_por_id
 from cine_fuente.repositories.salas import consultar_sala_por_id
-from cine_fuente.utils import construir_error_api
+from cine_fuente.utils import construir_error_api, formatear_fecha_hora
 
 
 # Obtiene el listado de funciones según los filtros.
@@ -17,7 +17,10 @@ def obtener_funciones(filtros, limit, offset):
         sucursal_id=filtros["sucursal_id"],
         activa=filtros["activa"],
     )
-    return funciones[offset:offset + limit], len(funciones)
+    pagina = funciones[offset:offset + limit]
+    for f in pagina:
+        f["fecha_hora"] = formatear_fecha_hora(f["fecha_hora"])
+    return pagina, len(funciones)
 
 
 # Busca una función por su identificador.
@@ -25,6 +28,7 @@ def obtener_funcion_por_id(funcion_id):
     funcion = consultar_funcion_por_id(funcion_id)
     if funcion is None:
         raise ValueError(construir_error_api("funcion.not.found", "Función no encontrada", "La función solicitada no existe."))
+    funcion["fecha_hora"] = formatear_fecha_hora(funcion["fecha_hora"])
     return funcion
 
 

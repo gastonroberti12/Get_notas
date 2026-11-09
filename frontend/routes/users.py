@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
 from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_reserva
@@ -6,23 +6,32 @@ from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_re
 
 users_bp = Blueprint("users", __name__)
 
+def destino_seguro(destino):
+    """Solo rutas internas del sitio (evita open redirect)."""
+    if destino and destino.startswith('/') and not destino.startswith('//') and '\\' not in destino:
+        return destino
+    return '/'
+
 @users_bp.route("/login", methods=['GET', 'POST'])
 def login():
+    siguiente = request.values.get('next', '')  # viene por URL (GET) o por campo oculto (POST)
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
-        
+
         status, cuerpo = llamar_api('POST', '/auth/login', {'email': email, 'contrasenia': password})
         if status == 200:
             session['token'] = cuerpo['token']
             session['usuario'] = cuerpo['usuario'] # incluye el rol
-            return redirect('/')
-        
-        error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
-        return render_template('login.html', error=error, email=email)
-    
-    return render_template("login.html")
+            session.pop('sucursal_id', None) # al loguearse vuelve a la sucursal principal
+            flash('Sesión iniciada con éxito.', 'exito') # flash: mensaje que se muestra en la siguiente página
+            return redirect(destino_seguro(siguiente))
 
+        error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
+        return render_template('login.html', error=error, email=email, siguiente=siguiente)
+
+    return render_template("login.html", siguiente=siguiente)
+    
 
 @users_bp.route("/registro", methods=['GET', 'POST']) # el back no loguea al registrar, por eso redirigimos al login
 def registro():
@@ -36,6 +45,7 @@ def registro():
 
         status, cuerpo = llamar_api('POST', '/usuarios', datos)
         if status == 201:
+            flash('Te registraste con éxito. Ya podés iniciar sesión.', 'exito')
             return redirect(url_for('users.login'))
 
         error = mensaje_error(status, cuerpo, 'No se pudo crear la cuenta.')
@@ -46,6 +56,7 @@ def registro():
 @users_bp.route("/logout", methods=['POST'])
 def logout():
     session.clear()
+    flash('Sesión cerrada con éxito.', 'exito')
     return redirect(url_for('peliculas.inicio'))
 
 @users_bp.route("/perfil")
@@ -55,7 +66,7 @@ def profile():
     
     #pedir datos del usuario y sus reservas al backend
     status, usuario = llamar_api('GET', '/usuarios/me')
-    if status == 401:  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
+    if status in (401, 404):  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
         session.clear()
         return redirect(url_for('users.login'))
     if status != 200:
@@ -72,9 +83,9 @@ def profile():
     if es_cliente():
         status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
         reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
-    cache = {}  # cache compartido por todas las reservas de este request
-    proximas = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
-    historial = [armar_reserva(reserva, cache) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
+   
+    proximas = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
+    historial = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
 
     return render_template('perfil.html', perfil=perfil, reservas_proximas=proximas, reservas_historial=historial)
 
@@ -84,8 +95,6 @@ def actualizar_perfil():
         return redirect(url_for('users.login'))
 
     datos = {campo: request.form.get(campo, '').strip() for campo in ('nombre', 'apellido', 'email')}
-    if request.form.get('password'):
-        datos['contrasenia'] = request.form['password']
 
     status, _ = llamar_api('PATCH', f"/usuarios/{session['usuario']['id']}", datos)
     if status == 204:

@@ -65,6 +65,16 @@ Authorization: Bearer {{adminToken}}
 }
 Esperado: 409.
 
+Caso 12b - Película duplicada dada de baja:
+POST /peliculas
+Authorization: ******
+{
+  "id_externo": "<id_externo_inactivo>",
+  "fecha_inicio_cartelera": "2026-11-01T10:00:00.000000-03:00",
+  "fecha_fin_cartelera": "2026-11-02T10:00:00.000000-03:00"
+}
+Esperado: 409 con mensaje para reactivarla desde el listado.
+
 Caso 13 - Alta nueva película:
 POST /peliculas
 Authorization: Bearer {{adminToken}}
@@ -75,6 +85,7 @@ Authorization: Bearer {{adminToken}}
 }
 Esperado: 201 si OMDb está configurada y devuelve la película; puede responder
 502 si OMDb no está disponible o 503 si falta configuración.
+Las fechas de la respuesta tienen formato ISO con 6 decimales y activa es booleano.
 La colección calcula las fechas y guarda peliculaPruebaId cuando recibe 201.
 
 -- PATCH /peliculas/{id}
@@ -109,7 +120,181 @@ Authorization: Bearer {{adminToken}}
 Esperado: 204. El código cambia activa a false, no borra físicamente.
 Ejecutar solo si peliculaPruebaId fue capturado.
 
+Caso 17b - Baja con reservas activas:
+DELETE /peliculas/{{peliculaConReservaId}}
+Authorization: ******
+Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS.
+
+Caso 17c - Baja sin reservas activas:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: ******
+{"activa": false}
+Esperado: 204.
+
 Caso 18 - Baja de película inexistente:
 DELETE /peliculas/999999
 Authorization: Bearer {{adminToken}}
 Esperado: 404.
+
+Caso 19 - PATCH actualiza fechas sin offset:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "fecha_inicio_cartelera": "2026-11-05T10:00:00.000000-03:00",
+  "fecha_fin_cartelera": "2026-11-06T10:00:00.000000-03:00"
+}
+Esperado: 204. Verificar con SELECT que fecha_inicio_cartelera y fecha_fin_cartelera
+se guarden como 2026-11-05 10:00:00 y 2026-11-06 10:00:00, respectivamente.
+
+Caso 20 - Baja con reserva pendiente vencida:
+Crear una reserva pendiente para una función futura de la película y con fecha_compra
+de más de diez minutos. Luego:
+DELETE /peliculas/{{peliculaConReservaPendienteVencidaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 204; procesar_expiraciones() cambia la reserva a expirada antes de validar
+las reservas activas.
+
+Caso 21 - Baja con reserva activa:
+DELETE /peliculas/{{peliculaConReservaActivaId}}
+Authorization: Bearer {{adminToken}}
+Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS y activa permanece true.
+
+Caso 22 - PATCH combinado rechazado sin cambios parciales:
+PATCH /peliculas/{{peliculaConReservaActivaId}}
+Authorization: Bearer {{adminToken}}
+{
+  "titulo": "Título que no debe persistirse",
+  "activa": false
+}
+Esperado: 409 con código BAJA_CON_RESERVAS_ACTIVAS; verificar que el título no
+cambió y que activa permanece true.
+
+Caso 23 - PATCH solo fecha de inicio:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"fecha_inicio_cartelera": "2026-11-20T10:00:00.000000-03:00"}
+Esperado: 204; fecha_fin_cartelera conserva su valor anterior.
+
+Caso 24 - PATCH solo fecha de fin:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00"}
+Esperado: 204; fecha_inicio_cartelera conserva su valor anterior.
+
+Caso 25 - PATCH sin fechas:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: Bearer {{adminToken}}
+{"titulo": "Título actualizado"}
+Esperado: 204; ambas fechas permanecen sin cambios.
+
+Caso 26 - POST con body no objeto:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+["x"]
+Esperado: 400 con código pelicula.invalid.
+
+Caso 27 - Alta con fecha vencida:
+POST /peliculas
+Authorization: Bearer {{adminToken}}
+{"id_externo": "tt0120338", "fecha_inicio_cartelera": "2020-01-01T10:00:00.000000-03:00", "fecha_fin_cartelera": "2020-01-02T10:00:00.000000-03:00"}
+Esperado: 400 con código pelicula.fecha.pasada.
+
+Caso 28 - Reactivación con nuevas fechas:
+PATCH /peliculas/{{peliculaInactivaId}}
+Authorization: Bearer {{adminToken}}
+{"activa": true, "fecha_inicio_cartelera": "2026-11-20T10:00:00.000000-03:00", "fecha_fin_cartelera": "2026-11-26T10:00:00.000000-03:00"}
+Esperado: 204; la película queda activa con el nuevo período.
+
+Caso 29 - Listado de administración con una lista vacía:
+GET /backoffice/peliculas
+Esperado: 200; si no hay películas inactivas se muestran las activas sin mensaje
+de error, ordenadas por id ascendente.
+
+Caso 30 - Listado de administración solo con inactivas:
+GET /backoffice/peliculas
+Esperado: 200; si no hay películas activas se muestran las inactivas sin mensaje
+de error.
+
+Caso 31 - Buscador marca película activa ya cargada:
+GET /backoffice/peliculas/buscar?q=batman&pagina=1
+Esperado: 200; una película activa ya cargada muestra "Ya cargada" y no es
+clickeable.
+
+Caso 32 - Buscador marca película inactiva:
+GET /backoffice/peliculas/buscar?q=batman&pagina=1
+Esperado: 200; una película dada de baja muestra "Dada de baja" y no es
+clickeable, aunque no haya otras películas inactivas.
+
+Caso 33 - PATCH solo fin de película en curso:
+PATCH /peliculas/{{peliculaEnCursoId}}
+Authorization: ******
+{"fecha_fin_cartelera": "<ahora + 4 días>"}
+Esperado: 204; se actualiza el fin aunque el inicio guardado esté en el pasado.
+
+Caso 34 - PATCH inicio pasado distinto:
+PATCH /peliculas/{{peliculaPruebaId}}
+Authorization: ******
+{"fecha_inicio_cartelera": "<ahora - 1 día>"}
+Esperado: 400 con código pelicula.fecha.pasada.
+
+Caso 35 - PATCH inicio igual al guardado:
+PATCH /peliculas/{{peliculaEnCursoId}}
+Authorization: ******
+{"fecha_inicio_cartelera": "<fecha_inicio_cartelera guardada>"}
+Esperado: 204 con la fecha guardada aunque esté en el pasado.
+
+Caso 36 - GET por vigencia:
+GET /peliculas
+Esperado: 200; devuelve solo películas activas y vigentes.
+
+Caso 37 - GET activas sin filtro de vigencia:
+GET /peliculas?activa=true
+Esperado: 200; devuelve películas activas vigentes y vencidas.
+
+Caso 38 - GET inactivas:
+GET /peliculas?activa=false
+Esperado: 200; devuelve solo películas inactivas.
+
+Caso 39 - GET por sucursal:
+GET /peliculas?sucursal_id=1
+Esperado: 200; devuelve solo películas vigentes con funciones futuras en la
+sucursal indicada.
+
+Caso 40 - Reactivación sin fechas:
+PATCH /peliculas/{{peliculaInactivaId}}
+Authorization: ******
+{"activa": true}
+Esperado: 400 con código pelicula.fecha.required.
+
+Caso 41 - Reactivación con una sola fecha:
+PATCH /peliculas/{{peliculaInactivaId}}
+Authorization: ******
+{"activa": true, "fecha_inicio_cartelera": "<ahora + 1 día>"}
+Esperado: 400 con código pelicula.fecha.required.
+
+Caso 42 - Reactivación con ambas fechas:
+PATCH /peliculas/{{peliculaInactivaId}}
+Authorization: ******
+{"activa": true, "fecha_inicio_cartelera": "<ahora + 1 día>",
+ "fecha_fin_cartelera": "<ahora + 5 días>"}
+Esperado: 204; la película queda activa.
+
+Caso 43 - Alta duplicada simultánea:
+POST /peliculas
+Authorization: ******
+{"id_externo": "<id_externo_existente>",
+ "fecha_inicio_cartelera": "<ahora + 1 día>",
+ "fecha_fin_cartelera": "<ahora + 5 días>"}
+Esperado: 409 con código pelicula.already.exists, incluso si el duplicado se
+detecta en el INSERT.
+
+Caso 44 - Alta con error de integridad no duplicado:
+POST /peliculas
+Authorization: ******
+Datos que provoquen un IntegrityError distinto de 1062.
+Esperado: 500 con código ERROR_INTERNO, no 409 pelicula.already.exists.
+
+Caso 45 - Inicialización con seed:
+Restaurar una base vacía y ejecutar backend/db/seed.sql.
+Esperado: inicialización correcta; existen las películas 1, 2 y 3 antes de
+insertar sus funciones y cada cartelera dura como máximo 7 días.

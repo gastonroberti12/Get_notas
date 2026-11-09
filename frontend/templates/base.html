@@ -18,10 +18,19 @@
         <a class="logo" href="{{ url_for('peliculas.inicio') }}">
             <img class="logo-img" src="{{ url_for('static', filename='images/logo_cine_paradiso_navbar.png') }}" alt="Logo Cine Paradiso">
             Cine Paradiso</a>
-        <nav>
+
+        <!-- Botón hamburguesa (solo se ve en pantallas chicas) -->
+        <button type="button" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-principal">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="nav-principal">
             <a href="{{ url_for('peliculas.listado_peliculas') }}">Películas</a>
 
             <!-- Desplegable de sucursales: muestra la sucursal elegida -->
+             {% if comprando %}
+            <span class="boton-cines bloqueado" title="No podés cambiar de sucursal durante la compra">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %}</span>
+            {% else %}
             <div class="nav-dropdown">
                 <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
                 <ul class="nav-submenu">
@@ -31,6 +40,8 @@
                 </ul>
             </div>
             
+            {% endif %}
+
             <!-- Enlace por rol -->
             {% if es_admin() %}
                 <a href="{{ url_for('backoffice.panel') }}">Backoffice</a>
@@ -43,6 +54,21 @@
         </nav>
     </header>
 
+    <!-- NOTIFICACIONES -->
+    {% set notificaciones = get_flashed_messages(with_categories=true) %}
+    {% if notificaciones %}
+    <div class="notificaciones">
+        {% for tipo, aviso in notificaciones %}
+        <div class="notificacion notificacion-{{ tipo }}">
+            <span class="notificacion_icono">{% if tipo == 'error' %}!{% else %}ok{% endif %}</span>
+            
+            <p class="notificacion_texto">{{ aviso }}</p>
+            <button type="button" class="notificacion_cerrar">×</button>
+            <span class="notificacion_barra"></span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <main>
         {% block content %}{% endblock %}
     </main>

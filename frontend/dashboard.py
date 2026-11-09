@@ -1,0 +1,126 @@
+from urllib.parse import urlencode
+
+from api_cliente import llamar_api, mensaje_error
+
+BASE = "/admin/estadisticas"
+RUTAS = {
+    "general": "/ocupacion/general",
+    "salas": "/ocupacion/salas",
+    "franjas": "/ocupacion/franjas_horarias",
+    "ventas": "/ventas/total",
+    "generos": "/ventas/generos",
+    "cancelaciones": "/cancelaciones",
+}
+# Con estos estados el resto de las consultas fallaría igual: se corta y se reutiliza el error.
+ESTADOS_FATALES = (None, 400, 401, 403)
+def numero(valor, decimales=0):
+    # Formato es-AR: 1.234,5
+    texto = f"{valor:,.{decimales}f}"
+    return texto.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def pesos(centavos):
+    # El backend informa los montos en centavos.
+    return "$ " + numero(centavos / 100)
+
+def leer_filtros(args):
+    # Solo normaliza; la validación del rango la hace el backend.
+    return {c: args.get(c, "").strip() or None for c in ("fecha_desde", "fecha_hasta")}
+
+
+def consultar(filtros, endpoints):
+    """Llama a cada endpoint por separado: si uno falla, los demás siguen mostrándose."""
+    query = urlencode({k: v for k, v in filtros.items() if v})
+    sufijo = f"?{query}" if query else ""
+    respuestas, error_fatal = {}, None
+    for clave in endpoints:
+        if error_fatal:
+            respuestas[clave] = (None, error_fatal)
+            continue
+        status, cuerpo = llamar_api("GET", BASE + RUTAS[clave] + sufijo)
+        if status == 200:
+            respuestas[clave] = (cuerpo, None)
+            continue
+        error = mensaje_error(status, cuerpo, "No se pudo cargar esta estadística.")
+        respuestas[clave] = (None, error)
+        if status in ESTADOS_FATALES:
+            error_fatal = error
+    return respuestas
+
+
+def barras(filas, etiqueta, valor, detalle, tope=None):
+    # Convierte filas en barras con ancho % relativo al máximo (o a un tope fijo, ej. 100).
+    maximo = tope or max((valor(f) for f in filas), default=0)
+    return [{
+        "etiqueta": etiqueta(f),
+        "valor": numero(valor(f)),
+        "detalle": detalle(f),
+        "ancho": min(100, round(valor(f) * 100 / maximo)) if maximo else 0,
+        "destacada": maximo > 0 and valor(f) == maximo,
+    } for f in filas]
+
+
+def tarjeta_ocupacion(d):
+    return {"valor": numero(d["porcentaje_ocupacion"], 1) + " %",
+            "detalle": f"{numero(d['entradas_vendidas'])} de {numero(d['capacidad_total'])} butacas"}
+
+
+def tarjeta_entradas(d):
+    return {"valor": numero(d["entradas_vendidas"]), "detalle": "Entradas vendidas"}
+
+
+def tarjeta_importe(d):
+    return {"valor": pesos(d["monto_total"]),
+            "detalle": f"Entradas {pesos(d['monto_entradas'])} · Servicios {pesos(d['monto_servicios'])}"}
+
+
+def tarjeta_cancelaciones(d):
+    return {"valor": numero(d["reservas_canceladas"]),
+            "detalle": f"{numero(d['porcentaje_cancelacion'], 1)} % de {numero(d['reservas_totales'])} reservas"}
+
+
+def grafico_generos(d):
+    return barras(d["generos"], lambda f: f["genero"], lambda f: f["entradas_vendidas"],
+                  lambda f: f"{numero(f['entradas_vendidas'])} entradas · {pesos(f['monto_total'])}")
+
+
+def grafico_franjas(d):
+    return barras(d["franjas"], lambda f: f"{f['hora']:02d}:00", lambda f: f["entradas_vendidas"],
+                  lambda f: f"{f['hora']:02d}:00 hs · {numero(f['entradas_vendidas'])} entradas")
+
+
+def grafico_salas(d):
+    return barras(d["salas"], lambda f: f["sala_nombre"], lambda f: f["porcentaje_ocupacion"],
+                  lambda f: (f"{numero(f['porcentaje_ocupacion'], 1)} % · "
+                             f"{numero(f['entradas_vendidas'])}/{numero(f['capacidad_total'])}"),
+                  tope=100)
+
+
+
+# nombre de sección -> (endpoint que la alimenta, función que prepara los datos para la vista)
+SECCIONES = {
+    "ocupacion": ("general", tarjeta_ocupacion),
+    "entradas": ("ventas", tarjeta_entradas),
+    "importe": ("ventas", tarjeta_importe),
+    "cancelaciones": ("cancelaciones", tarjeta_cancelaciones),
+    "generos": ("generos", grafico_generos),
+    "franjas": ("franjas", grafico_franjas),
+    "salas": ("salas", grafico_salas),
+}
+
+
+def procesar(respuesta, preparar):
+    datos, error = respuesta
+    if datos is not None:
+        try:
+            datos = preparar(datos)
+        except (KeyError, TypeError, ValueError):
+            datos, error = None, "La respuesta del servidor no tiene el formato esperado."
+    return {"datos": datos, "error": error}
+
+
+def armar_dashboard(filtros, nombres):
+    """Devuelve {sección: {"datos": ..., "error": ...}}; cada sección falla de forma independiente."""
+    endpoints = list(dict.fromkeys(SECCIONES[n][0] for n in nombres))
+    respuestas = consultar(filtros, endpoints)
+    return {n: procesar(respuestas[SECCIONES[n][0]], SECCIONES[n][1]) for n in nombres}
