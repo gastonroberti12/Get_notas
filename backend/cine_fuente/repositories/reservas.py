@@ -6,10 +6,10 @@ from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexi
 TOTAL_RESERVA_SQL = """
     (
         (
-            SELECT COUNT(*) * f.precio
+            SELECT COUNT(*)
             FROM entrada AS e
             WHERE e.reserva_id = r.id
-        )
+        ) * f.precio
         + COALESCE((
             SELECT SUM(rs.cantidad * rs.precio_unitario)
             FROM reserva_servicios AS rs
@@ -17,7 +17,6 @@ TOTAL_RESERVA_SQL = """
         ), 0)
     ) AS total
 """
-
 
 def consultar(sql, parametros=None):
     """Ejecuta una consulta de lectura en db.py."""
