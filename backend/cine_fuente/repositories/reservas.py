@@ -4,18 +4,18 @@ from constants import RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion, ejecutar_actualizacion
 
 TOTAL_RESERVA_SQL = """
-    (
-        (
-            SELECT COUNT(*)
-            FROM entrada AS e
-            WHERE e.reserva_id = r.id
-        ) * f.precio
-        + COALESCE((
-            SELECT SUM(rs.cantidad * rs.precio_unitario)
-            FROM reserva_servicios AS rs
-            WHERE rs.reserva_id = r.id
-        ), 0)
-    ) AS total
+    (COALESCE(en.cantidad, 0) * f.precio + COALESCE(sv.monto, 0)) AS total
+"""
+
+# Totales precalculados por reserva (evita subconsultas correlacionadas, que TiDB no resuelve).
+TOTAL_RESERVA_JOINS = """
+    LEFT JOIN (
+        SELECT reserva_id, COUNT(*) AS cantidad FROM entrada GROUP BY reserva_id
+    ) AS en ON en.reserva_id = r.id
+    LEFT JOIN (
+        SELECT reserva_id, SUM(cantidad * precio_unitario) AS monto
+        FROM reserva_servicios GROUP BY reserva_id
+    ) AS sv ON sv.reserva_id = r.id
 """
 
 def consultar(sql, parametros=None):
@@ -72,6 +72,7 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
         r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
         FROM reservas AS r
         INNER JOIN funcion AS f ON f.id = r.funcion_id
+        {TOTAL_RESERVA_JOINS}
         {where}
         ORDER BY r.fecha_compra DESC, r.id DESC
         LIMIT %(limit)s OFFSET %(offset)s
@@ -104,6 +105,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
 
         INNER JOIN funcion f
             ON r.funcion_id = f.id
+        {TOTAL_RESERVA_JOINS}
 
         INNER JOIN pelicula p
             ON f.pelicula_id = p.id
@@ -190,6 +192,7 @@ def obtener_reserva_por_id(reserva_id):
                r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
         FROM reservas AS r
         INNER JOIN funcion AS f ON f.id = r.funcion_id
+        {TOTAL_RESERVA_JOINS}
         WHERE r.id = %(reserva_id)s
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
@@ -354,6 +357,7 @@ def obtener_datos_notificacion(reserva_id):
         FROM reservas AS r
         INNER JOIN usuarios AS u ON u.id = r.usuario_id
         INNER JOIN funcion AS f ON f.id = r.funcion_id
+        {TOTAL_RESERVA_JOINS}
         INNER JOIN pelicula AS p ON p.id = f.pelicula_id
         INNER JOIN salas AS sa ON sa.id = f.sala_id
         INNER JOIN sucursales AS su ON su.id = sa.sucursal_id
