@@ -187,14 +187,11 @@ def contar_reservas(filtros, usuario_propio_id=None):
 def obtener_reserva_por_id(reserva_id):
     """Obtiene una reserva."""
     sql = f"""
-        SELECT id, usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion, total
-        FROM (
-            SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
-                   r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
-            FROM reservas AS r
-            INNER JOIN funcion AS f ON f.id = r.funcion_id
-            WHERE r.id = %(reserva_id)s
-        ) AS reserva_calculada
+        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+               r.fecha_cancelacion, {TOTAL_RESERVA_SQL}
+        FROM reservas AS r
+        INNER JOIN funcion AS f ON f.id = r.funcion_id
+        WHERE r.id = %(reserva_id)s
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     return filas[0] if filas else None
