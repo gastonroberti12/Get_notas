@@ -319,6 +319,14 @@
   color: var(--ok);
 }
 
+.estado_usada {
+  color: var(--accent, #4da3ff);
+}
+
+.estado_no_usada {
+  color: var(--text-soft);
+}
+
 .estado_finalizada {
   color: var(--text-soft);
 }
