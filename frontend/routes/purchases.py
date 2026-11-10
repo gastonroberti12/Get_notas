@@ -193,7 +193,7 @@ def checkout():
             return redirect(url_for("users.profile"))
         status_reserva, reserva_actual = llamar_api("GET", f"/reservas/{reserva_id}")
         if status_reserva == 200 and reserva_actual["estado"] == "expirada":
-            flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+            flash("Venció el plazo de pago de 8 minutos. Elegí nuevamente tus butacas.", "error")
             return redirect(url_for(
                 "purchases.seleccion_butacas",
                 funcion_id=reserva_actual["funcion_id"],
@@ -209,7 +209,7 @@ def checkout():
     if status_reserva != 200:
         abort(status_reserva or 503)
     if reserva["estado"] == "expirada":
-        flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+        flash("Venció el plazo de pago de 8 minutos. Elegí nuevamente tus butacas.", "error")
         return redirect(url_for(
             "purchases.seleccion_butacas",
             funcion_id=reserva["funcion_id"],

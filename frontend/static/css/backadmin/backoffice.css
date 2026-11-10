@@ -122,6 +122,11 @@
     margin: 0;
 }
 
+/* Listados con botón "Agregar": separa el encabezado de la grilla */
+.admin-heading-listado {
+    margin-bottom: 32px;
+}
+
 .admin-pending {
     font-size: 12px;
     color: var(--gold);
