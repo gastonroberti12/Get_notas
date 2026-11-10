@@ -73,7 +73,9 @@
 
                         <div class="reserva_cabecera">
                             <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
-                            {% if reserva.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
+                            {% if entrada.estado == 'usada' %}<span class="estado estado_usada">usada</span>
+                            {% elif entrada.estado == 'no_usada' %}<span class="estado estado_no_usada">no utilizada</span>
+                            {% elif entrada.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
                             {% elif reserva.estado == 'finalizada' %}<span class="estado estado_finalizada">finalizada</span>
                             {% else %}<span class="estado estado_cancelada">cancelada</span>{% endif %}
                         </div>
