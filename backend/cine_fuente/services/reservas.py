@@ -8,6 +8,12 @@ from cine_fuente.repositories.funciones_repository import consultar_funcion_por_
 from cine_fuente.repositories.butacas import obtener_butacas
 from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 
+from cine_fuente.services.notificaciones_service import (
+    enviar_en_segundo_plano,
+    enviar_estado_reserva,
+    mail_posible,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,8 +62,10 @@ def entrada_api(fila):
 
 
 def procesar_expiraciones():
-    """Procesa reservas pendientes vencidas."""
-    return compras_repo.procesar_reservas_vencidas(ahora_gmt3())
+    for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
+        datos = compras_repo.obtener_datos_notificacion(id_reserva)
+        if datos and mail_posible(datos):
+            enviar_en_segundo_plano(enviar_estado_reserva, datos)
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
@@ -320,3 +328,7 @@ def cancelar_reserva(reserva_id, usuario):
             "La reserva ya no está pendiente o confirmada.",
             409,
         )
+
+    datos = compras_repo.obtener_datos_notificacion(reserva_id)
+    if datos and mail_posible(datos):
+        enviar_en_segundo_plano(enviar_estado_reserva, datos)

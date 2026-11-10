@@ -4,6 +4,8 @@ from email.message import EmailMessage
 from email.utils import make_msgid
 from pathlib import Path
 from markupsafe import Markup
+import logging, threading, time
+logger = logging.getLogger(__name__)
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -59,20 +61,11 @@ def _crear_html(d, cids):
         estilos=Markup(f"<style>{css}</style>"),
     )
 
-
 def enviar_confirmacion_pago(datos_reserva):
     """Envía por SMTP la confirmación de pago con los QR embebidos y adjuntos."""
     destinatario = datos_reserva.get("email")
     if not destinatario:
         raise ValueError("La reserva confirmada no tiene un email de destino.")
-
-    servidor = os.getenv("SMTP_HOST")
-    puerto = int(os.getenv("SMTP_PORT", "587"))
-    remitente = os.getenv("SMTP_FROM")
-    usuario = os.getenv("SMTP_USER")
-    contrasena = os.getenv("SMTP_PASSWORD")
-    if not servidor or not remitente:
-        raise RuntimeError("Faltan SMTP_HOST o SMTP_FROM para enviar la confirmación.")
 
     entradas = datos_reserva.get("entradas", [])
     if any(not e.get("codigo_qr") for e in entradas):
@@ -82,7 +75,6 @@ def enviar_confirmacion_pago(datos_reserva):
 
     mensaje = EmailMessage()
     mensaje["Subject"] = f"Entradas confirmadas: {datos_reserva['pelicula']} - Reserva #{datos_reserva['id']}"
-    mensaje["From"] = remitente
     mensaje["To"] = destinatario
     mensaje.set_content(_crear_texto(datos_reserva))
     mensaje.add_alternative(_crear_html(datos_reserva, cids), subtype="html")
@@ -94,10 +86,54 @@ def enviar_confirmacion_pago(datos_reserva):
         mensaje.add_attachment(png, maintype="image", subtype="png",
                                filename=f"entrada-butaca-{_butaca(e)}.png")
 
-    with smtplib.SMTP(servidor, puerto, timeout=10) as conexion:
+    _enviar_smtp(mensaje)
+
+def _enviar_smtp(mensaje):
+    servidor, remitente = os.getenv("SMTP_HOST"), os.getenv("SMTP_FROM")
+    if not servidor or not remitente:
+        raise RuntimeError("Faltan SMTP_HOST o SMTP_FROM.")
+    mensaje["From"] = remitente
+    usuario, contrasena = os.getenv("SMTP_USER"), os.getenv("SMTP_PASSWORD")
+    with smtplib.SMTP(servidor, int(os.getenv("SMTP_PORT", "587")), timeout=10) as conexion:
         conexion.starttls()
         if usuario:
             if not contrasena:
-                raise RuntimeError("Falta SMTP_PASSWORD para autenticar el servidor SMTP.")
+                raise RuntimeError("Falta SMTP_PASSWORD.")
             conexion.login(usuario, contrasena)
         conexion.send_message(mensaje)
+
+def mail_posible(datos):
+    """Chequeo barato y síncrono: hay destinatario y SMTP configurado."""
+    return bool(datos.get("email") and os.getenv("SMTP_HOST") and os.getenv("SMTP_FROM"))
+
+def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
+    """Lanza el envío en un hilo, con reintentos y resultado en el log."""
+    def tarea():
+        for n in range(1, intentos + 1):
+            try:
+                funcion_envio(datos)
+                logger.info("Mail enviado (reserva %s, intento %s)", datos["id"], n)
+                return
+            except Exception:
+                logger.exception("Falló el mail de la reserva %s (intento %s)", datos["id"], n)
+                time.sleep(espera * n)
+        logger.error("Mail NO enviado tras %s intentos (reserva %s)", intentos, datos["id"])
+    threading.Thread(target=tarea, daemon=True).start()
+
+def enviar_estado_reserva(d):
+    """Mail de cancelación o expiración, según d['estado']."""
+    expirada = d["estado"] == "expirada"
+    titulo = "Tu reserva expiró" if expirada else "Tu reserva fue cancelada"
+    detalle = ("No se registró el pago a tiempo y las butacas fueron liberadas."
+               if expirada else "Las butacas fueron liberadas.")
+    mensaje = EmailMessage()
+    mensaje["Subject"] = f"{titulo} - Reserva #{d['id']}"
+    mensaje["To"] = d["email"]
+    mensaje.set_content(f"Hola {d['nombre']},\n\n{titulo}.\n{detalle}\n\n"
+                        f"Película: {d['pelicula']}\nFecha: {_fecha(d)}\n"
+                        f"Lugar: {d['sucursal']} - {d['sala']}")
+    mensaje.add_alternative(_entorno.get_template("estado_reserva.html").render(
+        d=d, titulo=titulo, detalle=detalle, fecha=_fecha(d),
+        estilos=Markup(f"<style>{(DIR_CSS / 'confirmacion.css').read_text(encoding='utf-8')}</style>"),
+    ), subtype="html")
+    _enviar_smtp(mensaje)

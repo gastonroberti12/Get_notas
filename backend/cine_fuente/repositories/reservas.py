@@ -499,13 +499,11 @@ def eliminar_entradas_reserva(reserva_id):
 
 
 def procesar_reservas_vencidas(ahora):
-    """Expira reservas que superaron el plazo configurado."""
-    fecha_limite = (
-        ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
-    ).replace(tzinfo=None)
-    sql = """
-        UPDATE reservas
-        SET estado = 'expirada'
-        WHERE estado = 'pendiente' AND fecha_compra <= %(fecha_limite)s
-    """
-    return escribir(sql, {"fecha_limite": fecha_limite})
+    limite = (ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)).replace(tzinfo=None)
+    ids = [f["id"] for f in consultar(
+        "SELECT id FROM reservas WHERE estado = 'pendiente' AND fecha_compra <= %(limite)s",
+        {"limite": limite})]
+    if ids:
+        escribir("UPDATE reservas SET estado = 'expirada' "
+                 "WHERE estado = 'pendiente' AND id IN %(ids)s", {"ids": tuple(ids)})
+    return ids
