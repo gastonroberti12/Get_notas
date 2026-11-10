@@ -6,10 +6,12 @@ from routes.roles import esta_logueado
 purchases_bp = Blueprint("purchases", __name__)
 
 
-@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['POST'])
+@purchases_bp.route("/reservas/<int:reserva_id>/cancelar", methods=['GET', 'POST'])
 def cancelar_reserva(reserva_id):
     if not esta_logueado():
-        return redirect(url_for('users.login'))
+        return redirect(url_for('users.login', next=request.path))
+    if request.method == 'GET':
+        return render_template('cancelar_reserva.html', reserva_id=reserva_id)
     # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
     status, cuerpo = llamar_api('PATCH', f'/reservas/{reserva_id}', {'estado': 'cancelada'})
     if status in (200, 204):
@@ -173,7 +175,7 @@ def checkout():
                 f"/reservas/{reserva_id}/servicios",
                 {"servicio_id": servicio_id, "cantidad": cantidad},
             )
-            if status_servicio not in (201, 409):
+            if status_servicio != 201:
                 flash("No se pudo agregar un servicio adicional.", "error")
                 return redirect(url_for(
                     "purchases.checkout",
@@ -191,7 +193,7 @@ def checkout():
             return redirect(url_for("users.profile"))
         status_reserva, reserva_actual = llamar_api("GET", f"/reservas/{reserva_id}")
         if status_reserva == 200 and reserva_actual["estado"] == "expirada":
-            flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+            flash("Venció el plazo de pago de 8 minutos. Elegí nuevamente tus butacas.", "error")
             return redirect(url_for(
                 "purchases.seleccion_butacas",
                 funcion_id=reserva_actual["funcion_id"],
@@ -207,7 +209,7 @@ def checkout():
     if status_reserva != 200:
         abort(status_reserva or 503)
     if reserva["estado"] == "expirada":
-        flash("Venció el plazo de pago de 10 minutos. Elegí nuevamente tus butacas.", "error")
+        flash("Venció el plazo de pago de 8 minutos. Elegí nuevamente tus butacas.", "error")
         return redirect(url_for(
             "purchases.seleccion_butacas",
             funcion_id=reserva["funcion_id"],
@@ -225,7 +227,7 @@ def checkout():
     )
     entradas = entradas_data.get("entradas", []) if status_entradas == 200 else []
 
-    status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100")
+    status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100&activo=true")
     servicios = servicios_data.get("servicios", []) if status_servicios == 200 else []
     for servicio in servicios:
         servicio["precio_formateado"] = formatear_total(servicio["precio"])

@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta, timezone
 from uuid import uuid4
 
+from constants import RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
 from cine_fuente.repositories.butacas import obtener_butacas
@@ -31,7 +32,9 @@ def reserva_api(fila):
         "usuario_id": int(fila["usuario_id"]),
         "funcion_id": int(fila["funcion_id"]),
         "fecha_compra": formatear_fecha_hora(fecha_compra),
-        "fecha_expiracion": formatear_fecha_hora(fecha_compra + timedelta(minutes=10)),
+        "fecha_expiracion": formatear_fecha_hora(
+            fecha_compra + timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
+        ),
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
@@ -63,6 +66,58 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     reservas = compras_repo.listar_reservas(filtros, limit, offset, usuario_propio_id)
     total = compras_repo.contar_reservas(filtros, usuario_propio_id)
     return [reserva_api(reserva) for reserva in reservas], total
+
+#obtiene las reservas del usuario con todos sus detalles
+def listar_reservas_perfil(filtros, limit, offset, usuario_id):
+
+    procesar_expiraciones()
+
+    #obtenemos las reservas
+    reservas = compras_repo.listar_reservas_perfil(
+        filtros, limit, offset, usuario_id
+    )
+
+    total = compras_repo.contar_reservas(filtros, usuario_id)
+
+    reserva_ids = [reserva["id"] for reserva in reservas]
+
+    #consultamos entradas y servicios
+    entradas = compras_repo.listar_entradas_perfil(reserva_ids)
+    servicios = compras_repo.listar_servicios_perfil(reserva_ids)
+
+    resultado = []
+
+    for reserva in reservas:
+        datos = reserva_api(reserva)
+
+        datos["pelicula"] = reserva["pelicula"]
+        datos["poster_url"] = reserva["poster_url"]
+        datos["fecha_hora"] = formatear_fecha_hora(reserva["fecha_hora"])
+        datos["sala"] = reserva["sala"]
+        datos["sucursal"] = reserva["sucursal"]
+
+        datos["entradas"] = []
+        datos["servicios"] = []
+
+        # asociamos las entradas
+        for entrada in entradas:
+            if entrada["reserva_id"] == reserva["id"]:
+                datos["entradas"].append({
+                    "butaca": f"{entrada['fila']}{entrada['numero']}",
+                    "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
+                })
+
+        # asociamos los servicios que corresponden
+        for servicio in servicios:
+            if servicio["reserva_id"] == reserva["id"]:
+                datos["servicios"].append({
+                    "nombre": servicio["nombre"],
+                    "cantidad": servicio["cantidad"]
+                })
+
+        resultado.append(datos)
+
+    return resultado, total
 
 
 def obtener_reserva(reserva_id, usuario, exige_titular_o_admin=True):
@@ -199,7 +254,9 @@ def confirmar_pago(reserva_id, usuario):
         )
 
     codigos_qr = [(int(entrada["id"]), str(uuid4())) for entrada in entradas]
-    fecha_limite = (ahora - timedelta(minutes=10)).replace(tzinfo=None)
+    fecha_limite = (
+        ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
+    ).replace(tzinfo=None)
     actualizada = compras_repo.confirmar_reserva_con_qr(
         reserva_id, codigos_qr, fecha_limite
     )

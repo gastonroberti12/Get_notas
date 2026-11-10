@@ -571,3 +571,98 @@ html {
     font-family: var(--font-title);
     font-size: 26px;
 }
+
+/* ===================================
+   RESPONSIVE - INICIO (ajustes finales)
+=================================== */
+
+@media (max-width: 768px) {
+    .carousel-container {
+        height: auto;
+        min-height: 0;
+    }
+
+    .carousel-slide {
+        position: relative;
+        inset: auto;
+        height: auto;
+        min-height: 0;
+        padding: 32px 52px 56px;
+        gap: 20px;
+    }
+
+    .carousel-info { max-width: none; }
+    .carousel-info h2 { margin-bottom: 12px; }
+    .carousel-info p { font-size: 15px; line-height: 1.6; }
+}
+
+@media (max-width: 600px) {
+    .home-carousel,
+    .home-filtros,
+    .home-cartelera { margin-bottom: 32px; }
+
+    .home-carousel h1 { font-size: 26px; margin-bottom: 16px; }
+    .home-filtros h2,
+    .home-cartelera h2 { font-size: 24px; }
+
+    .cartelera-encabezado {
+        display: block;
+        padding: 10px 20px;
+        font-size: 22px;
+        text-align: center;
+    }
+
+    .carousel-prev,
+    .carousel-next { width: 34px; height: 34px; font-size: 18px; }
+    .carousel-prev { left: 8px; }
+    .carousel-next { right: 8px; }
+
+    .carousel-slide { padding: 24px 46px 52px; }
+    .carousel-slide img { width: 150px; height: 220px; }
+    .carousel-info h2 { font-size: 24px; }
+
+    .filtros-container { gap: 8px; }
+    .filtro-btn { padding: 8px 16px; font-size: 13px; }
+}
+
+@media (max-width: 400px) {
+    .home-cartelera .pelicula-poster { height: 360px; }
+}
+
+
+/* Carrusel: slides apiladas en la misma celda, sin saltos de altura */
+.carousel-container { display: grid; height: auto; min-height: 0; }
+
+.carousel-slide {
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 440px;
+}
+
+@media (max-width: 768px) {
+    .carousel-slide { min-height: 0; }
+}
+
+
+.carousel-indicators { gap: 0; }
+
+.carousel-indicador {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: none;
+}
+
+.carousel-indicador::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.carousel-indicador.activo { background: none; }
+.carousel-indicador.activo::before { background: var(--gold); }

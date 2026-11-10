@@ -1,0 +1,165 @@
+/* Panel y estadísticas: tarjetas y gráficos. Cargar después de backoffice.css */
+
+/* TARJETAS ESTADÍSTICAS*/
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.admin-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 20px 16px;
+    min-height: 144px;
+}
+
+.admin-stat h3 {
+    color: var(--text-soft);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.admin-stat p {
+    color: var(--gold);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 13px 0;
+}
+
+.admin-stat small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* GRÁFICOS*/
+
+.admin-charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+/* DASHBOARD: gráficos en HTML/CSS puro (renderizados por el servidor) */
+
+.admin-chart-full { grid-column: 1 / -1; }
+
+.admin-stat-error,
+.admin-error-text,
+.admin-chart-error .admin-chart-icon { color: var(--danger); }
+
+.admin-chart-error { border-color: var(--danger); }
+
+.dash-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* Barras horizontales */
+.dash-barras {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+}
+
+.dash-barras-texto {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.dash-barras-texto span:last-child {
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.dash-pista {
+    height: 10px;
+    background: var(--surface-dark);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.dash-relleno {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 99px;
+}
+
+/* Columnas verticales (franjas horarias) */
+.dash-columnas-wrap { overflow-x: auto; }
+
+.dash-columnas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 8px;
+    height: 260px;
+    min-width: min-content;
+}
+
+.dash-columnas li {
+    flex: 1 0 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.dash-col-pista {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    background: var(--surface-dark);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dash-col-relleno {
+    width: 100%;
+    background: var(--text-faint);
+}
+
+.dash-top { color: var(--gold); font-weight: 700; }
+.dash-top .dash-col-relleno { background: var(--gold); }
+
+/* ============ RESPONSIVE ============ */
+
+/* Tablets */
+@media (max-width: 1000px) {
+    .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-charts { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Celulares */
+@media (max-width: 760px) {
+    .admin-stat { min-height: 0; }
+}
+
+/* Celulares chicos */
+@media (max-width: 480px) {
+    .admin-stats { grid-template-columns: 1fr; }
+    .dash-filtros { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+    .dash-filtros .admin-btn-primary,
+    .dash-filtros .admin-btn-secondary { width: 100%; box-sizing: border-box; text-align: center; }
+    .dash-barras-texto { flex-direction: column; gap: 2px; }
+    .dash-barras-texto span:last-child { text-align: left; }
+}

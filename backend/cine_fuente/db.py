@@ -1,18 +1,32 @@
-﻿import pymysql
+﻿import os
+import certifi # Para obtener los certificados de confianza
+import pymysql
+
 from pymysql.cursors import DictCursor
 
 from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 
 def obtener_conexion():
+
+    configuracion_ssl = {}
+
+    if os.getenv("DB_SSL", "false").lower() == "true": # Habilita TLS
+        configuracion_ssl = {
+            "ssl_ca": certifi.where(),
+            "ssl_verify_cert": True,
+            "ssl_verify_identity": True
+        }
+
     return pymysql.connect(
         host=DB_HOST,
         port=DB_PORT,
         user=DB_USER,
         password=DB_PASSWORD,
         database=DB_NAME,
-        charset='utf8mb4',
+        charset="utf8mb4",
         cursorclass=DictCursor,
+        **configuracion_ssl
     )
 
 

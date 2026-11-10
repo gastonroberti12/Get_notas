@@ -65,15 +65,13 @@ def obtener_entrada_id(entrada_id):
         return respuesta_error_interno(error)
 
 
-# POST /entradas/{id}/validacion: el administrador registra el ingreso.
-@entradas_bp.route("/entradas/<int:entrada_id>/validacion", methods=["POST"])
+# POST /entradas/validacion: el administrador registra el ingreso.
+@entradas_bp.route("/entradas/validacion", methods=["POST"])
 @requiere_rol("administrador")
-def post_validacion_entrada(entrada_id):
+def post_validacion_entrada():
     try:
-        entrada_id = validar_id_entrada(entrada_id)
         codigo_qr = validar_body(request.get_json(silent=True))
-        entrada = entradas_service.validar_entrada(entrada_id, codigo_qr)
-        return jsonify(entrada), 200
+        return jsonify(entradas_service.validar_por_qr(codigo_qr)), 200
     except ValueError as error:
         return respuesta_error_excepcion(error)
     except Exception as error:

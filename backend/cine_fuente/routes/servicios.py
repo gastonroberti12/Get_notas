@@ -12,6 +12,7 @@ from cine_fuente.services.servicios import (
 from cine_fuente.validators.servicios import (
     validar_creacion_servicio,
     validar_campos_servicio,
+    validar_cantidad,
     validar_modificacion_servicio_reserva
 )
 

@@ -18,7 +18,13 @@
         <a class="logo" href="{{ url_for('peliculas.inicio') }}">
             <img class="logo-img" src="{{ url_for('static', filename='images/logo_cine_paradiso_navbar.png') }}" alt="Logo Cine Paradiso">
             Cine Paradiso</a>
-        <nav>
+
+        <!-- Botón hamburguesa (solo se ve en pantallas chicas) -->
+        <button type="button" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-principal">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="nav-principal">
             <a href="{{ url_for('peliculas.listado_peliculas') }}">Películas</a>
 
             <!-- Desplegable de sucursales: muestra la sucursal elegida -->

@@ -2,21 +2,20 @@
 
 {% block content %}
 
-<div class="container d-flex flex-column justify-content-center align-items-center text-center"
-     style="min-height: 75vh;">
+<div class="error-pagina">
 
-    <h1 class="display-1 fw-bold mb-3">503</h1>
+    <h1 class="error-codigo">503</h1>
 
-    <h2 class="fw-bold mb-3" style="color: var(--text);">
+    <h2 class="error-titulo">
         La función está en pausa
     </h2>
 
-    <p class="fs-5 mb-4" style="color: var(--text-muted);">
+    <p class="error-texto">
         Nuestro servicio no se encuentra disponible en este momento.<br>
         Estamos trabajando para que puedas volver a disfrutar del cine.
     </p>
 
-    <div class="d-flex flex-wrap justify-content-center gap-3">
+    <div class="error-acciones">
         <a href="{{ url_for('peliculas.inicio') }}" class="btn-gold">
             Volver al inicio
         </a>

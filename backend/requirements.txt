@@ -4,3 +4,5 @@ python-dotenv
 PyMySQL
 PyJWT
 qrcode[pil]
+gunicorn  # Servidor que ejecutarlas aplicaciones en Render
+certifi

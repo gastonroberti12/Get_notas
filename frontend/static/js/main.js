@@ -1,7 +1,36 @@
-// Sublista de sucursales: al hacer click en "Cines" se abre o se cierra
-const menu = document.getElementsByClassName('nav-dropdown')[0];
+// Menú hamburguesa (pantallas chicas): abre y cierra la barra de navegación
+function iniciarMenuHamburguesa() {
+  const barra = document.getElementsByClassName('navbar')[0];
+  const botonMenu = document.getElementsByClassName('nav-toggle')[0];
+  if (!barra || !botonMenu) return;
 
-if (menu) {
+  botonMenu.addEventListener('click', () => {
+    const abierto = !barra.classList.contains('menu-abierto');
+
+    if (abierto) {
+      barra.classList.add('menu-abierto');
+    } else {
+      barra.classList.remove('menu-abierto');
+    }
+
+    botonMenu.setAttribute('aria-expanded', abierto);
+    botonMenu.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
+  });
+
+  // Al pasar a pantalla ancha el menú vuelve a su estado normal
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 860) {
+      barra.classList.remove('menu-abierto');
+      botonMenu.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+// Sublista de sucursales: al hacer click en "Cines" se abre o se cierra
+function iniciarMenuSucursales() {
+  const menu = document.getElementsByClassName('nav-dropdown')[0];
+  if (!menu) return;
+
   const boton = document.getElementsByClassName('boton-cines')[0];
 
   boton.addEventListener('click', () => {
@@ -17,6 +46,9 @@ if (menu) {
     if (!menu.contains(evento.target)) menu.classList.remove('abierto');
   });
 }
+
+iniciarMenuHamburguesa();
+iniciarMenuSucursales();
 
 // Cierra una notificacion en dos pasos: primero la anima y despues la saca de la pagina
 function cerrarNotificacion(notificacion) {

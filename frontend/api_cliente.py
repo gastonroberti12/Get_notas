@@ -14,7 +14,7 @@ def llamar_api(metodo, endpoint, datos=None):
     if 'token' in session:
         headers['Authorization'] = 'Bearer ' + session['token']
     try:
-        r = requests.request(metodo, f'{API_URL}{endpoint}', json=datos, headers=headers, timeout=5)
+        r = requests.request(metodo, f'{API_URL}{endpoint}', json=datos, headers=headers, timeout=90)
         return r.status_code, (r.json() if r.content else {})
     except (requests.RequestException, ValueError):
         return None, {}
