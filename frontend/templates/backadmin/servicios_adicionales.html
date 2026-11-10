@@ -149,14 +149,9 @@
                     {% include "backadmin/filtro_estado.html" %}
                 {% endwith %}
                 
-                {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
-                    <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
-                {% endfor %}
+                {% include "backadmin/mensajes.html" %}
 
-                {% if error %}
-                    <p class="admin-msg admin-msg-error">{{ error }}</p>
-
-                {% elif servicios %}
+                {% if servicios %}
                     
                 <div class="admin-table-wrap">
                     <table class="admin-table">
@@ -195,7 +190,7 @@
                     </table>
                 </div>
 
-                {% else %}
+                {% elif not error %}
                     <div class="admin-empty-chart">
                         <span class="admin-chart-icon">▥</span>
                         {% if ver_inactivos %}
