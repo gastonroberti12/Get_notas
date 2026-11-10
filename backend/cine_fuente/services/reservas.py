@@ -1,4 +1,6 @@
 import logging
+import secrets
+
 from datetime import timedelta, timezone
 from uuid import uuid4
 
@@ -15,6 +17,14 @@ from cine_fuente.services.notificaciones_service import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sin I, O, 0 ni 1 para no confundir al tipear
+
+def generar_codigo_ingreso():
+    """Código corto para el QR y para tipear a mano. Ej: K7M2-9QXP."""
+    letras = "".join(secrets.choice(ALFABETO_CODIGO) for _ in range(8))
+    return f"{letras[:4]}-{letras[4:]}"
 
 
 def error(code, message, description, status):
@@ -329,3 +339,4 @@ def cancelar_reserva(reserva_id, usuario):
     datos = compras_repo.obtener_datos_notificacion(reserva_id)
     if datos and mail_posible(datos):
         enviar_en_segundo_plano(enviar_estado_reserva, datos)
+
