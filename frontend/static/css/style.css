@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
    --bg: #141416;
@@ -19,7 +19,7 @@
    --warn: #e9b44c;
    --danger: #ff6a60;
  
-   --font-title: 'DM Serif Display', serif;
+   --font-title: 'Montserrat', sans-serif;
    --font-body: 'DM Sans', sans-serif;
    --font-mono: 'DM Mono', monospace;
 }
@@ -86,4 +86,9 @@ a {
 
 .btn-gold:active {
     transform: translateY(0);
+}
+
+h1, h2, h3 {
+    font-family: var(--font-title);
+    font-weight: 600;
 }

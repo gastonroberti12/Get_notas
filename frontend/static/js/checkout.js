@@ -62,19 +62,39 @@ function actualizarResumen() {
 
 
 //  Contadores de servicios (− / +)
+// maximo dos unidades por cada entrada comprada
+const MAX_CANTIDAD_SERVICIO = entradas * 2;
 
 for (const fila of document.getElementsByClassName('servicio')) {
   const campo = fila.querySelector('.cantidad');
+  const botonMas = fila.querySelector('.mas');
+  const botonMenos = fila.querySelector('.menos');
 
-  fila.querySelector('.mas').addEventListener('click', () => {
-    campo.value = Number(campo.value) + 1;
+  function actualizarContador() {
+    const cantidad = Number(campo.value);
+
+    botonMas.disabled = cantidad >= MAX_CANTIDAD_SERVICIO;
+    botonMenos.disabled = cantidad <= 0;
+
     actualizarResumen();
+  }
+
+  botonMas.addEventListener('click', () => {
+    campo.value = Math.min(
+      Number(campo.value) + 1,
+      MAX_CANTIDAD_SERVICIO
+    );
+
+    actualizarContador();
   });
 
-  fila.querySelector('.menos').addEventListener('click', () => {
+  botonMenos.addEventListener('click', () => {
     campo.value = Math.max(Number(campo.value) - 1, 0);
-    actualizarResumen();
+
+    actualizarContador();
   });
+
+  actualizarContador();
 }
 
 
