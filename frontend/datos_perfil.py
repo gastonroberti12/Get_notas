@@ -23,6 +23,32 @@ def parsear_fecha(valor):
     except (TypeError, ValueError):
         return None
 
+def funcion_ya_comenzo(fecha_hora):
+    fecha = parsear_fecha(fecha_hora)
+
+    if fecha is None:
+        return False
+
+    zona_argentina = timezone(timedelta(hours=-3))
+
+    if fecha.tzinfo is None:
+        fecha = fecha.replace(tzinfo=zona_argentina)
+
+    return fecha <= datetime.now(zona_argentina)
+
+def clasificar_reserva(reserva):
+    estado = reserva.get("estado")
+
+    if estado in ESTADOS_HISTORIAL:
+        return "historial"
+
+    if estado in ESTADOS_PROXIMAS:
+        if funcion_ya_comenzo(reserva.get("fecha_hora")):
+            return "historial"
+
+        return "proximas"
+
+    return None
 
 def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
     fecha = parsear_fecha(valor)
