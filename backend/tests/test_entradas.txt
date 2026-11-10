@@ -84,3 +84,15 @@ Esperado: 400 ERROR_VALIDACION.
 La validación busca la entrada por el código QR generado en el pago y
 registra el uso de forma atómica. Para obtener el código, primero pagar
 la reserva y luego llamar GET /reservas/{id}/entradas.
+
+Caso 14 - Código escrito en minúsculas:
+POST /entradas/validacion
+Authorization: Bearer {{adminToken}}
+{
+  "codigo_qr": "k7m2-9qxp"
+}
+Esperado: mismo resultado que con el código en mayúsculas (200 si está en horario).
+
+
+Los códigos nuevos tienen formato XXXX-XXXX (sin I, O, 0 ni 1).
+Las entradas de los test anteriores conservan su codigo largo
