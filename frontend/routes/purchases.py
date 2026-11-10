@@ -243,6 +243,8 @@ def checkout():
         status, cuerpo = llamar_api("POST", f"/reservas/{reserva_id}/pago", datos_pago)
         if status == 200:
             flash("Pago confirmado. La reserva quedó creada.", "exito")
+            if not cuerpo.get("mail_enviado", True):
+                flash("No pudimos enviarte el mail. Tus entradas están en tu perfil.", "error")
             return redirect(url_for("users.profile"))
         status_reserva, reserva_actual = llamar_api("GET", f"/reservas/{reserva_id}")
         if status_reserva == 200 and reserva_actual["estado"] == "expirada":

@@ -2,11 +2,17 @@ import logging
 from datetime import timedelta, timezone
 from uuid import uuid4
 
-from constants import RESERVA_EXPIRACION_MINUTOS
+from constants import RESERVA_CANCELACION_MINUTOS, RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
 from cine_fuente.repositories.butacas import obtener_butacas
 from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
+
+from cine_fuente.services.notificaciones_service import (
+    enviar_en_segundo_plano,
+    enviar_estado_reserva,
+    mail_posible,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,13 +62,14 @@ def entrada_api(fila):
 
 
 def procesar_expiraciones():
-    """Procesa reservas pendientes vencidas."""
-    return compras_repo.procesar_reservas_vencidas(ahora_gmt3())
+    for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
+        datos = compras_repo.obtener_datos_notificacion(id_reserva)
+        if datos and mail_posible(datos):
+            enviar_en_segundo_plano(enviar_estado_reserva, datos)
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     """Devuelve reservas y total para paginación."""
-    procesar_expiraciones()
     reservas = compras_repo.listar_reservas(filtros, limit, offset, usuario_propio_id)
     total = compras_repo.contar_reservas(filtros, usuario_propio_id)
     return [reserva_api(reserva) for reserva in reservas], total
@@ -70,7 +77,6 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
 #obtiene las reservas del usuario con todos sus detalles
 def listar_reservas_perfil(filtros, limit, offset, usuario_id):
 
-    procesar_expiraciones()
 
     #obtenemos las reservas
     reservas = compras_repo.listar_reservas_perfil(
@@ -143,8 +149,7 @@ def verificar_titular_o_admin(reserva, usuario):
 
 
 def listar_entradas_reserva(reserva_id, usuario, limit, offset):
-    """Lsta las entradas de la reserva para su titular o administrador."""
-    procesar_expiraciones()
+    """Lista las entradas de la reserva para su titular o administrador."""
     reserva = compras_repo.obtener_reserva_por_id(reserva_id)
     if reserva is None:
         error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
@@ -299,7 +304,7 @@ def cancelar_reserva(reserva_id, usuario):
     fecha_funcion = compras_repo.obtener_fecha_funcion_de_reserva(reserva_id)
     if fecha_funcion is None:
         error("FUNCION_NO_ENCONTRADA", "Función no encontrada", "La función asociada a la reserva no existe.", 404)
-    if normalizar_fecha_local(fecha_funcion) - ahora < timedelta(hours=1):
+    if normalizar_fecha_local(fecha_funcion) - ahora < timedelta(minutes=RESERVA_CANCELACION_MINUTOS):
         error(
             "PLAZO_CANCELACION_VENCIDO",
             "No se puede cancelar la reserva",
@@ -320,3 +325,7 @@ def cancelar_reserva(reserva_id, usuario):
             "La reserva ya no está pendiente o confirmada.",
             409,
         )
+
+    datos = compras_repo.obtener_datos_notificacion(reserva_id)
+    if datos and mail_posible(datos):
+        enviar_en_segundo_plano(enviar_estado_reserva, datos)

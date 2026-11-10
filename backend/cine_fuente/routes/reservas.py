@@ -3,7 +3,13 @@ import logging
 from flask import Blueprint, g, jsonify, make_response, request
 
 from cine_fuente.services import reservas as compras_service
-from cine_fuente.services.notificaciones_service import enviar_confirmacion_pago
+
+from cine_fuente.services.notificaciones_service import (
+    enviar_confirmacion_pago,
+    enviar_en_segundo_plano,
+    mail_posible,
+)
+
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.utils import (
     respuesta_paginada,
@@ -112,16 +118,14 @@ def post_pago_reserva(id_reserva):
         id_valido = validar_id_reserva(id_reserva)
         validar_body_pago(request.get_json(silent=True))
         reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
-        try:
-            enviar_confirmacion_pago(datos_notificacion)
-        except Exception:
-            logger.exception("No se pudo enviar el mail de la reserva %s", id_valido)
-        return jsonify(reserva), 200
+        enviado = mail_posible(datos_notificacion)
+        if enviado:
+            enviar_en_segundo_plano(enviar_confirmacion_pago, datos_notificacion)
+        return jsonify({**reserva, "mail_enviado": enviado}), 200
     except ValueError as error:
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error)
-
 
 # Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
