@@ -3,17 +3,17 @@ from api_cliente import llamar_api, mensaje_error
 from datos_perfil import formatear_fecha
 from routes.products import obtener_listado
 from routes.roles import solo_admin
-from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
+from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
 
 
 @backoffice_bp.route("/backoffice/funciones")
 @solo_admin
 def funciones_admin():
-    funciones, error = obtener_listado("funciones", "funciones")
+    inactivos = ver_inactivos()
+    funciones, error = obtener_listado("funciones", "funciones", "&activa=false" if inactivos else "&activa=true")
     for f in funciones:
         f["fecha_texto"] = formatear_fecha(f["fecha_hora"], "%d/%m/%Y %H:%M")
-    return render_template("backadmin/funciones.html", funciones=funciones, error=error)
-
+    return render_template("backadmin/funciones.html", funciones=funciones, error=error, ver_inactivos=inactivos)
 
 def _formulario(funcion=None, error=None):
     peliculas, err_p = obtener_listado("peliculas", "peliculas", "&activa=true")

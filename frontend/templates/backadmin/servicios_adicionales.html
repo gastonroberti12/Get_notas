@@ -145,13 +145,9 @@
 
             <div class="admin-form-card">
             
-                <div class="admin-actions admin-filtro">
-                        <a href="{{ url_for('backoffice.servicios_admin') }}"
-                            class="{{ 'admin-btn-secondary' if ver_inactivos else 'admin-btn-primary' }}">Activos</a>
-                        
-                        <a href="{{ url_for('backoffice.servicios_admin', estado='inactivos') }}"
-                           class="{{ 'admin-btn-primary' if ver_inactivos else 'admin-btn-secondary' }}">Dados de baja</a>
-                </div>
+                {% with etiqueta_activos="Activos", etiqueta_bajas="Dados de baja" %}
+                    {% include "backadmin/filtro_estado.html" %}
+                {% endwith %}
                 
                 {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
                     <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>

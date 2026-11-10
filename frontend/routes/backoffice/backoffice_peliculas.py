@@ -1,12 +1,11 @@
 from datetime import datetime
 import re
 from urllib.parse import urlencode
-
 from flask import abort, flash, redirect, render_template, request, session, url_for
-
 from api_cliente import llamar_api, mensaje_error
-from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
+from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
 from routes.roles import es_admin, solo_admin
+from routes.products import obtener_listado
 
 
 CAMPOS = ("titulo", "sinopsis", "poster_url", "duracion_min", "clasificacion", "genero")
@@ -37,18 +36,13 @@ def a_iso_gmt3(valor):
 
 
 @backoffice_bp.route("/backoffice/peliculas")
+@backoffice_bp.route("/backoffice/peliculas")
 def peliculas_admin():
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
-    peliculas = peliculas_locales()
-    if peliculas is None:
-        error = "No se pudieron obtener las películas."
-        return render_template("backadmin/peliculas_listado.html", peliculas=[], error=error)
-    return render_template(
-        "backadmin/peliculas_listado.html",
-        peliculas=peliculas,
-        error=None,
-    )
+    inactivos = ver_inactivos()
+    peliculas, error = obtener_listado("peliculas", "peliculas", "&activa=false" if inactivos else "&activa=true")
+    return render_template("backadmin/peliculas_listado.html", peliculas=peliculas, error=error, ver_inactivos=inactivos)
 
 
 @backoffice_bp.route("/backoffice/peliculas/buscar")

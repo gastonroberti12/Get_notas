@@ -5,6 +5,12 @@ from dashboard import armar_dashboard
 
 backoffice_bp = Blueprint("backoffice", __name__)
 
+def ver_inactivos():
+    # True si la URL pide la pestaña de dados de baja (?estado=inactivos).
+    return request.args.get("estado") == "inactivos"
+
+
+
 def cambiar_estado(endpoint, nombre, listado):
     # Da de alta o de baja un recurso con PATCH {"activa": ...} y vuelve a su listado.
     activa = request.form.get("activa") == "true"
@@ -13,6 +19,8 @@ def cambiar_estado(endpoint, nombre, listado):
         flash(f"{nombre} dada de {'alta' if activa else 'baja'}.", "ok")
     else:
         flash(mensaje_error(status, cuerpo, "No se pudo cambiar el estado."), "error")
+    if activa:
+        return redirect(url_for(listado, estado="inactivos"))
     return redirect(url_for(listado))
 
 @backoffice_bp.route("/backoffice")
