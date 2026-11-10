@@ -2046,7 +2046,7 @@ components:
           type: string
           description: Código único del QR. Se asigna al confirmar el pago
           nullable: true
-          example: a3f9c2d1-7b4e-4c1a-9d2f-5e6b8a0c1d3e
+          example: K7M2-9QXP
         fecha_uso:
           description: Fecha y hora en que se validó el QR. Es null si no se usó
           allOf:
@@ -2059,8 +2059,8 @@ components:
       properties:
         codigo_qr:
           type: string
-          description: Código leído del QR
-          example: a3f9c2d1-7b4e-4c1a-9d2f-5e6b8a0c1d3e
+          description: Código leído del QR o escrito a mano (formato XXXX-XXXX, no distingue mayúsculas)
+          example: K7M2-9QXP
     Servicio:
       type: object
       properties:
