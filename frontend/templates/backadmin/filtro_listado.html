@@ -1,0 +1,6 @@
+<div class="admin-actions admin-filtro">
+    <a href="{{ url_for(request.endpoint) }}"   
+       class="{{ 'admin-btn-secondary' if ver_inactivos else 'admin-btn-primary' }}">{{ etiqueta_activos }}</a>
+    <a href="{{ url_for(request.endpoint, estado='inactivos') }}"
+       class="{{ 'admin-btn-primary' if ver_inactivos else 'admin-btn-secondary' }}">{{ etiqueta_bajas }}</a>
+</div>
