@@ -7,7 +7,6 @@ from cine_fuente.repositories.peliculas import (
     insertar_pelicula,
     tiene_reservas_activas,
 )
-from cine_fuente.services.reservas import procesar_expiraciones
 from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 
 
@@ -46,7 +45,6 @@ def formatear_pelicula(fila):
 
 
 def dar_de_baja(pelicula_id):
-    procesar_expiraciones()
     if tiene_reservas_activas(pelicula_id):
         return False
     actualizar_pelicula(pelicula_id, {"activa": False})

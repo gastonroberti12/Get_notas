@@ -8,7 +8,7 @@ import logging, threading, time
 logger = logging.getLogger(__name__)
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-
+from constants import RESERVA_CANCELACION_MINUTOS
 from cine_fuente.services.qr_service import generar_qr_png
 
 DIR_BASE = Path(__file__).resolve().parent.parent
@@ -41,7 +41,7 @@ def _crear_texto(d):
     items = "\n".join(f"{c} x {n}: ${c * p}" for n, c, p in _items(d))
     butacas = ", ".join(_butaca(e) for e in d["entradas"])
     url = _url_cancelacion(d)
-    cancelar = f"\nPodés cancelar hasta 60 min antes de la función: {url}\n" if url else ""
+    cancelar = f"\nPodés cancelar hasta {RESERVA_CANCELACION_MINUTOS} min antes de la función: {url}\n" if url else ""
     codigos = "\n".join(f"{_butaca(e)}: {e['codigo_qr']}" for e in d["entradas"])
     return (
         f"Hola {d['nombre']},\n\nTu reserva #{d['id']} fue confirmada.\n\n"
@@ -58,6 +58,7 @@ def _crear_html(d, cids):
     css = (DIR_CSS / "confirmacion.css").read_text(encoding="utf-8")
     return _entorno.get_template("confirmacion.html").render(
         d=d, cids=cids, items=_items(d), fecha=_fecha(d), url=_url_cancelacion(d),
+        minutos=RESERVA_CANCELACION_MINUTOS,
         estilos=Markup(f"<style>{css}</style>"),
     )
 

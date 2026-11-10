@@ -1,5 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
+from cine_fuente.scheduler import iniciar_scheduler
 
 load_dotenv(Path(__file__).with_name('.env'), override=False)
 
@@ -69,6 +70,7 @@ def crear_app():
 
 
 app = crear_app()
+iniciar_scheduler()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
