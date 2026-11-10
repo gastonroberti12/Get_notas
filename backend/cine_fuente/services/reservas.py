@@ -2,7 +2,7 @@ import logging
 import secrets
 
 from datetime import timedelta, timezone
-from uuid import uuid4
+
 
 from constants import RESERVA_CANCELACION_MINUTOS, RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.repositories import reservas as compras_repo
@@ -268,7 +268,7 @@ def confirmar_pago(reserva_id, usuario):
             409,
         )
 
-    codigos_qr = [(int(entrada["id"]), str(uuid4())) for entrada in entradas]
+    codigos_qr = [(int(entrada["id"]), generar_codigo_ingreso()) for entrada in entradas]
     fecha_limite = (
         ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
     ).replace(tzinfo=None)
