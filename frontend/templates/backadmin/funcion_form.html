@@ -1,20 +1,10 @@
-{% extends "base.html" %}
-{% block title %}Función | Cine Paradiso{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">{% endblock %}
+{% extends "backadmin/base_backoffice.html" %}
 
-{% block content %}
+{% block title %}Función | Cine Paradiso{% endblock %}
+{% block titulo_admin %}Gestión de funciones{% endblock %}
+
+{% block contenido_admin %}
 {% set editando = funcion and funcion.id %}
-<section class="admin-panel">
-  <div class="admin-header">
-    <div>
-      <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-      <h1>Gestión de funciones</h1>
-    </div>
-    <span class="admin-role">Administrador</span>
-  </div>
-  <div class="admin-layout">
-    {% include "backadmin/barralateral.html" %}
-    <div class="admin-content">
       <div class="admin-section-heading"><h2>{{ 'Editar función' if editando else 'Agregar función' }}</h2></div>
       {% include "backadmin/mensajes.html" %}
       <div class="admin-form-card">
@@ -57,7 +47,4 @@
           </div>
         </form>
       </div>
-    </div>
-  </div>
-</section>
-{% endblock %}
+{% endblock contenido_admin %}
