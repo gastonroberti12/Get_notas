@@ -395,3 +395,16 @@
 .oculto {
   display: none;
 }
+
+.entrada_codigo {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.entrada_codigo strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--gold, #e8b84b);
+}

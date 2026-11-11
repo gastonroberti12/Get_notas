@@ -79,6 +79,7 @@ def armar_reserva(reserva):
             
         entradas.append({
             'butaca': entrada.get('butaca', SIN_DATO),
+            'codigo': entrada.get('codigo_qr'),
             'usada': usada,
             'estado': estado,
             'fecha_uso': formatear_fecha(

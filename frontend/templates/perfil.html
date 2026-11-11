@@ -93,6 +93,10 @@
                         <p class="entrada_estado">{% if entrada.fecha_uso %}Usada el {{ entrada.fecha_uso }}{% else %}Sin usar{% endif %}</p>
                         {% endif %}
 
+                        {% if entrada.codigo and entrada.estado == 'confirmada' %}
+                        <p class="entrada_codigo">Código de ingreso: <strong>{{ entrada.codigo }}</strong></p>
+                        {% endif %}
+
 
                         <!-- Servicios, total y cancelar son de la reserva: solo en la primera caja -->
                         {% if entrada == reserva.entradas[0] %}

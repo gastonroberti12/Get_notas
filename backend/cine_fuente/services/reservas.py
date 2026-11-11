@@ -120,6 +120,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
             if entrada["reserva_id"] == reserva["id"]:
                 datos["entradas"].append({
                     "butaca": f"{entrada['fila']}{entrada['numero']}",
+                    "codigo_qr": entrada["codigo_qr"],
                     "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
                 })
 
