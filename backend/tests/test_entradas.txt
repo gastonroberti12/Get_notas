@@ -96,3 +96,13 @@ Esperado: mismo resultado que con el código en mayúsculas (200 si está en hor
 
 Los códigos nuevos tienen formato XXXX-XXXX (sin I, O, 0 ni 1).
 Las entradas de los test anteriores conservan su codigo largo
+
+
+
+Caso 15 - Código sin guion:
+POST /entradas/validacion
+Authorization: Bearer {{adminToken}}
+{
+  "codigo_qr": "xfrmm9vs"
+}
+Esperado: igual que con "XFRM-M9VS" (200 si está en horario).
