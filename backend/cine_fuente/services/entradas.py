@@ -75,11 +75,17 @@ def validar_entrada(entrada_id, codigo_qr):
     }
     return resultado   
 
+def normalizar_codigo(codigo):
+    """Acepta el código con o sin guion y con espacios: 'xfrm m9vs' -> 'XFRM-M9VS'."""
+    limpio = codigo.strip().replace(" ", "")
+    if "-" not in limpio and len(limpio) == 8:
+        limpio = f"{limpio[:4]}-{limpio[4:]}"
+    return limpio.upper()
 
 def validar_por_qr(codigo_qr):
     entrada = entradas_repo.obtener_entrada_por_codigo_qr(codigo_qr)
     if entrada is None:
-        entrada = entradas_repo.obtener_entrada_por_codigo_qr(codigo_qr.upper())
+        entrada = entradas_repo.obtener_entrada_por_codigo_qr(normalizar_codigo(codigo_qr))
     if entrada is None:
         error_entrada("ENTRADA_NO_ENCONTRADA", "Entrada no encontrada", 404)
     return validar_entrada(entrada["id"], entrada["codigo_qr"])
