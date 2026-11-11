@@ -1,27 +1,13 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Agregar película | Cine Paradiso{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+{% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice_peliculas.css') }}">
 {% endblock %}
+{% block titulo_admin %}Gestión de películas{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Incorporá nuevas películas a la cartelera de Cine Paradiso.</p>{% endblock %}
 
-{% block content %}
-<section class="admin-panel">
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-            <h1>Gestión de películas</h1>
-            <p class="admin-subtitle">Incorporá nuevas películas a la cartelera de Cine Paradiso.</p>
-        </div>
-        <span class="admin-role">Administrador</span>
-    </div>
-
-    <div class="admin-layout">
-        {% include "backadmin/barralateral.html" %}
-
-        <div class="admin-content">
+{% block contenido_admin %}
             <div class="admin-section-heading">
                 <h2>Buscar película</h2>
             </div>
@@ -83,7 +69,4 @@
                 <p>Los resultados provienen de OMDb. Elegí una película para revisar sus datos y definir las fechas de cartelera antes de guardarla.</p>
             </div>
             {% endif %}
-        </div>
-    </div>
-</section>
-{% endblock %}
+{% endblock contenido_admin %}

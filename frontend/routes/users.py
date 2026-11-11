@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
-from datos_perfil import ESTADOS_PROXIMAS, ESTADOS_HISTORIAL, SIN_DATO, armar_reserva
+from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva
 
 
 users_bp = Blueprint("users", __name__)
@@ -84,8 +84,16 @@ def profile():
         status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
         reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
    
-    proximas = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_PROXIMAS]
-    historial = [armar_reserva(reserva) for reserva in reservas_api if reserva['estado'] in ESTADOS_HISTORIAL]
+    proximas = []
+    historial = []
+    for reserva in reservas_api:
+        ubicacion = clasificar_reserva(reserva)
+        
+        if ubicacion == "proximas":
+            proximas.append(armar_reserva(reserva))
+        
+        elif ubicacion == "historial":
+            historial.append(armar_reserva(reserva))
 
     return render_template('perfil.html', perfil=perfil, reservas_proximas=proximas, reservas_historial=historial)
 

@@ -62,6 +62,12 @@
   position: relative;
 }
 
+.nav-sucursal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .boton-cines {
   padding: 0;
   background: none;
@@ -336,6 +342,17 @@ main {
     border-bottom: 1px solid var(--border);
   }
 
+  .navbar nav .nav-sucursal {
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .navbar nav .nav-sucursal .boton-cines {
+    flex: 1;
+    width: auto;
+    border-bottom: 0;
+  }
+
   .navbar nav .nav-ingreso {
     margin-top: 12px;
     padding: 12px 18px;
@@ -353,6 +370,17 @@ main {
     border: 0;
     border-left: 2px solid var(--border);
     border-radius: 0;
+  }
+
+  .nav-submenu li {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar nav .nav-submenu .mapa-sucursal {
+    width: auto;
+    padding: 6px 10px !important;
+    border-bottom: 1px solid var(--gold);
   }
 
   .nav-dropdown:hover .nav-submenu { display: none; }

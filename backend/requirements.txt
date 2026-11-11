@@ -6,3 +6,4 @@ PyJWT
 qrcode[pil]
 gunicorn  # Servidor que ejecutarlas aplicaciones en Render
 certifi
+APScheduler

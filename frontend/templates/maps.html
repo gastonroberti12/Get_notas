@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa{% if sucursal_actual %} · {{ sucursal_actual.nombre }}{% endif %}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/maps.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="mapa-pagina">
+    {% if sucursal_actual and sucursal_actual.direccion %}
+    <header class="mapa-encabezado">
+        <p class="mapa-etiqueta">CINE PARADISO</p>
+        <h1>{{ sucursal_actual.nombre }}</h1>
+        <p>{{ sucursal_actual.direccion }}</p>
+    </header>
+    <div class="mapa-marco">
+        <iframe
+            title="Mapa de Cine Paradiso {{ sucursal_actual.nombre }}"
+            src="https://www.google.com/maps?q={{ ('Cine Paradiso ' ~ sucursal_actual.nombre ~ ', ' ~ sucursal_actual.direccion)|urlencode }}&amp;output=embed"
+            width="100%"
+            height="480"
+            style="border:0;"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    {% else %}
+    <div class="mapa-vacio">
+        <h1>Mapa de sucursales</h1>
+        <p>No hay una sucursal seleccionada con una dirección disponible.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

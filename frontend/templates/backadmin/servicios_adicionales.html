@@ -1,34 +1,10 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Gestión de servicios | Cine Paradiso{% endblock %}
+{% block titulo_admin %}Gestión de servicios{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Administrá los servicios adicionales de Cine Paradiso.</p>{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
-{% endblock %}
-
-{% block content %}
-
-<section class="admin-panel">
-
-    <!-- Encabezado -->
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-            <h1>Gestión de servicios</h1>
-            <p class="admin-subtitle">
-                Administrá los servicios adicionales de Cine Paradiso.
-            </p>
-        </div>
-
-        <span class="admin-role">Administrador</span>
-    </div>
-
-    <div class="admin-layout">
-
-        {% include "backadmin/barralateral.html" %}
-
-        <div class="admin-content">
-
+{% block contenido_admin %}
             <div class="admin-section-heading">
                 <h2>Agregar servicio</h2>
             </div>
@@ -145,14 +121,13 @@
 
             <div class="admin-form-card">
             
-                {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
-                    <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
-                {% endfor %}
+                {% with etiqueta_activos="Activos", etiqueta_bajas="Dados de baja" %}
+                    {% include "backadmin/filtro_estado.html" %}
+                {% endwith %}
+                
+                {% include "backadmin/mensajes.html" %}
 
-                {% if error %}
-                    <p class="admin-msg admin-msg-error">{{ error }}</p>
-
-                {% elif servicios %}
+                {% if servicios %}
                     
                 <div class="admin-table-wrap">
                     <table class="admin-table">
@@ -161,7 +136,6 @@
                                 <th>Nombre</th>
                                 <th>Descripción</th>
                                 <th>Precio</th>
-                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -172,18 +146,19 @@
                                 <td data-label="Nombre">{{ s.nombre }}</td>
                                 <td data-label="Descripción">{{ s.descripcion or "—" }}</td>
                                 <td data-label="Precio">${{ s.precio }}</td>
-                                <td data-label="Estado">{{ "Activo" if s.activo else "Inactivo" }}</td>
-                                <td data-label="Acciones" class="admin-actions">
-                                    <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
-                                    class="admin-btn-secondary">Editar</a>
-
-                                    {% if s.activo %}
-                                    <form method="POST"
-                                        action="{{ url_for('backoffice.servicios_baja', servicio_id=s.id) }}"
-                                        onsubmit="return confirm('¿Dar de baja este servicio?')">
-                                        <button type="submit" class="admin-btn-secondary">Dar de baja</button>
-                                    </form>
-                                    {% endif %}
+                                <td data-label="Acciones">
+                                    <div class="admin-actions">
+                                        <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
+                                           class="admin-btn-secondary">Editar</a>
+                                        <form method="POST"
+                                              action="{{ url_for('backoffice.servicios_estado', servicio_id=s.id) }}"
+                                              {% if s.activo %}onsubmit="return confirm('¿Dar de baja este servicio?')"{% endif %}>
+                                            <input type="hidden" name="activo" value="{{ 'false' if s.activo else 'true' }}">
+                                            <button type="submit" class="admin-btn-secondary">
+                                                {{ 'Dar de baja' if s.activo else 'Dar de alta' }}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -191,20 +166,18 @@
                     </table>
                 </div>
 
-                {% else %}
+                {% elif not error %}
                     <div class="admin-empty-chart">
                         <span class="admin-chart-icon">▥</span>
-                        <p>Sin servicios para mostrar</p>
-                        <small>Agregá el primero con el formulario de arriba.</small>
+                        {% if ver_inactivos %}
+                            <p>No hay servicios dados de baja</p>
+                        {% else %}
+                            <p>Sin servicios para mostrar</p>
+                            <small>Agregá el primero con el formulario de arriba.</small>
+                        {% endif %}
                     </div>
                 {% endif %}
 
             </div>
 
-        </div>
-
-    </div>
-
-</section>
-
-{% endblock %}
+{% endblock contenido_admin %}

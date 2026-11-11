@@ -160,28 +160,81 @@ def checkout():
         return redirect(url_for("peliculas.inicio"))
 
     if request.method == "POST":
+        # Consultar las entradas de la reserva
+        status_entradas, datos_entradas = llamar_api(
+            "GET",
+            f"/reservas/{reserva_id}/entradas?_limit=100"
+        )
+
+        if status_entradas != 200:
+            flash("No se pudieron verificar las entradas.", "error")
+            return redirect(url_for(
+                "purchases.checkout",
+                reserva_id=reserva_id
+            ))
+
+        cantidad_entradas = len(datos_entradas.get("entradas", []))
+
+        if cantidad_entradas == 0:
+            flash("La reserva no tiene entradas.", "error")
+            return redirect(url_for(
+                "purchases.checkout",
+                reserva_id=reserva_id
+            ))
+
+        maximo = cantidad_entradas * 2
+
+        #validamos todas las cantidades
         for clave, cantidad_texto in request.form.items():
-            if not clave.startswith("servicio_"):
-                continue
-            try:
+
+            if clave.startswith("servicio_"):
+
+                try:
+                    cantidad = int(cantidad_texto)
+                    servicio_id = int(clave.replace("servicio_", ""))
+
+                    if cantidad < 0 or cantidad > maximo or servicio_id <= 0:
+                        flash(
+                            f"El máximo permitido es {maximo} unidades por servicio.",
+                            "error"
+                        )
+                        return redirect(url_for(
+                            "purchases.checkout",
+                            reserva_id=reserva_id
+                        ))
+
+                except ValueError:
+                    flash("La cantidad del servicio no es válida.", "error")
+                    return redirect(url_for(
+                        "purchases.checkout",
+                        reserva_id=reserva_id
+                    ))
+
+        #agregamos los servicios
+        for clave, cantidad_texto in request.form.items():
+
+            if clave.startswith("servicio_"):
+
                 cantidad = int(cantidad_texto)
-                servicio_id = int(clave.removeprefix("servicio_"))
-            except ValueError:
-                continue
-            if cantidad <= 0:
-                continue
-            status_servicio, _ = llamar_api(
-                "POST",
-                f"/reservas/{reserva_id}/servicios",
-                {"servicio_id": servicio_id, "cantidad": cantidad},
-            )
-            if status_servicio != 201:
-                flash("No se pudo agregar un servicio adicional.", "error")
-                return redirect(url_for(
-                    "purchases.checkout",
-                    reserva_id=reserva_id,
-                    funcion_id=request.args.get("funcion_id"),
-                ))
+                servicio_id = int(clave.replace("servicio_", ""))
+
+                if cantidad > 0:
+
+                    status_servicio, _ = llamar_api(
+                        "POST",
+                        f"/reservas/{reserva_id}/servicios",
+                        {
+                            "servicio_id": servicio_id,
+                            "cantidad": cantidad
+                        }
+                    )
+
+                    if status_servicio != 201:
+                        flash("No se pudo agregar un servicio adicional.", "error")
+                        return redirect(url_for(
+                            "purchases.checkout",
+                            reserva_id=reserva_id
+                        ))
 
         datos_pago = {
             campo: request.form.get(campo, "")
@@ -190,6 +243,8 @@ def checkout():
         status, cuerpo = llamar_api("POST", f"/reservas/{reserva_id}/pago", datos_pago)
         if status == 200:
             flash("Pago confirmado. La reserva quedó creada.", "exito")
+            if not cuerpo.get("mail_enviado", True):
+                flash("No pudimos enviarte el mail. Tus entradas están en tu perfil.", "error")
             return redirect(url_for("users.profile"))
         status_reserva, reserva_actual = llamar_api("GET", f"/reservas/{reserva_id}")
         if status_reserva == 200 and reserva_actual["estado"] == "expirada":

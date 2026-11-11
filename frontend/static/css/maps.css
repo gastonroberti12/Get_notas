@@ -1,0 +1,61 @@
+.mapa-pagina {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.mapa-encabezado {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.mapa-etiqueta {
+    margin-bottom: 8px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .16em;
+}
+
+.mapa-encabezado h1,
+.mapa-vacio h1 {
+    margin-bottom: 8px;
+    color: var(--gold);
+    font-family: var(--font-title);
+    font-size: 36px;
+    font-weight: 400;
+}
+
+.mapa-encabezado p:last-child,
+.mapa-vacio p {
+    color: var(--text-muted);
+}
+
+.mapa-marco {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .28);
+}
+
+.mapa-marco iframe {
+    display: block;
+    min-height: 360px;
+}
+
+.mapa-vacio {
+    padding: 48px 24px;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .mapa-encabezado h1,
+    .mapa-vacio h1 {
+        font-size: 30px;
+    }
+
+    .mapa-marco iframe {
+        height: 380px;
+        min-height: 300px;
+    }
+}
