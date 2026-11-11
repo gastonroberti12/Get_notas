@@ -1,69 +1,52 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Salas | Cine Paradiso{% endblock %}
+{% block titulo_admin %}Salas{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Consultá las salas y capacidades de Cine Paradiso.</p>{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
-{% endblock %}
+{% block contenido_admin %}
+<div class="admin-section-heading">
+    <h2>Salas disponibles</h2>
+</div>
 
-{% block content %}
+<p class="admin-description">
+    Consultá las salas de cada local y su capacidad
+    para organizar las proyecciones.
+</p>
 
-<section class="admin-panel">
+<!-- Listado de salas (solo lectura: las salas vienen predefinidas) -->
+<div class="admin-form-card">
 
-    <!-- Encabezado -->
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
+    {% include "backadmin/mensajes.html" %}
 
-            <h1>Salas</h1>
-
-            <p class="admin-subtitle">
-                Consultá las salas y capacidades de Cine Paradiso.
-            </p>
-        </div>
-
-        <span class="admin-role">Administrador</span>
+    {% if salas %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Local</th>
+                    <th>Sala</th>
+                    <th>Capacidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in salas %}
+                <tr>
+                    <td data-label="Local">{{ s.sucursal or "—" }}</td>
+                    <td data-label="Sala">{{ s.nombre }}</td>
+                    <td data-label="Capacidad">{{ s.capacidad }} butacas</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <div class="admin-layout">
-
-        <!-- Menú lateral -->
-        {% include "backadmin/barralateral.html" %}
-
-        <!-- Contenido principal -->
-        <div class="admin-content">
-
-            <div class="admin-section-heading">
-                <h2>Salas disponibles</h2>
-            </div>
-
-            <p class="admin-description">
-                Consultá las salas de cada local y su capacidad
-                para organizar las proyecciones.
-            </p>
-
-            <!-- Listado de salas -->
-            <div class="admin-form-card">
-
-                <div class="admin-empty-chart">
-
-                    <span class="admin-chart-icon">▥</span>
-
-                    <p>Salas pendientes de carga</p>
-
-                    <small>
-                        Las salas registradas y sus capacidades
-                        aparecerán cuando se integre el backend.
-                    </small>
-
-                </div>
-
-            </div>
-
-        </div>
-
+    {% elif not error %}
+    <div class="admin-empty-chart">
+        <span class="admin-chart-icon">▥</span>
+        <p>No hay salas cargadas</p>
     </div>
+    {% endif %}
 
-</section>
-
-{% endblock %}
+</div>
+{% endblock contenido_admin %}
