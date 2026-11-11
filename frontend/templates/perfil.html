@@ -94,7 +94,12 @@
                         {% endif %}
 
                         {% if entrada.codigo and entrada.estado == 'confirmada' %}
-                        <p class="entrada_codigo">Código de ingreso: <strong>{{ entrada.codigo }}</strong></p>
+                        <div class="entrada_qr">
+                            {% if entrada.qr %}
+                            <img src="data:image/png;base64,{{ entrada.qr }}" alt="QR de la butaca {{ entrada.butaca }}">
+                            {% endif %}
+                            <p class="entrada_codigo">Código de ingreso: <strong>{{ entrada.codigo }}</strong></p>
+                        </div>
                         {% endif %}
 
 

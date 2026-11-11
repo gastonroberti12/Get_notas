@@ -408,3 +408,16 @@
   letter-spacing: 2px;
   color: var(--gold, #e8b84b);
 }
+
+.entrada_qr {
+  margin-top: 12px;
+}
+
+.entrada_qr img {
+  width: 140px;
+  height: 140px;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  display: block;
+}
