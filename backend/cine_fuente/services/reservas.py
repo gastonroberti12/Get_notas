@@ -1,6 +1,6 @@
 import logging
 import secrets
-
+import base64
 from datetime import timedelta, timezone
 
 
