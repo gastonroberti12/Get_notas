@@ -43,11 +43,14 @@ def clasificar_reserva(reserva):
         return "historial"
 
     if estado in ESTADOS_PROXIMAS:
-        if funcion_ya_comenzo(reserva.get("fecha_hora")):
+        # Si todas las entradas ya se usaron, no hay nada próximo: va al historial.
+        entradas = reserva.get("entradas", [])
+        todas_usadas = bool(entradas) and all(e.get("fecha_uso") for e in entradas)
+
+        if todas_usadas or funcion_ya_comenzo(reserva.get("fecha_hora")):
             return "historial"
 
         return "proximas"
-
     return None
 
 def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
