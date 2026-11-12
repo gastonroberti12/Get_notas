@@ -108,6 +108,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
         datos = reserva_api(reserva)
 
         datos["pelicula"] = reserva["pelicula"]
+        datos["pelicula_id"] = reserva["pelicula_id"]
         datos["poster_url"] = reserva["poster_url"]
         datos["fecha_hora"] = formatear_fecha_hora(reserva["fecha_hora"])
         datos["sala"] = reserva["sala"]

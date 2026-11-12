@@ -96,6 +96,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
             r.fecha_cancelacion,
             {TOTAL_RESERVA_SQL},
             f.fecha_hora,
+            f.pelicula_id,
             p.titulo AS pelicula,
             p.poster_url,
             s.nombre AS sala,
