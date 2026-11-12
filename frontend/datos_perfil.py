@@ -112,6 +112,7 @@ def armar_reserva(reserva):
         'id': reserva['id'],
         'estado': reserva['estado'],
         'pelicula': reserva.get('pelicula') or SIN_DATO,
+        'pelicula_id': reserva.get('pelicula_id'),
         'poster': reserva.get('poster_url'),
         'fecha_funcion': formatear_fecha(
             reserva.get('fecha_hora'), '%d/%m/%Y'

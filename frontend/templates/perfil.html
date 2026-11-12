@@ -72,7 +72,7 @@
                     <div class="reserva_info">
 
                         <div class="reserva_cabecera">
-                            <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
+                            <h2 class="reserva_titulo"><a href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=reserva.pelicula_id) }}">{{ reserva.pelicula }}</a></h2>
                             {% if entrada.estado == 'usada' %}<span class="estado estado_usada">usada</span>
                             {% elif entrada.estado == 'no_usada' %}<span class="estado estado_no_usada">no utilizada</span>
                             {% elif entrada.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
@@ -102,7 +102,10 @@
                         </div>
                         {% endif %}
 
-
+                        {% if entrada.estado == 'usada' %}
+                        <a class="entrada_resenar" href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=reserva.pelicula_id, _anchor='resenas') }}">Reseñar esta película</a>
+                        {% endif %}
+                        
                         <!-- Servicios, total y cancelar son de la reserva: solo en la primera caja -->
                         {% if entrada == reserva.entradas[0] %}
                         {% for servicio in reserva.servicios %}

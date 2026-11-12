@@ -421,3 +421,26 @@
   border-radius: 8px;
   display: block;
 }
+
+
+
+.reserva_titulo a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.reserva_titulo a:hover {
+  color: var(--gold);
+}
+
+.entrada_resenar {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.entrada_resenar:hover {
+  text-decoration: underline;
+}
