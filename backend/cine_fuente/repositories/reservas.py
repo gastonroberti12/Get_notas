@@ -135,6 +135,7 @@ def listar_entradas_perfil(reserva_ids):
     sql = f"""
         SELECT
             e.reserva_id,
+            e.codigo_qr,
             e.fecha_uso,
             b.fila,
             b.numero

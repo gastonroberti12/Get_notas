@@ -15,6 +15,7 @@ from cine_fuente.services.notificaciones_service import (
     enviar_estado_reserva,
     mail_posible,
 )
+from cine_fuente.services.qr_service import generar_qr_png
 
 logger = logging.getLogger(__name__)
 
@@ -115,13 +116,21 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
         datos["entradas"] = []
         datos["servicios"] = []
 
-        # asociamos las entradas
+         # asociamos las entradas
         for entrada in entradas:
             if entrada["reserva_id"] == reserva["id"]:
-                datos["entradas"].append({
+                item = {
                     "butaca": f"{entrada['fila']}{entrada['numero']}",
+                    "codigo_qr": entrada["codigo_qr"],
                     "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
-                })
+                }
+                # el QR solo se genera para entradas confirmadas y sin usar
+                if (reserva["estado"] == "confirmada"
+                        and entrada["codigo_qr"]
+                        and entrada["fecha_uso"] is None):
+                    png = generar_qr_png(entrada["codigo_qr"])
+                    item["qr_base64"] = base64.b64encode(png).decode("ascii")
+                datos["entradas"].append(item)
 
         # asociamos los servicios que corresponden
         for servicio in servicios:
