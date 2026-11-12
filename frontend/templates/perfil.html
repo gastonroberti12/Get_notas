@@ -41,7 +41,9 @@
             </div>
         </form>
 
+        
         <!-- Cerrar sesión -->
+         
         <form method="post" action="{{ url_for('users.logout') }}">
             <button type="submit" class="perfil_logout">Cerrar sesión</button>
         </form>
@@ -54,6 +56,7 @@
         <div class="tabs">
             <button type="button" class="tab">Próximas</button>
             <button type="button" class="tab">Historial</button>
+            <a class="tab-enlace" href="{{ url_for('users.mis_resenas') }}">Mis reseñas</a>
         </div>
 
         <!-- Se genera un panel por pestaña, cada uno con su lista de reservas -->

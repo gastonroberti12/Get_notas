@@ -444,3 +444,19 @@
 .entrada_resenar:hover {
   text-decoration: underline;
 }
+
+
+/* Tercera pestaña: lleva a la página Mis reseñas (no usa la clase .tab porque el JS la cuenta como panel) */
+.tab-enlace {
+  padding: 12px 18px;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tab-enlace:hover {
+  color: var(--text);
+}
