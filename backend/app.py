@@ -23,6 +23,7 @@ from cine_fuente.routes.salas import salas_bp
 from cine_fuente.routes.sucursales import sucursales_bp
 from cine_fuente.routes.entradas import entradas_bp
 from cine_fuente.routes.estadisticas import estadisticas_bp
+from cine_fuente.routes.resenas import resenas_bp
 
 
 def crear_app():
@@ -38,6 +39,7 @@ def crear_app():
     app.register_blueprint(servicios_bp)
     app.register_blueprint(entradas_bp)
     app.register_blueprint(estadisticas_bp)
+    app.register_blueprint(resenas_bp)
 
     @app.errorhandler(404)
     def manejar_ruta_no_encontrada(error):
