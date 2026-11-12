@@ -64,3 +64,28 @@ def insertar_resena(usuario_id, pelicula_id, calificacion, comentario):
         "calificacion": calificacion,
         "comentario": comentario,
     })
+
+
+
+
+def listar_resenas_usuario(usuario_id, limit, offset):
+    """Reseñas que escribió un usuario, con los datos de la película."""
+    sql = """
+        SELECT r.id, r.pelicula_id, r.calificacion, r.comentario, r.fecha,
+               p.titulo AS pelicula, p.poster_url
+        FROM resenas AS r
+        INNER JOIN pelicula AS p ON p.id = r.pelicula_id
+        WHERE r.usuario_id = %(usuario_id)s
+        ORDER BY r.fecha DESC, r.id DESC
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+    return ejecutar_consulta(
+        sql, {"usuario_id": usuario_id, "limit": limit, "offset": offset}
+    )
+
+
+def contar_resenas_usuario(usuario_id):
+    sql = "SELECT COUNT(*) AS total FROM resenas WHERE usuario_id = %(usuario_id)s"
+    return ejecutar_consulta(sql, {"usuario_id": usuario_id})[0]["total"]
+
+

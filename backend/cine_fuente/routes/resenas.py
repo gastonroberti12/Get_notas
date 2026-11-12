@@ -50,3 +50,21 @@ def estado_resena(pelicula_id):
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error)
+
+    
+
+# GET /usuarios/me/resenas: las reseñas del cliente autenticado.
+@resenas_bp.route("/usuarios/me/resenas", methods=["GET"])
+@requiere_rol("cliente")
+def obtener_mis_resenas():
+    try:
+        limit, offset = validar_paginacion(request.args)
+        return jsonify(
+            resenas_service.listar_resenas_usuario(int(g.usuario["id"]), limit, offset)
+        ), 200
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception as error:
+        return respuesta_error_interno(error)
+
+

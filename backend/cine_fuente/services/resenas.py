@@ -75,3 +75,24 @@ def crear_resena(usuario_id, pelicula_id, calificacion, comentario):
         "calificacion": calificacion,
         "comentario": comentario,
     }
+
+
+
+def listar_resenas_usuario(usuario_id, limit, offset):
+    """Reseñas del usuario autenticado, de la más nueva a la más vieja."""
+    filas = resenas_repo.listar_resenas_usuario(usuario_id, limit, offset)
+    return {
+        "resenas": [
+            {
+                "id": int(fila["id"]),
+                "pelicula_id": int(fila["pelicula_id"]),
+                "pelicula": fila["pelicula"],
+                "poster_url": fila["poster_url"],
+                "calificacion": int(fila["calificacion"]),
+                "comentario": fila["comentario"],
+                "fecha": formatear_fecha_hora(fila["fecha"]),
+            }
+            for fila in filas
+        ],
+        "total": int(resenas_repo.contar_resenas_usuario(usuario_id)),
+    }
