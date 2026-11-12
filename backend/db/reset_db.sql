@@ -16,6 +16,7 @@ TRUNCATE TABLE reserva_servicios;
 TRUNCATE TABLE entrada;
 TRUNCATE TABLE reservas;
 TRUNCATE TABLE funcion;
+TRUNCATE TABLE resenas;
 TRUNCATE TABLE pelicula;
 TRUNCATE TABLE servicios;
 TRUNCATE TABLE usuarios;
