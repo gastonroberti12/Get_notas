@@ -79,8 +79,15 @@ def profile():
         'anio_registro': (usuario.get('fecha_registro') or '')[:4] or SIN_DATO,
     }
 
-    reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
-
+    # las reservas del perfil las devuelve /usuarios/me/reservas (solo clientes; 204 = sin reservas)
+    reservas_api = []
+    if es_cliente():
+        status_reservas, cuerpo_reservas = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
+        if status_reservas == 200:
+            reservas_api = cuerpo_reservas.get('reservas', [])
+        elif status_reservas != 204:
+            flash('No se pudieron cargar tus reservas. Probá de nuevo en unos minutos.', 'error')
+            
     proximas = []
     historial = []
     for reserva in reservas_api:

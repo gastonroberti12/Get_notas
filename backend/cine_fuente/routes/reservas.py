@@ -118,7 +118,7 @@ def post_pago_reserva(id_reserva):
         id_valido = validar_id_reserva(id_reserva)
         validar_body_pago(request.get_json(silent=True))
         reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
-        enviado = mail_posible(datos_notificacion)
+        enviado = bool(datos_notificacion) and mail_posible(datos_notificacion)
         if enviado:
             enviar_en_segundo_plano(enviar_confirmacion_pago, datos_notificacion)
         return jsonify({**reserva, "mail_enviado": enviado}), 200

@@ -74,9 +74,14 @@ def entrada_api(fila):
 
 def procesar_expiraciones():
     for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
-        datos = compras_repo.obtener_datos_notificacion(id_reserva)
-        if datos and mail_posible(datos):
-            enviar_en_segundo_plano(enviar_estado_reserva, datos)
+        if not mail_posible({"email": True}):  # en Render no hay mails: evita consultas innecesarias
+            continue
+        try:
+            datos = compras_repo.obtener_datos_notificacion(id_reserva)
+            if datos and mail_posible(datos):
+                enviar_en_segundo_plano(enviar_estado_reserva, datos)
+        except Exception:
+            logger.exception("No se pudo preparar el mail de la reserva %s", id_reserva)
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
@@ -288,9 +293,15 @@ def confirmar_pago(reserva_id, usuario):
         )
 
     reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
-    datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
-    if reserva_actualizada is None or datos_notificacion is None:
+    if reserva_actualizada is None:
         raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
+
+    # El pago ya está confirmado: los datos para el mail son opcionales y nunca deben dar error 500.
+    try:
+        datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
+    except Exception:
+        logger.exception("No se pudieron obtener los datos de notificación de la reserva %s", reserva_id)
+        datos_notificacion = None
 
     return reserva_api(reserva_actualizada), datos_notificacion
 
@@ -341,6 +352,11 @@ def cancelar_reserva(reserva_id, usuario):
         )
 
     datos = compras_repo.obtener_datos_notificacion(reserva_id)
-    if datos and mail_posible(datos):
-        enviar_en_segundo_plano(enviar_estado_reserva, datos)
+    try:
+        if mail_posible({"email": True}):
+            datos = compras_repo.obtener_datos_notificacion(reserva_id)
+            if datos and mail_posible(datos):
+                enviar_en_segundo_plano(enviar_estado_reserva, datos)
+    except Exception:
+        logger.exception("No se pudo preparar el mail de la reserva %s", reserva_id)
 

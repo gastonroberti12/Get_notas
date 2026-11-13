@@ -89,7 +89,20 @@ def enviar_confirmacion_pago(datos_reserva):
 
     _enviar_smtp(mensaje)
 
+
+def _en_render():
+    """Render define RENDER=true en todos sus servicios; en localhost no existe."""
+    return os.getenv("RENDER", "").lower() == "true"
+
+
+def mail_habilitado():
+    """El envío de mails solo funciona fuera de Render (localhost): Render bloquea los puertos SMTP."""
+    return not _en_render()
+
+
 def _enviar_smtp(mensaje):
+    if not mail_habilitado():
+        raise RuntimeError("El envío de mails está deshabilitado en Render.")
     servidor, remitente = os.getenv("SMTP_HOST"), os.getenv("SMTP_FROM")
     if not servidor or not remitente:
         raise RuntimeError("Faltan SMTP_HOST o SMTP_FROM.")
@@ -103,12 +116,20 @@ def _enviar_smtp(mensaje):
             conexion.login(usuario, contrasena)
         conexion.send_message(mensaje)
 
+
 def mail_posible(datos):
-    """Chequeo barato y síncrono: hay destinatario y SMTP configurado."""
+    """Chequeo barato y síncrono: estamos en localhost, hay destinatario y SMTP configurado."""
+    if not datos or not mail_habilitado():
+        return False
     return bool(datos.get("email") and os.getenv("SMTP_HOST") and os.getenv("SMTP_FROM"))
 
+
 def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
-    """Lanza el envío en un hilo, con reintentos y resultado en el log."""
+    """Lanza el envío en un hilo, con reintentos y resultado en el log.
+    Nunca lanza excepciones: un problema de mail no debe romper la reserva."""
+    if not mail_habilitado():
+        return
+
     def tarea():
         for n in range(1, intentos + 1):
             try:
@@ -119,7 +140,11 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
                 logger.exception("Falló el mail de la reserva %s (intento %s)", datos["id"], n)
                 time.sleep(espera * n)
         logger.error("Mail NO enviado tras %s intentos (reserva %s)", intentos, datos["id"])
-    threading.Thread(target=tarea, daemon=True).start()
+
+    try:
+        threading.Thread(target=tarea, daemon=True).start()
+    except Exception:
+        logger.exception("No se pudo iniciar el hilo de envío de mail")
 
 def enviar_estado_reserva(d):
     """Mail de cancelación o expiración, según d['estado']."""

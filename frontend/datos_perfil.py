@@ -103,6 +103,9 @@ def armar_reserva(reserva):
     #comprobar si puede cancelarse
     inicio = parsear_fecha(reserva.get('fecha_hora'))
 
+    if inicio is not None and inicio.tzinfo is None:
+    inicio = inicio.replace(tzinfo=timezone(timedelta(hours=-3)))
+
     faltan_mas_de_1h = (
         inicio is not None
         and inicio - datetime.now(timezone.utc) > timedelta(hours=1)
