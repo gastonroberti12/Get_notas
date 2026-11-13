@@ -35,6 +35,14 @@ def respuesta_error_api(payload: dict, status: int):
     return jsonify(payload), status
 
 
+def respuesta_error(codigo: str, titulo: str, descripcion: str, status: int):
+    """Construye y devuelve una respuesta de error API estándar."""
+    return respuesta_error_api(
+        construir_error_api(codigo, titulo, descripcion),
+        status,
+    )
+
+
 def respuesta_error_excepcion(error: ValueError):
     payload = error.args[0] if error.args and isinstance(error.args[0], dict) else construir_error_api(
         "ERROR_VALIDACION", "Solicitud inválida", "Los datos enviados no son válidos."
@@ -116,6 +124,14 @@ def validar_minimo(valor: int, minimo: int, nombre: str) -> int:
             f"'{nombre}' debe ser mayor o igual a {minimo}."
         )
     return valor
+
+
+def validar_id_query(parametros, nombre: str) -> int | None:
+    """Valida un ID opcional recibido como parámetro de consulta."""
+    valor = parametros.get(nombre)
+    if valor is None:
+        return None
+    return validar_minimo(validar_entero_estricto(valor, nombre), 1, nombre)
 
 
 def validar_maximo(valor: int, maximo: int, nombre: str) -> int:

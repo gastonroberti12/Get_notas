@@ -85,4 +85,62 @@
 
 </section>
 
+<!-- RESEÑAS -->
+
+<section class="resenas" id="resenas">
+
+    <h2>Reseñas</h2>
+
+    {% if resenas.total %}
+    <p class="resenas-resumen">
+        <span class="resenas-promedio">★ {{ resenas.promedio|string|replace('.', ',') }}</span>
+        · {{ resenas.total }} reseña{{ '' if resenas.total == 1 else 's' }}
+    </p>
+    {% endif %}
+
+    {% if estado_resena %}
+        {% if estado_resena.puede_resenar %}
+
+        <!-- Solo aparece si el cliente tiene una entrada ya validada de esta película -->
+        <form class="resena-form" method="post" action="{{ url_for('peliculas.crear_resena', pelicula_id=pelicula.id) }}">
+            <p class="resena-form-titulo">Dejá tu reseña</p>
+
+            <!-- Las estrellas van de 5 a 1 porque el CSS las muestra al revés (1 a 5) -->
+            <div class="estrellas">
+                {% for n in [5, 4, 3, 2, 1] %}
+                <input type="radio" id="estrella-{{ n }}" name="calificacion" value="{{ n }}" required>
+                <label for="estrella-{{ n }}" title="{{ n }} de 5">★</label>
+                {% endfor %}
+            </div>
+
+            <textarea name="comentario" rows="3" maxlength="500" placeholder="Contanos qué te pareció (opcional)"></textarea>
+            <button type="submit" class="resena-boton">Publicar reseña</button>
+        </form>
+
+        {% elif estado_resena.ya_reseno %}
+        <p class="resena-aviso">Ya dejaste tu reseña de esta película. ¡Gracias!</p>
+        {% else %}
+        <p class="resena-aviso">Vas a poder reseñar esta película cuando valides tu entrada en el cine.</p>
+        {% endif %}
+    {% endif %}
+
+    {% if resenas.resenas %}
+    <div class="resenas-lista">
+        {% for r in resenas.resenas %}
+        <article class="resena">
+            <div class="resena-cabecera">
+                <strong>{{ r.autor }}</strong>
+                <span class="resena-estrellas" aria-label="{{ r.calificacion }} de 5">{{ '★' * r.calificacion }}{{ '☆' * (5 - r.calificacion) }}</span>
+                <span class="resena-fecha">{{ r.fecha_texto }}</span>
+            </div>
+            {% if r.comentario %}<p class="resena-comentario">{{ r.comentario }}</p>{% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="detalle-mensaje">Todavía no hay reseñas de esta película.</p>
+    {% endif %}
+
+</section>
+
 {% endblock %}

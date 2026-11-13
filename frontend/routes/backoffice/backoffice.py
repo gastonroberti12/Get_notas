@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash , request
 from routes.roles import es_admin
 from api_cliente import llamar_api, mensaje_error
 from dashboard import armar_dashboard
+from routes.products import obtener_listado
 
 backoffice_bp = Blueprint("backoffice", __name__)
 
@@ -46,4 +47,8 @@ def salas_admin():
     if not es_admin():
         return redirect(url_for("peliculas.inicio"))
 
-    return render_template("backadmin/salas.html")
+    # Solo lectura: las salas vienen predefinidas. obtener_listado ya pide _limit=100
+    # y, si el backend falla, devuelve ([], mensaje de error) en vez de explotar.
+    salas, error = obtener_listado("salas", "salas")
+    return render_template("backadmin/salas.html", salas=salas, error=error)
+

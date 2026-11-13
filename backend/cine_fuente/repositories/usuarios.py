@@ -1,6 +1,7 @@
 import pymysql
 
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.utils import ahora_gmt3
 
 
 MYSQL_ERROR_DUPLICADO = 1062
@@ -105,14 +106,15 @@ def obtener_usuario_por_email(email):
 def crear_usuario(nombre, apellido, email, contrasenia):
     """Inserta un usuario cliente y devuelve su id o None si el email ya existe."""
     sql = """
-        INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
-        VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
+        INSERT INTO usuarios (nombre, apellido, email, contrasena, rol, fecha_registro)
+        VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente', %(fecha)s)
     """
     return _escribir_usuario(sql, {
         "nombre": nombre,
         "apellido": apellido,
         "email": email,
         "contrasena": contrasenia,
+        "fecha": ahora_gmt3().replace(tzinfo=None),  # la base de TiDB está en UTC
     }, devolver_id=True)
 
 

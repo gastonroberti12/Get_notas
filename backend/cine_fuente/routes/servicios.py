@@ -17,10 +17,10 @@ from cine_fuente.validators.servicios import (
 )
 
 from cine_fuente.utils import (
-    construir_error_api,
     mensaje_validacion,
     validar_paginacion,
-    respuesta_paginada
+    respuesta_paginada,
+    respuesta_error as respuesta_error_compartida,
 )
 
 servicios_bp = Blueprint("servicios", __name__)
@@ -28,9 +28,9 @@ servicios_bp = Blueprint("servicios", __name__)
 
 # AUXILIAR - Respuestas de error
 def error_servicio(codigo, mensaje, estado, descripcion=None):
-    return jsonify(
-        construir_error_api(codigo, mensaje, descripcion or mensaje)
-    ), estado
+    return respuesta_error_compartida(
+        codigo, mensaje, descripcion or mensaje, estado
+    )
 
 
 # 1. GET /servicios

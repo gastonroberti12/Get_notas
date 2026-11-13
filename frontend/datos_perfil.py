@@ -43,11 +43,14 @@ def clasificar_reserva(reserva):
         return "historial"
 
     if estado in ESTADOS_PROXIMAS:
-        if funcion_ya_comenzo(reserva.get("fecha_hora")):
+        # Si todas las entradas ya se usaron, no hay nada próximo: va al historial.
+        entradas = reserva.get("entradas", [])
+        todas_usadas = bool(entradas) and all(e.get("fecha_uso") for e in entradas)
+
+        if todas_usadas or funcion_ya_comenzo(reserva.get("fecha_hora")):
             return "historial"
 
         return "proximas"
-
     return None
 
 def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
@@ -79,6 +82,8 @@ def armar_reserva(reserva):
             
         entradas.append({
             'butaca': entrada.get('butaca', SIN_DATO),
+            'codigo': entrada.get('codigo_qr'),
+            'qr': entrada.get('qr_base64'),
             'usada': usada,
             'estado': estado,
             'fecha_uso': formatear_fecha(
@@ -107,6 +112,7 @@ def armar_reserva(reserva):
         'id': reserva['id'],
         'estado': reserva['estado'],
         'pelicula': reserva.get('pelicula') or SIN_DATO,
+        'pelicula_id': reserva.get('pelicula_id'),
         'poster': reserva.get('poster_url'),
         'fecha_funcion': formatear_fecha(
             reserva.get('fecha_hora'), '%d/%m/%Y'

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Mis reseñas{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mis_resenas.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<a class="volver" href="{{ url_for('users.profile') }}">← Mi perfil</a>
+
+<section class="mis-resenas">
+
+    <h1>Mis reseñas</h1>
+
+    {% if resenas %}
+    <div class="mis-resenas-lista">
+        {% for r in resenas %}
+        <article class="mi-resena">
+
+            <!-- Póster que lleva a la película -->
+            <a class="mi-resena-poster" href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=r.pelicula_id, _anchor='resenas') }}">
+                {% if r.poster_url %}<img src="{{ r.poster_url }}" alt="Póster de {{ r.pelicula }}">{% endif %}
+            </a>
+
+            <div class="mi-resena-info">
+                <div class="mi-resena-cabecera">
+                    <h2><a href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=r.pelicula_id, _anchor='resenas') }}">{{ r.pelicula }}</a></h2>
+                    <span class="mi-resena-fecha">{{ r.fecha_texto }}</span>
+                </div>
+
+                <span class="mi-resena-estrellas" aria-label="{{ r.calificacion }} de 5">{{ '★' * r.calificacion }}{{ '☆' * (5 - r.calificacion) }}</span>
+
+                {% if r.comentario %}
+                <p class="mi-resena-comentario">{{ r.comentario }}</p>
+                {% endif %}
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="mis-resenas-vacio">
+        Todavía no escribiste ninguna reseña. Cuando valides una entrada, vas a poder reseñar la película desde tu historial.
+        <a href="{{ url_for('users.profile') }}">Ir a mi perfil</a>
+    </p>
+    {% endif %}
+
+</section>
+
+{% endblock %}
+

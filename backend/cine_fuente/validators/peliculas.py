@@ -1,8 +1,11 @@
 import re
 from datetime import datetime, timedelta, timezone
 
-from cine_fuente.utils import construir_error_api
-from cine_fuente.utils import ahora_gmt3
+from cine_fuente.utils import (
+    ahora_gmt3,
+    construir_error_api,
+    validar_id_query,
+)
 
 
 PATRON_FECHA_CARTELERA = re.compile(
@@ -147,5 +150,5 @@ def validar_filtros(parametros):
     if activa not in (None, "true", "false"):
         raise ValueError(construir_error_api(
             "invalid.activa.format", "Formato inválido", "activa debe ser true o false."), 400)
-    return {"sucursal_id": parametros.get("sucursal_id", type=int),
+    return {"sucursal_id": validar_id_query(parametros, "sucursal_id"),
             "activa": None if activa is None else activa == "true"}
