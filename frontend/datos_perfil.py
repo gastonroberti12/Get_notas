@@ -104,7 +104,7 @@ def armar_reserva(reserva):
     inicio = parsear_fecha(reserva.get('fecha_hora'))
 
     if inicio is not None and inicio.tzinfo is None:
-    inicio = inicio.replace(tzinfo=timezone(timedelta(hours=-3)))
+        inicio = inicio.replace(tzinfo=timezone(timedelta(hours=-3)))
 
     faltan_mas_de_1h = (
         inicio is not None
