@@ -96,7 +96,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
             r.fecha_cancelacion,
             {TOTAL_RESERVA_SQL},
             f.fecha_hora,
-            f.pelicula_id,
+            p.id AS pelicula_id,
             p.titulo AS pelicula,
             p.poster_url,
             s.nombre AS sala,
@@ -125,6 +125,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
 
     return consultar(sql, parametros)
 
+
 """obtiene las entradas y sus butacas para varias reservas"""
 def listar_entradas_perfil(reserva_ids):
 
@@ -136,7 +137,6 @@ def listar_entradas_perfil(reserva_ids):
     sql = f"""
         SELECT
             e.reserva_id,
-            e.codigo_qr,
             e.fecha_uso,
             b.fila,
             b.numero
@@ -178,6 +178,58 @@ def listar_servicios_perfil(reserva_ids):
     """
 
     return consultar(sql, parametros)
+
+
+def obtener_datos_perfil(filtros, limit, offset, usuario_id):
+    """Trae reservas, total, entradas y servicios del perfil usando UNA sola conexión."""
+    where, parametros = _construir_filtros(filtros, usuario_id)
+    parametros_lista = {**parametros, "limit": limit, "offset": offset}
+
+    sql_reservas = f"""
+        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+               r.fecha_cancelacion, {TOTAL_RESERVA_SQL},
+               f.fecha_hora, p.id AS pelicula_id, p.titulo AS pelicula, p.poster_url,
+               s.nombre AS sala, su.nombre AS sucursal
+        FROM reservas r
+        INNER JOIN funcion f ON r.funcion_id = f.id
+        {TOTAL_RESERVA_JOINS}
+        INNER JOIN pelicula p ON f.pelicula_id = p.id
+        INNER JOIN salas s ON f.sala_id = s.id
+        INNER JOIN sucursales su ON s.sucursal_id = su.id
+        {where}
+        ORDER BY r.fecha_compra DESC, r.id DESC
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql_reservas, parametros_lista)
+        reservas = cursor.fetchall()
+
+        cursor.execute(f"SELECT COUNT(*) AS total FROM reservas AS r {where}", parametros)
+        fila = cursor.fetchone()
+        total = int(fila["total"]) if fila else 0
+
+        entradas, servicios = [], []
+        ids = [r["id"] for r in reservas]
+        if ids:
+            marcadores, params_in = clausula_in(ids, "reserva")
+            cursor.execute(f"""
+                SELECT e.reserva_id, e.codigo_qr, e.fecha_uso, b.fila, b.numero
+                FROM entrada e INNER JOIN butacas b ON e.butaca_id = b.id
+                WHERE e.reserva_id IN ({marcadores})
+                ORDER BY e.reserva_id, e.id
+            """, params_in)
+            entradas = cursor.fetchall()
+
+            cursor.execute(f"""
+                SELECT rs.reserva_id, rs.cantidad, s.nombre
+                FROM reserva_servicios rs INNER JOIN servicios s ON rs.servicio_id = s.id
+                WHERE rs.reserva_id IN ({marcadores})
+                ORDER BY rs.reserva_id, rs.id
+            """, params_in)
+            servicios = cursor.fetchall()
+
+    return reservas, total, entradas, servicios
 
 
 def contar_reservas(filtros, usuario_propio_id=None):
@@ -285,6 +337,7 @@ def obtener_entradas_para_pago(reserva_id):
 def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
     """Confirma una reserva y asigna sus QR en una única transacción."""
     with obtener_conexion() as conexion:
+        conexion.begin()
         try:
             with conexion.cursor() as cursor:
                 cursor.execute(
@@ -392,17 +445,22 @@ def obtener_datos_notificacion(reserva_id):
     )
     return datos
 
+
 def crear_reserva_con_entradas(datos, butaca_ids):
     """Transacción única: bloquea la función, valida butacas e inserta reserva y entradas.
     Devuelve (reserva_id, []) o (None, butacas_ocupadas) si hay conflicto."""
     placeholders, parametros_in = clausula_in(butaca_ids, "ocupada")
     with obtener_conexion() as conexion:
+        conexion.begin()
         try:
             with conexion.cursor() as cursor:
+                # Serializa las compras de la misma función.
                 cursor.execute(
                     "SELECT id FROM funcion WHERE id = %(funcion_id)s FOR UPDATE",
                     {"funcion_id": datos["funcion_id"]},
                 )
+                # FOR UPDATE = lectura actual: en TiDB un SELECT común lee el snapshot previo
+                # al lock y no vería la compra que otra transacción acaba de confirmar.
                 cursor.execute(
                     f"""
                     SELECT e.butaca_id
@@ -411,6 +469,7 @@ def crear_reserva_con_entradas(datos, butaca_ids):
                     WHERE r.funcion_id = %(funcion_id)s
                     AND r.estado IN ('pendiente', 'confirmada', 'finalizada')
                     AND e.butaca_id IN ({placeholders})
+                    FOR UPDATE
                     """,
                     {"funcion_id": datos["funcion_id"], **parametros_in},
                 )
@@ -427,12 +486,11 @@ def crear_reserva_con_entradas(datos, butaca_ids):
                     datos,
                 )
                 reserva_id = cursor.lastrowid
-                for butaca_id in butaca_ids:
-                    cursor.execute(
-                        "INSERT INTO entrada (reserva_id, butaca_id, codigo_qr, fecha_uso) "
-                        "VALUES (%(reserva_id)s, %(butaca_id)s, NULL, NULL)",
-                        {"reserva_id": reserva_id, "butaca_id": butaca_id},
-                    )
+                # Un solo INSERT multi-fila en vez de uno por butaca (menos viajes a la base).
+                cursor.executemany(
+                    "INSERT INTO entrada (reserva_id, butaca_id) VALUES (%s, %s)",
+                    [(reserva_id, butaca_id) for butaca_id in butaca_ids],
+                )
             conexion.commit()
             return int(reserva_id), []
         except Exception:
@@ -501,11 +559,21 @@ def eliminar_entradas_reserva(reserva_id):
 
 
 def procesar_reservas_vencidas(ahora):
+    """Expira las reservas pendientes vencidas y devuelve solo los ids que expiró esta llamada."""
     limite = (ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)).replace(tzinfo=None)
-    ids = [f["id"] for f in consultar(
-        "SELECT id FROM reservas WHERE estado = 'pendiente' AND fecha_compra <= %(limite)s",
-        {"limite": limite})]
-    if ids:
-        escribir("UPDATE reservas SET estado = 'expirada' "
-                 "WHERE estado = 'pendiente' AND id IN %(ids)s", {"ids": tuple(ids)})
+    sql_vencidas = ("SELECT id FROM reservas "
+                    "WHERE estado = 'pendiente' AND fecha_compra <= %(limite)s")
+    if not consultar(sql_vencidas, {"limite": limite}):  # caso habitual: una sola consulta, sin locks
+        return []
+    with obtener_conexion() as conexion:
+        conexion.begin()
+        with conexion.cursor() as cursor:
+            # Lectura actual + lock: si otro proceso ya las expiró, o se pagaron mientras tanto,
+            # no vuelven a aparecer acá.
+            cursor.execute(sql_vencidas + " FOR UPDATE", {"limite": limite})
+            ids = [f["id"] for f in cursor.fetchall()]
+            if ids:
+                cursor.execute("UPDATE reservas SET estado = 'expirada' WHERE id IN %(ids)s",
+                               {"ids": tuple(ids)})
+        conexion.commit()
     return ids
