@@ -1,4 +1,4 @@
-﻿import os
+import os
 import certifi # Para obtener los certificados de confianza
 import pymysql
 
@@ -26,6 +26,7 @@ def obtener_conexion():
         database=DB_NAME,
         charset="utf8mb4",
         cursorclass=DictCursor,
+        connect_timeout=15, # Por TiDB tarda en responder, la petición no queda colgada y corta a los 15 s
         **configuracion_ssl
     )
 
