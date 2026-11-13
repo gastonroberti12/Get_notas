@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-cine_password}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
     ports:
-      - "3306:3306"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/db/cine_paradiso.sql:/docker-entrypoint-initdb.d/01-cine_paradiso.sql:ro
