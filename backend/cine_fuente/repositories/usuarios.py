@@ -134,6 +134,21 @@ def actualizar_usuario(id_usuario, cambios):
         {**cambios, "id": id_usuario},
     )
 
+def obtener_hash_contrasenia(id_usuario):
+    """Devuelve el hash guardado de la contraseña del usuario"""
+    filas = ejecutar_consulta("SELECT contrasena FROM usuarios WHERE id = %(id)s LIMIT 1", {"id": id_usuario})
+    return filas[0]["contrasena"] if filas else None
+
+
+def cambiar_contrasenia(id_usuario, hash_nuevo):
+    """Guarda la contrasena nueva e invalida los tokens anteriores en un solo UPDATE."""
+    sql = """
+        UPDATE usuarios
+        SET contrasena = %(contrasena)s, fecha_ultimo_logout = UTC_TIMESTAMP()
+        WHERE id = %(id)s
+    """
+    ejecutar_escritura(sql, {"contrasena": hash_nuevo, "id": id_usuario})
+
 def actualizar_fecha_logout(id_usuario):
     """Actualiza la fecha del último logout usando UTC explícito en MySQL."""
     sql = "UPDATE usuarios SET fecha_ultimo_logout = UTC_TIMESTAMP() WHERE id = %(id)s"

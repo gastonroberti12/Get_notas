@@ -2,7 +2,7 @@ from flask import g
 
 from cine_fuente.repositories import usuarios as usuarios_repo
 from cine_fuente.utils import formatear_fecha_hora, construir_error_api
-from cine_fuente.services.seguridad import es_titular_o_admin, hashear_contrasenia
+from cine_fuente.services.seguridad import es_titular_o_admin, hashear_contrasenia, verificar_contrasenia
 
 
 def usuario_api(fila):
@@ -82,6 +82,13 @@ def verificar_permisos_edicion(id_usuario, body):
             "Acceso denegado",
             "Solo un administrador puede modificar el rol de un usuario.",
         ), 403)
+    # Un cliente cambia su contraseña, que exige la actual.
+    if isinstance(body, dict) and "contrasenia" in body and g.usuario["rol"] != "administrador":
+        raise ValueError(construir_error_api(
+            "CONTRASENIA_NO_AUTORIZADA",
+            "Acceso denegado",
+            "Para cambiar su contraseña debe ingresar la contraseña actual.",
+        ), 403)
 
 
 def actualizar_usuario(id_usuario, cambios):
@@ -98,4 +105,27 @@ def actualizar_usuario(id_usuario, cambios):
 
     _guardar_sin_duplicar_email(lambda: usuarios_repo.actualizar_usuario(id_usuario, cambios))
 
+
+def cambiar_contrasenia(id_usuario, contrasenia_actual, contrasenia_nueva):
+    """Cambia la contraseña del titular. 403 si la actual no coincide, 400 si la nueva es igual."""
+    hash_guardado = usuarios_repo.obtener_hash_contrasenia(id_usuario)
+    if hash_guardado is None:
+        raise _error_usuario_no_encontrado()
+
+    if not verificar_contrasenia(hash_guardado, contrasenia_actual):
+        raise ValueError(construir_error_api(
+            "CONTRASENIA_ACTUAL_INCORRECTA",
+            "Contraseña actual incorrecta",
+            "La contraseña actual no es correcta.",
+        ), 403)
+
+    if contrasenia_actual == contrasenia_nueva:
+        raise ValueError(construir_error_api(
+            "CONTRASENIA_REPETIDA",
+            "Contraseña inválida",
+            "La nueva contraseña tiene que ser distinta de la actual.",
+        ), 400)
+
+    # También registra el logout, los tokens emitidos hasta ahora dejan de valer.
+    usuarios_repo.cambiar_contrasenia(id_usuario, hashear_contrasenia(contrasenia_nueva))
 
