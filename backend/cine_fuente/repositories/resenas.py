@@ -1,4 +1,5 @@
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.utils import ahora_gmt3
 
 
 def listar_resenas(pelicula_id, limit, offset):
@@ -55,17 +56,16 @@ def usuario_vio_pelicula(usuario_id, pelicula_id):
 
 def insertar_resena(usuario_id, pelicula_id, calificacion, comentario):
     sql = """
-        INSERT INTO resenas (usuario_id, pelicula_id, calificacion, comentario)
-        VALUES (%(usuario_id)s, %(pelicula_id)s, %(calificacion)s, %(comentario)s)
+        INSERT INTO resenas (usuario_id, pelicula_id, calificacion, comentario, fecha)
+        VALUES (%(usuario_id)s, %(pelicula_id)s, %(calificacion)s, %(comentario)s, %(fecha)s)
     """
     return ejecutar_escritura(sql, {
         "usuario_id": usuario_id,
         "pelicula_id": pelicula_id,
         "calificacion": calificacion,
         "comentario": comentario,
+        "fecha": ahora_gmt3().replace(tzinfo=None),  # la base de TiDB está en UTC
     })
-
-
 
 
 def listar_resenas_usuario(usuario_id, limit, offset):

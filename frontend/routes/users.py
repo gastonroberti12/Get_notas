@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import current_app, Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
 from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva, parsear_fecha
@@ -82,8 +82,13 @@ def profile():
     reservas_api = []
     if es_cliente():
         status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
-        reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
-   
+        if status in (200, 204):
+            reservas_api = cuerpo.get('reservas', [])
+        else:
+            current_app.logger.error('Fallo GET /usuarios/me/reservas: status=%s cuerpo=%s', status, cuerpo)
+            flash('No pudimos cargar tus reservas en este momento. Probá de nuevo en unos segundos.', 'error')
+
+
     proximas = []
     historial = []
     for reserva in reservas_api:

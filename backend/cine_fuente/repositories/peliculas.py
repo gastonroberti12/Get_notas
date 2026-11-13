@@ -67,11 +67,11 @@ def tiene_reservas_activas(pelicula_id):
 # Consulta las películas activas con funciones futuras en una sucursal.
 def consultar_peliculas_por_sucursal(sucursal_id, desde):
     return ejecutar_consulta(
-        "SELECT p.* FROM pelicula p "
-        "JOIN funcion f ON f.pelicula_id = p.id "
-        "JOIN salas s ON s.id = f.sala_id "
-        "WHERE p.activa = TRUE "
-        "AND s.sucursal_id = %s AND f.fecha_hora > %s "
-        "GROUP BY p.id ORDER BY p.id",
+        "SELECT * FROM pelicula "
+        "WHERE activa = TRUE AND id IN ("
+        "  SELECT f.pelicula_id FROM funcion f "
+        "  JOIN salas s ON s.id = f.sala_id "
+        "  WHERE f.activa = TRUE AND s.sucursal_id = %s AND f.fecha_hora > %s"
+        ") ORDER BY id",
         (sucursal_id, desde),
     )
