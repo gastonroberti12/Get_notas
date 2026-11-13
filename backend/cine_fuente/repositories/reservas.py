@@ -96,6 +96,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
             r.fecha_cancelacion,
             {TOTAL_RESERVA_SQL},
             f.fecha_hora,
+            p.id AS pelicula_id,
             p.titulo AS pelicula,
             p.poster_url,
             s.nombre AS sala,
@@ -123,6 +124,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
     """
 
     return consultar(sql, parametros)
+
 
 """obtiene las entradas y sus butacas para varias reservas"""
 def listar_entradas_perfil(reserva_ids):
