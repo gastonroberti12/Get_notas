@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort
+from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
 from api_cliente import llamar_api, mensaje_error
 from datos_perfil import parsear_fecha
 from sucursales import contexto_sucursales
+from routes.roles import esta_logueado, es_cliente
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
@@ -89,4 +90,41 @@ def detalle_pelicula(pelicula_id):
         f["dia"] = fecha.strftime("%d/%m") if fecha else ""
         f["hora"] = fecha.strftime("%H:%M") if fecha else ""
 
-    return render_template("pelicula_detalle.html", pelicula=pelicula, funciones=funciones)
+    # Reseñas de la película (públicas) con su promedio
+    resenas = {"resenas": [], "total": 0, "promedio": None}
+    status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}/resenas?_limit=50")
+    if status == 200:
+        resenas = datos
+    for r in resenas["resenas"]:
+        fecha = parsear_fecha(r.get("fecha"))
+        r["fecha_texto"] = fecha.strftime("%d/%m/%Y") if fecha else ""
+
+    # Solo los clientes consultan si pueden reseñar (entrada ya validada)
+    estado_resena = None
+    if es_cliente():
+        status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}/resenas/estado")
+        if status == 200:
+            estado_resena = datos
+    return render_template("pelicula_detalle.html", pelicula=pelicula, funciones=funciones, resenas=resenas, estado_resena=estado_resena)
+
+
+# Publicar una reseña: el backend valida que la entrada haya sido usada
+@peliculas_bp.route("/peliculas/<int:pelicula_id>/resenas", methods=["POST"])
+def crear_resena(pelicula_id):
+    if not esta_logueado():
+        return redirect(url_for("users.login"))
+
+    calificacion = request.form.get("calificacion", type=int)
+    comentario = request.form.get("comentario", "").strip()
+
+    status, cuerpo = llamar_api(
+        "POST",
+        f"/peliculas/{pelicula_id}/resenas",
+        {"calificacion": calificacion, "comentario": comentario or None},
+    )
+    if status == 201:
+        flash("¡Gracias por tu reseña!", "exito")
+    else:
+        flash(mensaje_error(status, cuerpo, "No se pudo guardar la reseña."), "error")
+
+    return redirect(url_for("peliculas.detalle_pelicula", pelicula_id=pelicula_id, _anchor="resenas"))

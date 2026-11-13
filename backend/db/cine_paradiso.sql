@@ -109,3 +109,17 @@ CREATE TABLE reserva_servicios (
     FOREIGN KEY (reserva_id)  REFERENCES reservas(id),
     FOREIGN KEY (servicio_id) REFERENCES servicios(id)
 );
+
+
+-- ============ RESEÑAS ============
+CREATE TABLE resenas (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id   INT NOT NULL,
+    pelicula_id  INT NOT NULL,
+    calificacion TINYINT NOT NULL,  -- 1 a 5, se valida en el backend
+    comentario   VARCHAR(500),
+    fecha        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (usuario_id, pelicula_id),
+    FOREIGN KEY (usuario_id)  REFERENCES usuarios(id),
+    FOREIGN KEY (pelicula_id) REFERENCES pelicula(id)
+);

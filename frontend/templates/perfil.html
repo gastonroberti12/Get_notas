@@ -41,7 +41,9 @@
             </div>
         </form>
 
+        
         <!-- Cerrar sesión -->
+         
         <form method="post" action="{{ url_for('users.logout') }}">
             <button type="submit" class="perfil_logout">Cerrar sesión</button>
         </form>
@@ -54,6 +56,7 @@
         <div class="tabs">
             <button type="button" class="tab">Próximas</button>
             <button type="button" class="tab">Historial</button>
+            <a class="tab-enlace" href="{{ url_for('users.mis_resenas') }}">Mis reseñas</a>
         </div>
 
         <!-- Se genera un panel por pestaña, cada uno con su lista de reservas -->
@@ -72,7 +75,7 @@
                     <div class="reserva_info">
 
                         <div class="reserva_cabecera">
-                            <h2 class="reserva_titulo">{{ reserva.pelicula }}</h2>
+                            <h2 class="reserva_titulo"><a href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=reserva.pelicula_id) }}">{{ reserva.pelicula }}</a></h2>
                             {% if entrada.estado == 'usada' %}<span class="estado estado_usada">usada</span>
                             {% elif entrada.estado == 'no_usada' %}<span class="estado estado_no_usada">no utilizada</span>
                             {% elif entrada.estado == 'confirmada' %}<span class="estado estado_confirmada">confirmada</span>
@@ -93,7 +96,19 @@
                         <p class="entrada_estado">{% if entrada.fecha_uso %}Usada el {{ entrada.fecha_uso }}{% else %}Sin usar{% endif %}</p>
                         {% endif %}
 
+                        {% if entrada.codigo and entrada.estado == 'confirmada' %}
+                        <div class="entrada_qr">
+                            {% if entrada.qr %}
+                            <img src="data:image/png;base64,{{ entrada.qr }}" alt="QR de la butaca {{ entrada.butaca }}">
+                            {% endif %}
+                            <p class="entrada_codigo">Código de ingreso: <strong>{{ entrada.codigo }}</strong></p>
+                        </div>
+                        {% endif %}
 
+                        {% if entrada.estado == 'usada' %}
+                        <a class="entrada_resenar" href="{{ url_for('peliculas.detalle_pelicula', pelicula_id=reserva.pelicula_id, _anchor='resenas') }}">Reseñar esta película</a>
+                        {% endif %}
+                        
                         <!-- Servicios, total y cancelar son de la reserva: solo en la primera caja -->
                         {% if entrada == reserva.entradas[0] %}
                         {% for servicio in reserva.servicios %}

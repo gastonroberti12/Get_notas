@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
-from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva
+from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva, parsear_fecha
 
 
 users_bp = Blueprint("users", __name__)
@@ -108,3 +108,26 @@ def actualizar_perfil():
     if status == 204:
         session['usuario'] = {**session['usuario'], 'nombre': datos['nombre']}  # el navbar muestra el nombre
     return redirect(url_for('users.profile'))
+
+
+
+
+# Página con todas las reseñas que escribió el cliente
+@users_bp.route("/perfil/resenas")
+def mis_resenas():
+    if not esta_logueado():
+        return redirect(url_for('users.login', next=request.path))
+    if not es_cliente():
+        return redirect(url_for('users.profile'))
+
+    status, cuerpo = llamar_api('GET', '/usuarios/me/resenas?_limit=100')
+    if status not in (200, 204):
+        flash(mensaje_error(status, cuerpo, 'No se pudieron cargar tus reseñas.'), 'error')
+        return redirect(url_for('users.profile'))
+
+    resenas = cuerpo.get('resenas', [])
+    for r in resenas:
+        fecha = parsear_fecha(r.get('fecha'))
+        r['fecha_texto'] = fecha.strftime('%d/%m/%Y') if fecha else ''
+
+    return render_template('mis_resenas.html', resenas=resenas)

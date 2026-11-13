@@ -29,19 +29,25 @@
 
             <!-- Desplegable de sucursales: muestra la sucursal elegida -->
              {% if comprando %}
-            <span class="boton-cines bloqueado" title="No podés cambiar de sucursal durante la compra">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %}</span>
-            {% else %}
-            <div class="nav-dropdown">
-                <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
-                <ul class="nav-submenu">
-                    {% for s in sucursales %}
-                        <li><a href="{{ url_for('cines.elegir_sucursal', sucursal_id=s.id) }}"{% if sucursal_actual and s.id == sucursal_actual.id %} class="activa"{% endif %}>{{ s.nombre }}</a></li>
-                    {% endfor %}
-                </ul>
+             <div class="nav-sucursal">
+                 <span class="boton-cines bloqueado" title="No podés cambiar de sucursal durante la compra">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %}</span>
+             </div>
+             {% else %}
+             <div class="nav-dropdown">
+                 <div class="nav-sucursal">
+                     <button type="button" class="boton-cines">Cines{% if sucursal_actual %}: {{ sucursal_actual.nombre }}{% endif %} ▾</button>
+                 </div>
+                 <ul class="nav-submenu">
+                     {% for s in sucursales %}
+                         <li><a href="{{ url_for('cines.elegir_sucursal', sucursal_id=s.id) }}"{% if sucursal_actual and s.id == sucursal_actual.id %} class="activa"{% endif %}>{{ s.nombre }}</a></li>
+                     {% endfor %}
+                 </ul>
             </div>
             
             {% endif %}
-
+            {% if sucursal_actual %}
+            <a class="mapa-sucursal" href="{{ url_for('cines.mapa') }}">Ubicación</a>
+            {% endif %}
             <!-- Enlace por rol -->
             {% if es_admin() %}
                 <a href="{{ url_for('backoffice.panel') }}">Backoffice</a>

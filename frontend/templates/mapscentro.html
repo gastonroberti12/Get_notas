@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa · Centro{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/maps.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="mapa-pagina">
+    <header class="mapa-encabezado">
+        <p class="mapa-etiqueta">CINE PARADISO</p>
+        <h1>{{ sucursal_actual.nombre }}</h1>
+        <p>{{ sucursal_actual.direccion }}</p>
+    </header>
+    <div class="mapa-marco">
+        <iframe
+            title="Mapa de Cine Paradiso {{ sucursal_actual.nombre }}"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3534.1030948370526!2d-58.38976949938131!3d-34.60512090957393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bccac4276b48d1%3A0xfee863ba373fb778!2sCine%20Lorca!5e1!3m2!1ses-419!2sar!4v1794351363046!5m2!1ses-419!2sar" 
+            width="100%"
+            height="480"
+            style="border:0;"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+</section>
+{% endblock %}
