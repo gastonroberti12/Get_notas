@@ -25,10 +25,13 @@ def mapa():
         if sucursal_actual
         else ""
     )
-    plantillas = {
-        "centro": "mapscentro.html",
-        "palermo": "mapspalermo.html",
-        "belgrano": "mapsbelgrano.html",
+    mapas_embebidos = {
+        "centro": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3534.1030948370526!2d-58.38976949938131!3d-34.60512090957393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bccac4276b48d1%3A0xfee863ba373fb778!2sCine%20Lorca!5e1!3m2!1ses-419!2sar!4v1794351363046!5m2!1ses-419!2sar",
+        "palermo": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2972.4802785998927!2d-58.412776324525545!3d-34.58651665658953!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcca821220477f%3A0x22f851827c26991e!2sCinemark%20Palermo!5e1!3m2!1ses-419!2sar!4v1794351686690!5m2!1ses-419!2sar",
+        "belgrano": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11894.22883031673!2d-58.467474474007325!3d-34.55639922536786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb42dc3d95ed9%3A0xbfcf33802627903c!2sCine%20Showcase%20Belgrano!5e1!3m2!1ses-419!2sar!4v1794351412196!5m2!1ses-419!2sar",
     }
-    plantilla = plantillas.get(nombre, "maps.html")
-    return render_template(plantilla, sucursal_actual=sucursal_actual)
+    return render_template(
+        "maps.html",
+        sucursal_actual=sucursal_actual,
+        mapa_url=mapas_embebidos.get(nombre),
+    )

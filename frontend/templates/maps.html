@@ -8,16 +8,22 @@
 
 {% block content %}
 <section class="mapa-pagina">
-    {% if sucursal_actual and sucursal_actual.direccion %}
+    {% if sucursal_actual and (mapa_url or sucursal_actual.direccion) %}
     <header class="mapa-encabezado">
         <p class="mapa-etiqueta">CINE PARADISO</p>
         <h1>{{ sucursal_actual.nombre }}</h1>
+        {% if sucursal_actual.direccion %}
         <p>{{ sucursal_actual.direccion }}</p>
+        {% endif %}
     </header>
     <div class="mapa-marco">
         <iframe
             title="Mapa de Cine Paradiso {{ sucursal_actual.nombre }}"
+            {% if mapa_url %}
+            src="{{ mapa_url }}"
+            {% else %}
             src="https://www.google.com/maps?q={{ ('Cine Paradiso ' ~ sucursal_actual.nombre ~ ', ' ~ sucursal_actual.direccion)|urlencode }}&amp;output=embed"
+            {% endif %}
             width="100%"
             height="480"
             style="border:0;"
