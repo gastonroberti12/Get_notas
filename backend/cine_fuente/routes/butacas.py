@@ -12,8 +12,7 @@ from cine_fuente.repositories.butacas import (
 )
 from cine_fuente.repositories.salas import consultar_sala_por_id
 from cine_fuente.utils import (
-    construir_error_api,
-    respuesta_error_api,
+    respuesta_error as error,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
@@ -21,10 +20,6 @@ from cine_fuente.utils import (
 from cine_fuente.services.seguridad import requiere_rol
 
 butacas_bp = Blueprint("butacas", __name__)
-
-
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 @butacas_bp.route("/salas/<int:sala_id>/butacas", methods=["GET"])

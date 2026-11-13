@@ -7,15 +7,12 @@ from cine_fuente.utils import (
     construir_error_api,
     respuesta_error_api,
     respuesta_error_excepcion,
+    respuesta_error as error,
     respuesta_paginada,
     validar_paginacion,
 )
 
 salas_bp = Blueprint("salas", __name__, url_prefix="/salas")
-
-
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 @salas_bp.route("", methods=["GET"])
