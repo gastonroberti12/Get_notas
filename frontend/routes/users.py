@@ -114,6 +114,43 @@ def actualizar_perfil():
     return redirect(url_for('users.profile'))
 
 
+CONTRASENIA_MINIMA = 8    # mismos límites que valida el back (validators/auth.py)
+CONTRASENIA_MAXIMA = 128
+
+    
+@users_bp.route("/perfil/contrasenia", methods=['GET', 'POST'])
+def cambiar_contrasenia():
+    if not esta_logueado():
+        return redirect(url_for('users.login', next=request.path))
+
+    if request.method == 'POST':
+        actual = request.form.get('actual', '')
+        nueva = request.form.get('nueva', '')
+        repetir = request.form.get('repetir', '')
+
+        error = None
+        if not actual or not nueva or not repetir:
+            error = 'Completá todos los campos.'
+        elif nueva != repetir:
+            error = 'La nueva contraseña y su repetición no coinciden.'
+        elif len(nueva) < CONTRASENIA_MINIMA or len(nueva) > CONTRASENIA_MAXIMA:
+            error = f'La nueva contraseña debe tener entre {CONTRASENIA_MINIMA} y {CONTRASENIA_MAXIMA} caracteres.'
+
+        if error is None:
+            # el back verifica la actual, rechaza una nueva igual y cierra las sesiones anteriores
+            status, cuerpo = llamar_api('POST', '/usuarios/me/contrasenia', {'contrasenia_actual': actual, 'contrasenia_nueva': nueva})
+            if status == 204:
+                session.clear()
+                flash('Contraseña actualizada. Iniciá sesión con la nueva.', 'exito')
+                return redirect(url_for('users.login'))
+            if status == 401:  # token vencido
+                session.clear()
+                return redirect(url_for('users.login'))
+            error = mensaje_error(status, cuerpo, 'No se pudo cambiar la contraseña.')
+
+        return render_template('cambiar_contrasenia.html', error=error, minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
+
+    return render_template('cambiar_contrasenia.html', minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
 
 
 # Página con todas las reseñas que escribió el cliente
