@@ -118,6 +118,14 @@ def validar_minimo(valor: int, minimo: int, nombre: str) -> int:
     return valor
 
 
+def validar_id_query(parametros, nombre: str) -> int | None:
+    """Valida un ID opcional recibido como parámetro de consulta."""
+    valor = parametros.get(nombre)
+    if valor is None:
+        return None
+    return validar_minimo(validar_entero_estricto(valor, nombre), 1, nombre)
+
+
 def validar_maximo(valor: int, maximo: int, nombre: str) -> int:
     """Valida el límite superior."""
     if valor > maximo:
