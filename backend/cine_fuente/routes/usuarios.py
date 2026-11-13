@@ -9,6 +9,7 @@ from cine_fuente.utils import (
 )
 from cine_fuente.validators.usuarios import (
     validar_body_actualizar_usuario,
+    validar_body_cambiar_contrasenia,
     validar_body_crear_usuario,
     validar_filtros_usuarios,
     validar_id_usuario,
@@ -87,3 +88,16 @@ def get_mi_perfil():
         return respuesta_error_excepcion(error)
     except Exception as error:
         return respuesta_error_interno(error) 
+
+# cambia la contraseña del usuario autenticado (exige la actual).
+@usuarios_bp.route("/usuarios/me/contrasenia", methods=["POST"])
+@requiere_rol("cliente", "administrador")
+def post_cambiar_contrasenia():
+    try:
+        actual, nueva = validar_body_cambiar_contrasenia(request.get_json(silent=True))
+        usuarios_service.cambiar_contrasenia(int(g.usuario["id"]), actual, nueva)
+        return "", 204
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
+    except Exception as error:
+        return respuesta_error_interno(error)

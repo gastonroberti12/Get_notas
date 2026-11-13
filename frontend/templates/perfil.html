@@ -41,7 +41,8 @@
             </div>
         </form>
 
-        
+        <a class="perfil_logout" href="{{ url_for('users.cambiar_contrasenia') }}">Cambiar contraseña</a>
+
         <!-- Cerrar sesión -->
          
         <form method="post" action="{{ url_for('users.logout') }}">
