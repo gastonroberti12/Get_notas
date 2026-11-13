@@ -180,6 +180,58 @@ def listar_servicios_perfil(reserva_ids):
     return consultar(sql, parametros)
 
 
+def obtener_datos_perfil(filtros, limit, offset, usuario_id):
+    """Trae reservas, total, entradas y servicios del perfil usando UNA sola conexión."""
+    where, parametros = _construir_filtros(filtros, usuario_id)
+    parametros_lista = {**parametros, "limit": limit, "offset": offset}
+
+    sql_reservas = f"""
+        SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
+               r.fecha_cancelacion, {TOTAL_RESERVA_SQL},
+               f.fecha_hora, p.id AS pelicula_id, p.titulo AS pelicula, p.poster_url,
+               s.nombre AS sala, su.nombre AS sucursal
+        FROM reservas r
+        INNER JOIN funcion f ON r.funcion_id = f.id
+        {TOTAL_RESERVA_JOINS}
+        INNER JOIN pelicula p ON f.pelicula_id = p.id
+        INNER JOIN salas s ON f.sala_id = s.id
+        INNER JOIN sucursales su ON s.sucursal_id = su.id
+        {where}
+        ORDER BY r.fecha_compra DESC, r.id DESC
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        cursor.execute(sql_reservas, parametros_lista)
+        reservas = cursor.fetchall()
+
+        cursor.execute(f"SELECT COUNT(*) AS total FROM reservas AS r {where}", parametros)
+        fila = cursor.fetchone()
+        total = int(fila["total"]) if fila else 0
+
+        entradas, servicios = [], []
+        ids = [r["id"] for r in reservas]
+        if ids:
+            marcadores, params_in = clausula_in(ids, "reserva")
+            cursor.execute(f"""
+                SELECT e.reserva_id, e.codigo_qr, e.fecha_uso, b.fila, b.numero
+                FROM entrada e INNER JOIN butacas b ON e.butaca_id = b.id
+                WHERE e.reserva_id IN ({marcadores})
+                ORDER BY e.reserva_id, e.id
+            """, params_in)
+            entradas = cursor.fetchall()
+
+            cursor.execute(f"""
+                SELECT rs.reserva_id, rs.cantidad, s.nombre
+                FROM reserva_servicios rs INNER JOIN servicios s ON rs.servicio_id = s.id
+                WHERE rs.reserva_id IN ({marcadores})
+                ORDER BY rs.reserva_id, rs.id
+            """, params_in)
+            servicios = cursor.fetchall()
+
+    return reservas, total, entradas, servicios
+
+
 def contar_reservas(filtros, usuario_propio_id=None):
     """Cuenta registros para la paginación."""
     where, parametros = _construir_filtros(filtros, usuario_propio_id)

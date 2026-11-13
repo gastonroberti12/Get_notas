@@ -26,6 +26,8 @@ def obtener_conexion():
         database=DB_NAME,
         charset="utf8mb4",
         cursorclass=DictCursor,
+        read_timeout=60,
+        write_timeout=60,
         connect_timeout=15, # Por TiDB tarda en responder, la petición no queda colgada y corta a los 15 s
         **configuracion_ssl
     )
