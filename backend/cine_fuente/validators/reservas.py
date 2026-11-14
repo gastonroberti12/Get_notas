@@ -2,14 +2,16 @@ from datetime import datetime
 import re
 
 from cine_fuente.utils import construir_error_api, ahora_gmt3
+from cine_fuente.validators.comunes import (
+    error_validacion,
+    validar_campos,
+)
 
-
-def error_validacion(mensaje: str, detalle: str):
-    raise ValueError(construir_error_api("ERROR_VALIDACION", mensaje, detalle), 400)
+ESTADOS_VALIDOS = ("pendiente", "confirmada", "cancelada", "expirada", "finalizada")
 
 
 def validar_entero_positivo(valor, nombre: str) -> int:
-    """Valida IDs usados"""
+    """Valida IDs usados por reservas y entradas."""
     if isinstance(valor, bool):
         error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo.")
     if isinstance(valor, int):
@@ -32,16 +34,8 @@ def validar_entero_json_positivo(valor, nombre: str) -> int:
 
 def validar_body_crear_reserva(body) -> dict:
     """Valida el JSON antes de consultar la base de datos."""
-    if not isinstance(body, dict):
-        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
-
     campos = {"funcion_id", "butaca_ids"}
-    desconocidos = set(body) - campos
-    faltantes = campos - set(body)
-    if desconocidos:
-        error_validacion("Campos desconocidos", f"No se admiten estos campos: {', '.join(sorted(desconocidos))}.")
-    if faltantes:
-        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(sorted(faltantes))}.")
+    validar_campos(body, campos, campos)
 
     funcion_id = validar_entero_json_positivo(body["funcion_id"], "funcion_id")
     butaca_ids = body["butaca_ids"]
@@ -57,10 +51,19 @@ def validar_body_crear_reserva(body) -> dict:
 
 def validar_body_cancelar_reserva(body) -> dict:
     """Valida el JSON, solo admite estado='cancelada'."""
-    if not isinstance(body, dict):
-        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
-    if set(body) != {"estado"}:
-        error_validacion("Cuerpo inválido", "El cuerpo debe contener únicamente el campo 'estado'.")
+    validar_campos(
+        body,
+        {"estado"},
+        {"estado"},
+        error_desconocidos=(
+            "Cuerpo inválido",
+            "El cuerpo debe contener únicamente el campo 'estado'.",
+        ),
+        error_faltantes=(
+            "Cuerpo inválido",
+            "El cuerpo debe contener únicamente el campo 'estado'.",
+        ),
+    )
     if body.get("estado") != "cancelada":
         error_validacion("Estado inválido", "El único estado admitido en esta operación es 'cancelada'.")
     return {"estado": "cancelada"}
@@ -74,16 +77,11 @@ def validar_id_reserva(id_reserva) -> int:
 def validar_filtros_listado(args) -> dict:
     """Valida filtros admitidos."""
     filtros = {}
-    estados_validos = ("pendiente", "confirmada", "cancelada", "expirada", "finalizada")
     for campo in ("usuario_id", "funcion_id"):
         valor = args.get(campo)
         filtros[campo] = validar_entero_positivo(valor, campo) if valor is not None else None
 
-    estado = args.get("estado")
-    if estado is not None and estado not in estados_validos:
-        error_validacion("Estado inválido", f"'estado' debe ser uno de: {', '.join(estados_validos)}.")
-    filtros["estado"] = estado
-
+    filtros["estado"] = validar_estado_propio(args)
     fechas = {}
     for campo in ("fecha_desde", "fecha_hasta"):
         texto = args.get(campo)
@@ -106,10 +104,9 @@ def validar_filtros_listado(args) -> dict:
 
 def validar_estado_propio(args) -> str | None:
     """Valida el filtro estado de GET /usuarios/me/reservas."""
-    estados_validos = ("pendiente", "confirmada", "cancelada", "expirada", "finalizada")
     estado = args.get("estado")
-    if estado is not None and estado not in estados_validos:
-        error_validacion("Estado inválido", f"'estado' debe ser uno de: {', '.join(estados_validos)}.")
+    if estado is not None and estado not in ESTADOS_VALIDOS:
+        error_validacion("Estado inválido", f"'estado' debe ser uno de: {', '.join(ESTADOS_VALIDOS)}.")
     return estado
 
 
@@ -132,17 +129,8 @@ def validar_luhn(numero: str) -> bool:
 def validar_body_pago(body) -> None:
     """Valida los datos de tarjeta para el pago simulado sin almacenarlos."""
     # Se exige un objeto JSON con exactamente los cinco campos definidos.
-    if not isinstance(body, dict):
-        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
     campos = {"titular", "numero_tarjeta", "mes_vencimiento", "anio_vencimiento", "cvv"}
-
-    desconocidos = set(body) - campos
-    faltantes = campos - set(body)
-
-    if desconocidos:
-        error_validacion("Campos desconocidos", f"No se admiten estos campos: {', '.join(sorted(desconocidos))}.")
-    if faltantes:
-        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(sorted(faltantes))}.")
+    validar_campos(body, campos, campos)
 
     # El titular admite letras, acentos y espacios.
     titular = body["titular"]

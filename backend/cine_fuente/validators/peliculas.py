@@ -6,6 +6,7 @@ from cine_fuente.utils import (
     construir_error_api,
     validar_id_query,
 )
+from cine_fuente.validators.comunes import error_validacion
 
 
 PATRON_FECHA_CARTELERA = re.compile(
@@ -20,11 +21,12 @@ LONGITUDES_PELICULA = {
 
 
 def error_pelicula(campo, mensaje):
-    raise ValueError(construir_error_api(
-        f"pelicula.{campo}.invalid",
+    error_validacion(
         "Datos de película inválidos",
         mensaje,
-    ), 400)
+        f"pelicula.{campo}.invalid",
+        400,
+    )
 
 
 def validar_modificacion_pelicula(datos):

@@ -13,7 +13,6 @@ def validar_nombre(nombre):
 
     if len(nombre) > 100:
         raise ValueError("El nombre no puede superar los 100 caracteres")
-
     return nombre
 
 
@@ -24,12 +23,15 @@ def validar_descripcion(descripcion):
         return None
 
     if not isinstance(descripcion, str):
-        raise ValueError("La descripción debe ser un texto")
+        error_validacion("La descripción debe ser un texto", "La descripción debe ser un texto")
 
     descripcion = descripcion.strip()
 
     if len(descripcion) > 255:
-        raise ValueError("La descripción no puede superar los 255 caracteres")
+        error_validacion(
+            "La descripción no puede superar los 255 caracteres",
+            "La descripción no puede superar los 255 caracteres",
+        )
 
     return descripcion or None
 
@@ -38,7 +40,7 @@ def validar_descripcion(descripcion):
 def validar_activo(activo):
 
     if not isinstance(activo, bool):
-        raise ValueError("El campo activo debe ser true o false")
+        error_validacion("El campo activo debe ser true o false", "El campo activo debe ser true o false")
 
     return activo
 
@@ -51,7 +53,6 @@ def validar_cantidad(cantidad):
 
     if cantidad <= 0:
         raise ValueError("La cantidad debe ser mayor a cero")
-
     return cantidad
 
 
