@@ -3,6 +3,10 @@ import logging
 from urllib.parse import urlencode
 
 from flask import g, jsonify, request
+from cine_fuente.validators.comunes import (
+    construir_error_api,
+    error_validacion,
+)
 
 try:
     from cine_fuente.repositories.usuarios import obtener_usuario_por_token
@@ -17,17 +21,6 @@ PAGINACION_LIMIT_MAXIMO = 100
 PAGINACION_OFFSET_DEFAULT = 0
 PAGINACION_OFFSET_MINIMO = 0
 logger = logging.getLogger(__name__)
-
-
-def construir_error_api(code: str, message: str, description: str, level: str = "error") -> dict:
-    """Construye el formato de error para cualquier endpoint."""
-    return {
-        "errors": [{
-            "codigo": code,
-            "titulo": message,
-            "mensaje": description,
-        }]
-    }
 
 
 def respuesta_error_api(payload: dict, status: int):
@@ -93,7 +86,7 @@ def ahora_gmt3() -> datetime:
 
 def error_paginacion(codigo: str, mensaje: str, descripcion: str) -> None:
     """Utilidad común: levanta un error JSON de validación para parámetros de paginación."""
-    raise ValueError(construir_error_api(codigo, mensaje, descripcion), 400)
+    error_validacion(mensaje, descripcion, codigo, 400)
 
 
 def validar_entero_estricto(valor, nombre: str) -> int:
