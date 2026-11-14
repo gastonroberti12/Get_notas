@@ -2,6 +2,9 @@ import unittest
 
 from werkzeug.datastructures import MultiDict
 
+from cine_fuente.validators.comunes import (
+    validar_campos,
+)
 from cine_fuente.validators.funciones import (
     validar_eliminacion,
     validar_filtros as validar_filtros_funciones,
@@ -40,6 +43,14 @@ class FiltrosQueryTest(unittest.TestCase):
     def test_eliminacion_acepta_sin_cuerpo_o_booleano(self):
         self.assertFalse(validar_eliminacion(None))
         self.assertTrue(validar_eliminacion({"fisica": True}))
+
+    def test_helper_comun_valida_campos(self):
+        self.assertEqual(validar_campos({"a": 1}, {"a"}, {"a"}), {"a": 1})
+
+    def test_helper_comun_rechaza_campos_invalidos(self):
+        with self.assertRaises(ValueError) as error:
+            validar_campos({"otro": 1}, {"a"})
+        self.assertEqual(error.exception.args[1], 400)
 
 
 if __name__ == "__main__":
