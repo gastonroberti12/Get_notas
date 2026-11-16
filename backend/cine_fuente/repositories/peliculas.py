@@ -16,9 +16,12 @@ def consultar_pelicula_por_imdb(imdb_id):
 
 # Consulta las películas almacenadas; con activa, filtra por ese estado.
 def consultar_peliculas(activa=None):
+    ahora = ahora_gmt3().replace(tzinfo=None)
     if activa is False:
+        # Inactivas: dadas de baja a mano o con la cartelera vencida.
         return ejecutar_consulta(
-            "SELECT * FROM pelicula WHERE activa = FALSE ORDER BY id"
+            "SELECT * FROM pelicula WHERE activa = FALSE OR fecha_fin_cartelera < %s ORDER BY id",
+            (ahora,),
         )
     ahora = ahora_gmt3().replace(tzinfo=None)
     return ejecutar_consulta(
