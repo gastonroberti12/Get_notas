@@ -1,37 +1,12 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Locales | Cine Paradiso{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
-{% endblock %}
-
-{% block content %}
-
-<section class="admin-panel">
-
-    <!-- Encabezado -->
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-
-            <h1>Locales</h1>
-
-            <p class="admin-subtitle">
+{% block titulo_admin %}Locales{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">
                 Consultá los establecimientos de Cine Paradiso.
-            </p>
-        </div>
+            </p>{% endblock %}
 
-        <span class="admin-role">Administrador</span>
-    </div>
-
-    <div class="admin-layout">
-
-        <!-- Menú lateral -->
-        {% include "backadmin/barralateral.html" %}
-
-        <!-- Contenido principal -->
-        <div class="admin-content">
+{% block contenido_admin %}
 
             <div class="admin-section-heading">
                 <h2>Locales registrados</h2>
@@ -51,10 +26,4 @@
 
             </div>
 
-        </div>
-
-    </div>
-
-</section>
-
-{% endblock %}
+{% endblock contenido_admin %}
