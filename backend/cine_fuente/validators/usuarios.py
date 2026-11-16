@@ -87,6 +87,19 @@ def validar_body_actualizar_usuario(body) -> dict:
 
     return {campo: _validar_campo(campo, valor) for campo, valor in body.items()}
 
+def validar_body_cambiar_contrasenia(body) -> tuple:
+    """Valida el JSON de POST /usuarios/me/contrasenia. Devuelve (actual, nueva)."""
+    if not isinstance(body, dict):
+        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
+
+    faltantes = [c for c in ("contrasenia_actual", "contrasenia_nueva") if c not in body]
+    if faltantes:
+        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(faltantes)}.")
+
+    actual = body["contrasenia_actual"]
+    if not isinstance(actual, str) or not actual:
+        error_validacion("Campo inválido", "'contrasenia_actual' debe ser un texto no vacío.")
+    return actual, validar_contrasenia(body["contrasenia_nueva"])
 
 def validar_id_usuario(id_usuario) -> int:
     """Valida el ID de la URL para GET/PATCH /usuarios/{id}."""

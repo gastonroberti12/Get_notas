@@ -115,6 +115,43 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/InternalServerError"
+          /usuarios/me/contrasenia:
+    post:
+      summary: Cambiar la contraseña propia
+      description: Exige la contraseña actual. Si se cambia, los tokens emitidos
+        hasta ese momento dejan de ser válidos y hay que iniciar sesión de nuevo.
+        **Rol autorizado:** Cliente y Administrador.
+      tags:
+        - Usuarios
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contrasenia_actual
+                - contrasenia_nueva
+              properties:
+                contrasenia_actual:
+                  type: string
+                contrasenia_nueva:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+      responses:
+        "204":
+          $ref: "#/components/responses/NoContent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /usuarios/me/reservas:
     get:
       summary: Listar las reservas propias
