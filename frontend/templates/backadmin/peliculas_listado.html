@@ -12,7 +12,7 @@
                 <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-primary">Agregar película</a>
             </div>
 
-            {% with etiqueta_activos="Activas", etiqueta_bajas="Dadas de baja" %}
+            {% with etiqueta_activos="Activas", etiqueta_bajas="Dadas de baja o vencidas" %}
                 {% include "backadmin/filtro_estado.html" %}
             {% endwith %}
             {% include "backadmin/mensajes.html" %}
@@ -40,7 +40,7 @@
                                 <div class="admin-actions">
                                     <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
                                        class="admin-btn-secondary">Editar</a>
-                                    {% if p.activa %}
+                                    {% if p.activa and not ver_inactivos %}
                                     <form method="post"
                                           action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
                                           onsubmit="return confirm('¿Dar de baja esta película?')">

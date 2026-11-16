@@ -1,4 +1,5 @@
 ﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.utils import ahora_gmt3
 
 #constante para simplificar consultar_funciones y consultar_funcion_por_id
 SELECT_FUNCION = (
@@ -23,8 +24,9 @@ def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id
         sql += " AND s.sucursal_id = %s"
         params.append(sucursal_id)
     if activa is not None:
-        sql += " AND f.activa = %s"
-        params.append(activa)
+        # Activas = vigentes y futuras; inactivas = dadas de baja o ya pasadas.
+        sql += " AND f.activa = TRUE AND f.fecha_hora >= %s" if activa else " AND (f.activa = FALSE OR f.fecha_hora < %s)"
+        params.append(ahora_gmt3().replace(tzinfo=None))
     sql += " ORDER BY f.fecha_hora"
     return ejecutar_consulta(sql, tuple(params))
 
