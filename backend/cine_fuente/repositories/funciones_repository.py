@@ -57,6 +57,39 @@ def insertar_funcion(pelicula_id, sala_id, fecha_hora, precio):
     )
 
 
+def obtener_pelicula_para_funcion(cursor, pelicula_id):
+    cursor.execute(
+        "SELECT id, activa, fecha_inicio_cartelera, fecha_fin_cartelera, duracion_min "
+        "FROM pelicula WHERE id = %s",
+        (pelicula_id,),
+    )
+    return cursor.fetchone()
+
+
+def bloquear_sala_para_funcion(cursor, sala_id):
+    cursor.execute("SELECT id FROM salas WHERE id = %s FOR UPDATE", (sala_id,))
+    return cursor.fetchone()
+
+
+def consultar_funciones_sala_en_transaccion(cursor, sala_id):
+    cursor.execute(
+        "SELECT f.fecha_hora, p.duracion_min "
+        "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
+        "WHERE f.sala_id = %s",
+        (sala_id,),
+    )
+    return cursor.fetchall()
+
+
+def insertar_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, precio):
+    cursor.execute(
+        "INSERT INTO funcion (pelicula_id, sala_id, fecha_hora, precio, activa) "
+        "VALUES (%s, %s, %s, %s, TRUE)",
+        (pelicula_id, sala_id, fecha_hora, precio),
+    )
+    return cursor.lastrowid
+
+
 # Modifica los datos de una función.
 def actualizar_funcion(funcion_id, datos):
     campos = ", ".join(f"{campo} = %s" for campo in datos)
