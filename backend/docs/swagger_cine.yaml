@@ -101,7 +101,7 @@ paths:
   /usuarios/me:
     get:
       summary: Consultar el perfil propio
-      description: "**Rol autorizado:** Cliente."
+      description: "**Rol autorizado:** Cliente y Administrador."
       tags:
         - Usuarios
       security:
@@ -279,12 +279,17 @@ paths:
   /auth/logout:
     post:
       summary: Cerrar sesión
-      description: Cerrar sesión. **Rol autorizado:** Público general.
+      description: Cerrar sesión del usuario autenticado. **Rol autorizado:** Cliente
+        y Administrador.
       tags:
         - Autenticación
+      security:
+        - bearerAuth: []
       responses:
         "204":
           $ref: "#/components/responses/NoContent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /peliculas:
@@ -346,21 +351,136 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         "502":
           $ref: "#/components/responses/BadGateway"
-  /peliculas/{id}:
-    parameters:
-      - $ref: "#/components/parameters/Id"
+  /peliculas/buscar:
     get:
-      summary: Obtener una película por ID
-      description: "**Rol autorizado:** Público general."
+      summary: Buscar películas en OMDb
+      description: Busca películas externas por título. No agrega resultados a la
+        cartelera local. **Rol autorizado:** Público general.
       tags:
         - Películas
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Texto de búsqueda, no vacío y de hasta 100 caracteres
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: pagina
+          in: query
+          required: false
+          description: Página de resultados
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 1
       responses:
         "200":
-          $ref: "#/components/responses/GetPelicula200"
+          description: Resultados de búsqueda
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagina:
+                    type: integer
+                  resultados:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id_externo:
+                          type: string
+                        titulo:
+                          type: string
+                        anio:
+                          type: string
+                        tipo:
+                          type: string
+                        poster_url:
+                          type: string
+                          nullable: true
+                  total_resultados:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          description: OMDb no está configurado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errores"
+  /peliculas/{id}:
+    get:
+      summary: Obtener una película por ID local o IMDb
+      description: Un entero consulta la película local. Un identificador IMDb con
+        formato `tt` seguido de números consulta el detalle externo mediante OMDb.
+        **Rol autorizado:** Público general.
+      tags:
+        - Películas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID local entero o identificador IMDb
+          schema:
+            oneOf:
+              - type: integer
+                minimum: 1
+              - type: string
+                pattern: '^tt[0-9]+$'
+          examples:
+            local:
+              value: 1
+            imdb:
+              value: tt0120338
+      responses:
+        "200":
+          description: Película local o detalle OMDb normalizado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Pelicula"
+                  - type: object
+                    properties:
+                      id_externo:
+                        type: string
+                      titulo:
+                        type: string
+                      anio:
+                        type: string
+                      sinopsis:
+                        type: string
+                        nullable: true
+                      poster_url:
+                        type: string
+                        nullable: true
+                      duracion_min:
+                        type: integer
+                        nullable: true
+                      clasificacion:
+                        type: string
+                        nullable: true
+                      genero:
+                        type: string
+                        nullable: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          description: OMDb no está configurado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errores"
     patch:
       summary: Actualizar parcialmente una película
       description: "**Rol autorizado:** Administrador."
@@ -368,6 +488,8 @@ paths:
         - Películas
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
@@ -397,6 +519,8 @@ paths:
         - Películas
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
       responses:
         "204":
           $ref: "#/components/responses/NoContent"
@@ -511,12 +635,24 @@ paths:
           $ref: "#/components/responses/InternalServerError"
     delete:
       summary: Eliminar una función
-      description: 409 si la función tiene reservas asociadas. **Rol autorizado:**
-        Administrador.
+      description: "Baja lógica por omisión o con `fisica: false`. Con `fisica:
+        true` intenta la baja física y puede responder 409 si existen datos
+        relacionados. **Rol autorizado:** Administrador."
       tags:
         - Funciones
       security:
         - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fisica:
+                  type: boolean
+                  default: false
+                  description: true intenta eliminar físicamente; false o omitido desactiva la función
       responses:
         "204":
           $ref: "#/components/responses/NoContent"
@@ -769,10 +905,13 @@ paths:
       - $ref: "#/components/parameters/Id"
     get:
       summary: Consultar las butacas de una sala
-      description: Devuelve todas las butacas de la sala sin paginar, para poder
-        dibujar el mapa de asientos. **Rol autorizado:** Público general.
+      description: Devuelve una página paginada de las butacas de la sala.
+        **Rol autorizado:** Público general.
       tags:
         - Butacas
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
       responses:
         "200":
           $ref: "#/components/responses/GetButacasList200"
@@ -780,36 +919,6 @@ paths:
           $ref: "#/components/responses/NoContent"
         "404":
           $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-    post:
-      summary: Crear butacas para una sala
-      description: Crea todas las butacas o ninguna. 409 si se supera la `capacidad`
-        de la sala o se repite una fila y número. **Rol autorizado:**
-        Administrador.
-      tags:
-        - Butacas
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ButacasCreate"
-      responses:
-        "201":
-          $ref: "#/components/responses/CreatedMany"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /butacas/{id}:
@@ -897,7 +1006,7 @@ paths:
     post:
       summary: Crear una reserva
       description: Crea la reserva en estado `pendiente` y bloquea las butacas durante
-        10 minutos. 409 si alguna butaca ya está ocupada o la función ya
+        8 minutos. 409 si alguna butaca ya está ocupada o la función ya
         comenzó. **Rol autorizado:** Cliente.
       tags:
         - Reservas
@@ -1099,7 +1208,7 @@ paths:
               $ref: "#/components/schemas/ReservaServicioCreate"
       responses:
         "201":
-          $ref: "#/components/responses/Created"
+          $ref: "#/components/responses/CreatedNoContent"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -1530,7 +1639,7 @@ components:
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$
       description: Fecha y hora en GMT-3 con 6 decimales de precisión
-      example: 2026-11-20T21:30:00.000000-03:00
+      example: "2026-11-20T21:30:00.000000-03:00"
     Usuario:
       type: object
       properties:
@@ -1866,6 +1975,11 @@ components:
           description: Cantidad de butacas de la sala
           minimum: 1
           example: 80
+        sucursal_id:
+          type: integer
+          description: Sucursal de destino; debe existir
+          minimum: 1
+          example: 1
     Butaca:
       type: object
       properties:
@@ -1990,6 +2104,10 @@ components:
           description: Precio por entrada en centavos (varía según 2D, 3D o sala VIP)
           minimum: 1
           example: 450000
+        activa:
+          type: boolean
+          description: Indica si la función está activa
+          example: true
     Reserva:
       type: object
       properties:
@@ -2006,7 +2124,7 @@ components:
           description: Función reservada
           example: 1
         fecha_compra:
-          description: Fecha de creación de la reserva. Los 10 minutos para pagar se
+          description: Fecha de creación de la reserva. Los 8 minutos para pagar se
             cuentan desde acá
           allOf:
             - $ref: "#/components/schemas/FechaHora"
@@ -2115,8 +2233,8 @@ components:
           example: Pochoclos grandes y gaseosa de 500 ml
         precio:
           type: integer
-          description: Precio unitario en centavos
-          minimum: 1
+          description: Precio unitario en pesos enteros
+          minimum: 0
           example: 350000
         activo:
           type: boolean
@@ -2138,8 +2256,8 @@ components:
           example: Pochoclos grandes y gaseosa de 500 ml
         precio:
           type: integer
-          description: Precio unitario en centavos
-          minimum: 1
+          description: Precio unitario en pesos enteros
+          minimum: 0
           example: 350000
         activo:
           type: boolean
@@ -2159,8 +2277,8 @@ components:
           example: Pochoclos grandes y gaseosa de 500 ml
         precio:
           type: integer
-          description: Precio unitario en centavos
-          minimum: 1
+          description: Precio unitario en pesos enteros
+          minimum: 0
           example: 350000
         activo:
           type: boolean
@@ -2400,52 +2518,56 @@ components:
         _links:
           $ref: '#/components/schemas/Links'
     MisReservasListResponse:
-    type: object
-    properties:
-       reservas:
-        type: array
-        items:
-          $ref: '#/components/schemas/ReservaPerfil'
-       _links:
-          $ref: '#/components/schemas/Links'
+      type: object
+      properties:
+        reservas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservaPerfil"
+        _links:
+          $ref: "#/components/schemas/Links"
 
     ReservaPerfil:
-    allOf:
-      - $ref: '#/components/schemas/Reserva'
-      - type: object
-        properties:
-          pelicula:
-           type: string
-        poster_url:
-          type: string
-          nullable: true
-        fecha_hora:
-          type: string
-          format: date-time
-        sala:
-          type: string
-        sucursal:
-          type: string
-        entradas:
-          type: array
-          items:
-            type: object
-            properties:
-              butaca:
-                type: string
-              fecha_uso:
-                type: string
-                format: date-time
-                nullable: true
-        servicios:
-          type: array
-          items:
-            type: object
-            properties:
-              nombre:
-                type: string
-              cantidad:
-                type: integer
+      allOf:
+        - $ref: "#/components/schemas/Reserva"
+        - type: object
+          properties:
+            pelicula:
+              type: string
+            pelicula_id:
+              type: integer
+            poster_url:
+              type: string
+              nullable: true
+            fecha_hora:
+              type: string
+              format: date-time
+            sala:
+              type: string
+            sucursal:
+              type: string
+            entradas:
+              type: array
+              items:
+                type: object
+                properties:
+                  butaca:
+                    type: string
+                  codigo_qr:
+                    type: string
+                  fecha_uso:
+                    type: string
+                    format: date-time
+                    nullable: true
+            servicios:
+              type: array
+              items:
+                type: object
+                properties:
+                  nombre:
+                    type: string
+                  cantidad:
+                    type: integer
 
     EntradasListResponse:
       type: object
@@ -2472,6 +2594,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Butaca"
+        _links:
+          $ref: "#/components/schemas/Links"
     ReservaServiciosListResponse:
       type: object
       properties:
@@ -2497,7 +2621,7 @@ components:
         href:
           type: string
           description: URI para navegar a la página indicada
-          example: http://localhost:5000/peliculas?_offset=0&_limit=10
+          example: http://localhost:5001/peliculas?_offset=0&_limit=10
     IdResponse:
       type: object
       properties:
@@ -2518,23 +2642,15 @@ components:
     Error:
       type: object
       properties:
-        code:
+        codigo:
           type: string
           description: Código alfanumérico del error
           example: ERROR_VALIDACION
-        message:
+        titulo:
           type: string
           description: Resumen breve del error
           example: El cuerpo de la solicitud es inválido
-        level:
-          type: string
-          description: Nivel del error
-          enum:
-            - info
-            - warning
-            - error
-          example: error
-        description:
+        mensaje:
           type: string
           description: Descripción detallada del error
           example: El campo 'precio' debe ser un entero mayor a cero
@@ -2627,7 +2743,7 @@ components:
       schema:
         type: string
         format: date
-      example: 2026-11-20
+      example: "2026-11-20"
     FechaDesdeFilter:
       name: fecha_desde
       in: query
@@ -2635,7 +2751,7 @@ components:
       schema:
         type: string
         format: date
-      example: 2026-11-01
+      example: "2026-11-01"
     FechaHastaFilter:
       name: fecha_hasta
       in: query
@@ -2643,7 +2759,7 @@ components:
       schema:
         type: string
         format: date
-      example: 2026-11-30
+      example: "2026-11-30"
     ReservaEstadoFilter:
       name: estado
       in: query
@@ -2726,11 +2842,11 @@ components:
           schema:
             $ref: '#/components/schemas/ReservasListResponse'
     GetMisReservasList200:
-    description: Reservas del usuario con sus detalles
-    content:
-         application/json:
-           schema:
-            $ref: '#/components/schemas/MisReservasListResponse'
+      description: Reservas del usuario con sus detalles
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MisReservasListResponse"
     GetEntradasList200:
       description: OK
       content:
@@ -2881,6 +2997,8 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/IdResponse"
+    CreatedNoContent:
+      description: Recurso creado sin contenido en el cuerpo
     CreatedMany:
       description: Creados
       content:
