@@ -5,9 +5,9 @@ from cine_fuente.repositories.butacas import (
     actualizar_butaca,
     consultar_butaca_por_id,
     consultar_butacas_por_sala,
-    contar_butacas,
     eliminar_butaca,
     eliminar_butacas_de_sala,
+    generar_butacas_atomico,
     insertar_butaca,
 )
 from cine_fuente.repositories.salas import consultar_sala_por_id
@@ -39,20 +39,10 @@ def listar_butacas_sala(sala_id):
 @requiere_rol("administrador")
 # Genera las butacas de una sala.
 def generar_butacas(sala_id):
-    sala = consultar_sala_por_id(sala_id)
-    if sala is None:
-        return error("sala.not.found", "Sala no encontrada", "La sala solicitada no existe.", 404)
-    capacidad = sala["capacidad"]
-    if capacidad % 10 != 0:
-        return error("sala.capacidad.invalid", "Capacidad inválida", "La capacidad debe ser múltiplo de 10 para generar butacas.", 400)
-    if contar_butacas(sala_id) != 0:
-        return error("butacas.already.generated", "Butacas ya generadas", "La sala ya tiene butacas generadas.", 409)
-    cantidad = 0
-    for fila_numero in range(1, capacidad // 10 + 1):
-        fila = chr(64 + fila_numero)
-        for numero in range(1, 11):
-            insertar_butaca(sala_id, fila, numero)
-            cantidad += 1
+    try:
+        cantidad = generar_butacas_atomico(sala_id)
+    except ValueError as error_validacion:
+        return respuesta_error_excepcion(error_validacion)
     return jsonify({"mensaje": "Butacas generadas", "cantidad": cantidad}), 201
 
 
