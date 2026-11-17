@@ -19,7 +19,7 @@ PAGINACION_OFFSET_MINIMO = 0
 logger = logging.getLogger(__name__)
 
 
-def construir_error_api(code: str, message: str, description: str, level: str = "error") -> dict:
+def construir_error_api(code: str, message: str, description: str) -> dict:
     """Construye el formato de error para cualquier endpoint."""
     return {
         "errors": [{
@@ -206,16 +206,6 @@ def respuesta_paginada(
     )
 
     return jsonify({clave: registros, "_links": enlaces}), 200
-
-
-def construir_links_paginacion(total: int, limit: int, offset: int) -> dict:
-    return construir_links(
-        request.base_url,
-        request.args.to_dict(flat=True),
-        total,
-        limit,
-        offset
-    )
 
 def validar_precio(valor, minimo=1):
     """Precio en pesos enteros; rechaza decimales, strings y booleanos."""
