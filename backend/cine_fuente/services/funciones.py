@@ -3,10 +3,12 @@ from datetime import timedelta, timezone
 
 from cine_fuente.db import ejecutar_transaccion
 from cine_fuente.repositories.funciones_repository import (
-    actualizar_funcion, consultar_funcion_por_id, consultar_funciones,
+    consultar_funcion_por_id, consultar_funciones,
     desactivar_funcion, eliminar_funcion, bloquear_sala_para_funcion,
     consultar_funciones_sala_en_transaccion, insertar_funcion_en_transaccion,
-    obtener_pelicula_para_funcion,
+    obtener_pelicula_para_funcion, obtener_funcion_para_actualizar,
+    contar_reservas_de_funcion, existe_pelicula, existe_sala,
+    actualizar_funcion_en_transaccion,
 )
 from cine_fuente.repositories.peliculas import consultar_pelicula_por_id
 from cine_fuente.repositories.salas import consultar_sala_por_id
@@ -131,15 +133,47 @@ def validar_relaciones(pelicula_id, sala_id):
 
 # Actualiza los datos de una función existente.
 def actualizar_funcion_por_id(funcion_id, cambios):
-    obtener_funcion_por_id(funcion_id)
-    if "pelicula_id" in cambios:
-        validar_relaciones(cambios["pelicula_id"], consultar_funcion_por_id(funcion_id)["sala_id"])
-    if "sala_id" in cambios:
-        validar_relaciones(consultar_funcion_por_id(funcion_id)["pelicula_id"], cambios["sala_id"])
     try:
-        actualizar_funcion(funcion_id, cambios)
+        ejecutar_transaccion(
+            lambda cursor: _actualizar_funcion_en_transaccion(
+                cursor, funcion_id, cambios
+            )
+        )
     except pymysql.err.IntegrityError as causa:
         raise ValueError(construir_error_api("funcion.overlap", "Horario ocupado", "Ya existe una función en esa sala y horario.")) from causa
+
+
+def _actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
+    funcion = obtener_funcion_para_actualizar(cursor, funcion_id)
+    if funcion is None:
+        raise ValueError(construir_error_api(
+            "funcion.not.found", "Función no encontrada",
+            "La función solicitada no existe.",
+        ))
+
+    campos_protegidos = {"pelicula_id", "sala_id", "fecha_hora"}
+    if campos_protegidos.intersection(cambios) and contar_reservas_de_funcion(
+        cursor, funcion_id
+    ):
+        raise ValueError(construir_error_api(
+            "funcion.has.reservas", "No se puede modificar la función",
+            "La función tiene reservas asociadas y no se puede cambiar su película, sala u horario.",
+        ), 409)
+
+    if "pelicula_id" in cambios and not existe_pelicula(
+        cursor, cambios["pelicula_id"]
+    ):
+        raise ValueError(construir_error_api(
+            "pelicula.not.found", "Película no encontrada",
+            "La película indicada no existe.",
+        ))
+    if "sala_id" in cambios and not existe_sala(cursor, cambios["sala_id"]):
+        raise ValueError(construir_error_api(
+            "sala.not.found", "Sala no encontrada",
+            "La sala indicada no existe.",
+        ))
+
+    actualizar_funcion_en_transaccion(cursor, funcion_id, cambios)
 
 
 # Elimina o desactiva una función.

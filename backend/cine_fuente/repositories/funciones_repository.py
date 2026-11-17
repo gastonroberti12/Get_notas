@@ -90,6 +90,41 @@ def insertar_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, pr
     return cursor.lastrowid
 
 
+def obtener_funcion_para_actualizar(cursor, funcion_id):
+    cursor.execute(
+        "SELECT id, pelicula_id, sala_id, fecha_hora "
+        "FROM funcion WHERE id = %s FOR UPDATE",
+        (funcion_id,),
+    )
+    return cursor.fetchone()
+
+
+def contar_reservas_de_funcion(cursor, funcion_id):
+    cursor.execute(
+        "SELECT COUNT(*) AS cantidad FROM reservas WHERE funcion_id = %s",
+        (funcion_id,),
+    )
+    return cursor.fetchone()["cantidad"]
+
+
+def existe_pelicula(cursor, pelicula_id):
+    cursor.execute("SELECT id FROM pelicula WHERE id = %s", (pelicula_id,))
+    return cursor.fetchone() is not None
+
+
+def existe_sala(cursor, sala_id):
+    cursor.execute("SELECT id FROM salas WHERE id = %s", (sala_id,))
+    return cursor.fetchone() is not None
+
+
+def actualizar_funcion_en_transaccion(cursor, funcion_id, datos):
+    campos = ", ".join(f"{campo} = %s" for campo in datos)
+    cursor.execute(
+        f"UPDATE funcion SET {campos} WHERE id = %s",
+        (*datos.values(), funcion_id),
+    )
+
+
 # Modifica los datos de una función.
 def actualizar_funcion(funcion_id, datos):
     campos = ", ".join(f"{campo} = %s" for campo in datos)
