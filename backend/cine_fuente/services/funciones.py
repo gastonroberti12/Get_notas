@@ -16,6 +16,7 @@ def obtener_funciones(filtros, limit, offset):
         sala_id=filtros["sala_id"],
         sucursal_id=filtros["sucursal_id"],
         activa=filtros["activa"],
+        fecha=filtros["fecha"],
     )
     pagina = funciones[offset:offset + limit]
     for f in pagina:

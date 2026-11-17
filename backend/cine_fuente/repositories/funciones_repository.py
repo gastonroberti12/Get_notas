@@ -1,4 +1,6 @@
-﻿from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+﻿from datetime import timedelta
+
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
 from cine_fuente.utils import ahora_gmt3
 
 #constante para simplificar consultar_funciones y consultar_funcion_por_id
@@ -11,7 +13,13 @@ SELECT_FUNCION = (
 
 
 # Consulta las funciones registradas.
-def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id=None):
+def consultar_funciones(
+    pelicula_id=None,
+    sala_id=None,
+    activa=None,
+    sucursal_id=None,
+    fecha=None,
+):
     sql = SELECT_FUNCION + " WHERE 1 = 1"
     params = []
     if pelicula_id is not None:
@@ -23,6 +31,9 @@ def consultar_funciones(pelicula_id=None, sala_id=None, activa=None, sucursal_id
     if sucursal_id is not None:
         sql += " AND s.sucursal_id = %s"
         params.append(sucursal_id)
+    if fecha is not None:
+        sql += " AND f.fecha_hora >= %s AND f.fecha_hora < %s"
+        params.extend([fecha, fecha + timedelta(days=1)])
     if activa is not None:
         # Activas = vigentes y futuras; inactivas = dadas de baja o ya pasadas.
         sql += " AND f.activa = TRUE AND f.fecha_hora >= %s" if activa else " AND (f.activa = FALSE OR f.fecha_hora < %s)"

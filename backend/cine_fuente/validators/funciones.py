@@ -25,11 +25,32 @@ def validar_filtros(parametros):
         if activa_texto.lower() not in {"true", "false"}:
             raise ValueError(construir_error_api("invalid.activa.format", "Formato inválido", "activa debe ser true o false."))
         activa = activa_texto.lower() == "true"
+
+    fecha = parametros.get("fecha")
+    if fecha is not None:
+        try:
+            fecha_validada = datetime.strptime(fecha, "%Y-%m-%d").date()
+        except (TypeError, ValueError) as causa:
+            raise ValueError(construir_error_api(
+                "invalid.fecha.format",
+                "Formato de fecha inválido",
+                "fecha debe tener formato YYYY-MM-DD.",
+            )) from causa
+        if fecha_validada.isoformat() != fecha:
+            raise ValueError(construir_error_api(
+                "invalid.fecha.format",
+                "Formato de fecha inválido",
+                "fecha debe tener formato YYYY-MM-DD.",
+            ))
+    else:
+        fecha_validada = None
+
     return {
         "pelicula_id": validar_id_query(parametros, "pelicula_id"),
         "sala_id": validar_id_query(parametros, "sala_id"),
         "sucursal_id": validar_id_query(parametros, "sucursal_id"),
         "activa": activa,
+        "fecha": fecha_validada,
     }
 
 

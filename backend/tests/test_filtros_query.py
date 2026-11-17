@@ -18,6 +18,17 @@ class FiltrosQueryTest(unittest.TestCase):
                     validar_filtros_funciones(MultiDict([("sala_id", valor)]))
                 self.assertEqual(error.exception.args[1], 400)
 
+    def test_funciones_acepta_fecha_iso(self):
+        filtros = validar_filtros_funciones(MultiDict([("fecha", "2026-11-20")]))
+        self.assertEqual(filtros["fecha"].isoformat(), "2026-11-20")
+
+    def test_funciones_rechaza_fecha_invalida(self):
+        for valor in ("20-11-2026", "2026-2-20", "2026-02-30"):
+            with self.subTest(valor=valor):
+                with self.assertRaises(ValueError) as error:
+                    validar_filtros_funciones(MultiDict([("fecha", valor)]))
+                self.assertEqual(error.exception.args[1], 400)
+
     def test_peliculas_rechaza_sucursal_no_numerica(self):
         with self.assertRaises(ValueError) as error:
             validar_filtros_peliculas(MultiDict([("sucursal_id", "abc")]))
