@@ -78,7 +78,7 @@ SELECT * FROM funcion;
 
 ---
 
-## 2. Configuración inicial del entorno
+## 2. Configuración inicial del entorno (Opcional si no utilizas el Docker )
 
 Primero copiá el archivo de ejemplo:
 
@@ -213,7 +213,7 @@ Las películas consultadas también pueden almacenarse localmente y sus pósters
 
 ---
 
-## 6. Endpoints principales
+## 6. Endpoints principales (Backend) 
 
 ### Películas
 
@@ -295,7 +295,7 @@ GET /salas?_limit=10&_offset=0
 
 ---
 
-## 7. Pruebas con Postman
+## 7. Pruebas con Postman (Backend) 
 
 1. Levantar el proyecto con `docker compose up -d`.
 2. Usar el frontend o ejecutar una consulta de prueba.
@@ -311,9 +311,24 @@ Ejemplo para crear una función:
 
 ```json
 {
+
+
   "pelicula_id": 1,
   "sala_id": 1,
   "fecha_hora": "2026-11-01T18:00:00",
   "precio": 8500
 }
 ```
+## 8. Ingresar a la pagina (front)
+Después de levantar todo (con el docker o el entorno virtual). 
+En su navegador, de preferencia, entrar al siguiente puerto: http://localhost:5000/
+Dónde se va a poder crear un usuario y registrarse
+## 9. Ingresar como administrador (front)
+Existen usuarios precargados con el rol de administrador ya configurados desde la base de datos un usuario para testiar las otras funciones es 
+{
+  "email": "admin@cineparadiso.com",
+  "contrasenia": "Admin1234"
+}
+## 10. pagina web (Host)
+Host de la pagina en Render
+https://get-notas-web-zo6s.onrender.com/
