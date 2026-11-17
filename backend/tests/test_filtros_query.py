@@ -23,6 +23,21 @@ class FiltrosQueryTest(unittest.TestCase):
             validar_filtros_peliculas(MultiDict([("sucursal_id", "abc")]))
         self.assertEqual(error.exception.args[1], 400)
 
+    def test_peliculas_acepta_y_normaliza_filtros_de_texto(self):
+        filtros = validar_filtros_peliculas(MultiDict([
+            ("titulo", "  Incep  "),
+            ("genero", " Sci-Fi "),
+        ]))
+        self.assertEqual(filtros["titulo"], "Incep")
+        self.assertEqual(filtros["genero"], "Sci-Fi")
+
+    def test_peliculas_rechaza_filtros_de_texto_vacios_o_largos(self):
+        for campo, valor in (("titulo", " "), ("genero", "x" * 101)):
+            with self.subTest(campo=campo):
+                with self.assertRaises(ValueError) as error:
+                    validar_filtros_peliculas(MultiDict([(campo, valor)]))
+                self.assertEqual(error.exception.args[1], 400)
+
     def test_acepta_ids_validos_y_filtros_omitidos(self):
         self.assertEqual(
             validar_filtros_funciones(MultiDict([("sala_id", "2")]))["sala_id"],

@@ -17,6 +17,10 @@ LONGITUDES_PELICULA = {
     "clasificacion": 20,
     "genero": 100,
 }
+LONGITUDES_FILTROS = {
+    "titulo": LONGITUDES_PELICULA["titulo"],
+    "genero": LONGITUDES_PELICULA["genero"],
+}
 
 
 def error_pelicula(campo, mensaje):
@@ -150,5 +154,30 @@ def validar_filtros(parametros):
     if activa not in (None, "true", "false"):
         raise ValueError(construir_error_api(
             "invalid.activa.format", "Formato inválido", "activa debe ser true o false."), 400)
-    return {"sucursal_id": validar_id_query(parametros, "sucursal_id"),
-            "activa": None if activa is None else activa == "true"}
+
+    filtros_texto = {}
+    for campo, maximo in LONGITUDES_FILTROS.items():
+        valor = parametros.get(campo)
+        if valor is None:
+            filtros_texto[campo] = None
+            continue
+        valor = valor.strip()
+        if not valor:
+            raise ValueError(construir_error_api(
+                f"invalid.{campo}.value",
+                "Parámetro inválido",
+                f"{campo} no puede estar vacío.",
+            ), 400)
+        if len(valor) > maximo:
+            raise ValueError(construir_error_api(
+                f"invalid.{campo}.length",
+                "Parámetro inválido",
+                f"{campo} no puede superar los {maximo} caracteres.",
+            ), 400)
+        filtros_texto[campo] = valor
+
+    return {
+        **filtros_texto,
+        "sucursal_id": validar_id_query(parametros, "sucursal_id"),
+        "activa": None if activa is None else activa == "true",
+    }
