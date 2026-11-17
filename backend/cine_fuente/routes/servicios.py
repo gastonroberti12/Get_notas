@@ -17,7 +17,6 @@ from cine_fuente.validators.servicios import (
 )
 
 from cine_fuente.utils import (
-    mensaje_validacion,
     validar_paginacion,
     respuesta_paginada,
     respuesta_error as respuesta_error_compartida,
@@ -37,10 +36,7 @@ def error_servicio(codigo, mensaje, estado, descripcion=None):
 @servicios_bp.route("/servicios", methods=["GET"])
 def listar_servicios():
 
-    try:
-        limit, offset = validar_paginacion(request.args)
-    except ValueError as error:
-        return jsonify(error.args[0]), error.args[1]
+    limit, offset = validar_paginacion(request.args)
 
     nombre = request.args.get("nombre")
     activo_param = request.args.get("activo")
@@ -84,12 +80,7 @@ def obtener_servicio_por_id(servicio_id):
 @requiere_rol("administrador")
 def crear_servicio():
 
-    try:
-        campos = validar_creacion_servicio(request.get_json(silent=True))
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    campos = validar_creacion_servicio(request.get_json(silent=True))
 
     id_creado = servicios_repo.insertar_servicio(
         campos["nombre"],
@@ -111,12 +102,7 @@ def modificar_servicio(servicio_id):
     if error is not None:
         return jsonify(error[0]), error[1]
 
-    try:
-        campos = validar_campos_servicio(request.get_json(silent=True))
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    campos = validar_campos_servicio(request.get_json(silent=True))
 
     servicios_repo.actualizar_servicio(servicio_id, campos)
 
@@ -209,14 +195,9 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
     if error is not None:
         return jsonify(error[0]), error[1]
 
-    try:
-        cantidad = validar_modificacion_servicio_reserva(
-            request.get_json(silent=True)
-        )
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    cantidad = validar_modificacion_servicio_reserva(
+        request.get_json(silent=True)
+    )
 
     servicios_repo.actualizar_cantidad_servicio_reserva(
         reserva_id, servicio_reserva_id, cantidad
