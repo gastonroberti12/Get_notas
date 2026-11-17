@@ -101,4 +101,5 @@ def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, tolerancia):
     with obtener_conexion() as conexion, conexion.cursor() as cursor:
         cursor.execute(sql, parametros)
         registrada = cursor.rowcount == 1
+        conexion.commit()
     return registrada

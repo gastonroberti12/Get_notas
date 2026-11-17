@@ -200,6 +200,8 @@
 
 .perfil_logout {
   display: block;
+  text-align: center;
+  text-decoration: none;
   margin: 22px auto 0;
   padding: 0;
   border: 0;

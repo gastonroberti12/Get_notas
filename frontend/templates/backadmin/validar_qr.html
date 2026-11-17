@@ -1,34 +1,10 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Validación de entradas | Cine Paradiso{% endblock %}
+{% block titulo_admin %}Validación de entradas{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Verificá las entradas para permitir el ingreso a las salas.</p>{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
-{% endblock %}
-
-{% block content %}
-
-<section class="admin-panel">
-
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-
-            <h1>Validación de entradas</h1>
-
-            <p class="admin-subtitle">
-                Verificá las entradas para permitir el ingreso a las salas.
-            </p>
-        </div>
-
-        <span class="admin-role">Administrador</span>
-    </div>
-
-    <div class="admin-layout">
-
-        {% include "backadmin/barralateral.html" %}
-
-        <div class="admin-content">
+{% block contenido_admin %}
 
             <div class="admin-section-heading">
                 <h2>Validar entrada</h2>
@@ -50,7 +26,7 @@
                             Código QR
                         </label>
 
-                        <input type="text" id="codigo_qr" name="codigo_qr" autocomplete="off" autofocus
+                        <input type="text" id="codigo_qr" name="codigo_qr" autocomplete="off"
                             placeholder="Escaneá o ingresá el código de la entrada" required>
 
                         <small>
@@ -124,16 +100,7 @@
                 </div>
                 {% endif %}
             </div>
-
-        </div>
-
-    </div>
-
-
-</section>
-
-{% endblock %}
-
+{% endblock contenido_admin %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/qr_scanner.js') }}"></script>
