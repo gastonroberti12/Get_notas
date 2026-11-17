@@ -8,9 +8,32 @@ from cine_fuente.validators.funciones import (
     validar_modificacion,
 )
 from cine_fuente.validators.peliculas import validar_filtros as validar_filtros_peliculas
+from cine_fuente.validators.entradas import (
+    validar_body as validar_body_entrada,
+)
 
 
 class FiltrosQueryTest(unittest.TestCase):
+    def test_codigo_qr_acepta_formatos_normalizables(self):
+        for valor, esperado in (
+            ("K7M2-9QXP", "K7M2-9QXP"),
+            ("k7m2-9qxp", "K7M2-9QXP"),
+            ("k7m2 9qxp", "K7M2-9QXP"),
+            ("K7M29QXP", "K7M2-9QXP"),
+        ):
+            with self.subTest(valor=valor):
+                self.assertEqual(
+                    validar_body_entrada({"codigo_qr": valor}),
+                    esperado,
+                )
+
+    def test_codigo_qr_rechaza_formato_invalido(self):
+        for valor in ("ABC", "K7M2_9QXP", "K0M2-9QXP", "I7M2-9QXP"):
+            with self.subTest(valor=valor):
+                with self.assertRaises(ValueError) as error:
+                    validar_body_entrada({"codigo_qr": valor})
+                self.assertEqual(error.exception.args[1], 400)
+
     def test_funciones_rechaza_ids_no_numericos_o_no_positivos(self):
         for valor in ("abc", "0", "-2"):
             with self.subTest(valor=valor):
