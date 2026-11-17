@@ -30,7 +30,7 @@ def a_iso_gmt3(valor):
     if not valor:
         return ""
     try:
-        return datetime.fromisoformat(valor).strftime("%Y-%m-%dT%H:%M:%S.%f") + "-03:00"
+        return datetime.fromisoformat(valor).strftime("%Y-%m-%dT%H:%M:%S") + "-03:00"
     except ValueError:
         return valor
 

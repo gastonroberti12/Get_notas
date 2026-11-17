@@ -8,7 +8,7 @@ info:
     - **Autenticación:** `POST /auth/login` devuelve un token que se envía en
     `Authorization: Bearer <token>`. Los endpoints sin candado son públicos.
 
-    - **Fechas:** `date-time` en GMT-3 con 6 decimales. Los importes son enteros
+    - **Fechas:** `date-time` en GMT-3 con precisión de segundos. Los importes son enteros
     en centavos.
 
     - **Errores:** siempre con el formato `{"errors": [...]}`.
@@ -47,6 +47,8 @@ tags:
   - name: Estadísticas
     description: Backoffice. `fecha_desde` y `fecha_hasta` filtran por fecha de la
       función (ocupación) o de la compra (ventas y cancelaciones)
+  - name: Reseñas
+    description: Calificaciones y comentarios de usuarios sobre películas
 paths:
   /usuarios:
     get:
@@ -197,6 +199,30 @@ paths:
           $ref: "#/components/responses/NoContent"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /usuarios/me/resenas:
+    get:
+      summary: Listar las reseñas propias
+      description: "**Rol autorizado:** Cliente."
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Reseñas escritas por el usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MisResenasListResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -532,6 +558,101 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /peliculas/{pelicula_id}/resenas:
+    parameters:
+      - name: pelicula_id
+        in: path
+        required: true
+        description: Identificador local de la película
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      summary: Consultar las reseñas de una película
+      description: Devuelve las reseñas, el total y el promedio de calificaciones.
+        **Rol autorizado:** Público general.
+      tags:
+        - Reseñas
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Reseñas de la película
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResenasPeliculaListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Crear una reseña
+      description: Solo admite clientes con una entrada validada para la película.
+        Cada usuario puede crear una única reseña por película.
+        **Rol autorizado:** Cliente.
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResenaCreate"
+      responses:
+        "201":
+          description: Reseña creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResenaCreada"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /peliculas/{pelicula_id}/resenas/estado:
+    parameters:
+      - name: pelicula_id
+        in: path
+        required: true
+        description: Identificador local de la película
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      summary: Consultar si el usuario puede reseñar
+      description: Indica si vio la película y si todavía puede crear su reseña.
+        **Rol autorizado:** Cliente.
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Estado de elegibilidad del usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoResena"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /funciones:
@@ -1637,9 +1758,9 @@ components:
     FechaHora:
       type: string
       format: date-time
-      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$
-      description: Fecha y hora en GMT-3 con 6 decimales de precisión
-      example: "2026-11-20T21:30:00.000000-03:00"
+      pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-03:00$
+      description: Fecha y hora en GMT-3 con precisión de segundos
+      example: "2026-11-20T21:30:00-03:00"
     Usuario:
       type: object
       properties:
@@ -2569,6 +2690,123 @@ components:
                   cantidad:
                     type: integer
 
+    ResenaCreate:
+      type: object
+      required:
+        - calificacion
+      properties:
+        calificacion:
+          type: integer
+          description: Calificación de 1 a 5
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          description: Comentario opcional
+          maxLength: 500
+          nullable: true
+          example: Excelente película
+    Resena:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          nullable: true
+          example: Excelente película
+        fecha:
+          allOf:
+            - $ref: "#/components/schemas/FechaHora"
+        autor:
+          type: string
+          example: Ana P.
+    ResenaCreada:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        pelicula_id:
+          type: integer
+          example: 1
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          nullable: true
+          example: Excelente película
+    ResenasPeliculaListResponse:
+      type: object
+      properties:
+        resenas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Resena"
+        total:
+          type: integer
+          example: 12
+        promedio:
+          type: number
+          nullable: true
+          example: 4.3
+    EstadoResena:
+      type: object
+      properties:
+        vio_pelicula:
+          type: boolean
+          example: true
+        ya_reseno:
+          type: boolean
+          example: false
+        puede_resenar:
+          type: boolean
+          example: true
+    MisResenasListResponse:
+      type: object
+      properties:
+        resenas:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              pelicula_id:
+                type: integer
+                example: 1
+              pelicula:
+                type: string
+                example: Inception
+              poster_url:
+                type: string
+                nullable: true
+              calificacion:
+                type: integer
+                minimum: 1
+                maximum: 5
+                example: 5
+              comentario:
+                type: string
+                nullable: true
+                example: Excelente película
+              fecha:
+                allOf:
+                  - $ref: "#/components/schemas/FechaHora"
+        total:
+          type: integer
+          example: 3
     EntradasListResponse:
       type: object
       properties:

@@ -15,7 +15,7 @@ def filtro_fechas(columna, filtros):
         parametros["fecha_desde"] = filtros["fecha_desde"]
 
     if filtros.get("fecha_hasta") is not None:
-        # Límite exclusivo para incluir todo el día fecha_hasta, incluso microsegundos.
+        # Límite exclusivo para incluir todo el día fecha_hasta.
         condiciones.append(
             f"{columna} < DATE_ADD(%(fecha_hasta)s, INTERVAL 1 DAY)"
         )

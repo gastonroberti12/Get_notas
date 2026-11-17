@@ -22,7 +22,7 @@ def fecha_relativa(dias):
 
 def fecha_iso(fecha):
     return fecha.astimezone(timezone(timedelta(hours=-3))).isoformat(
-        timespec="microseconds"
+        timespec="seconds"
     )
 
 

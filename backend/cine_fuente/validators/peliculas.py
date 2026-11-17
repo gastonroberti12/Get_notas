@@ -9,7 +9,7 @@ from cine_fuente.utils import (
 
 
 PATRON_FECHA_CARTELERA = re.compile(
-    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$"
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-03:00$"
 )
 LONGITUDES_PELICULA = {
     "titulo": 200,
@@ -88,7 +88,7 @@ def parsear_fecha_cartelera(valor, campo):
         raise ValueError(construir_error_api(
             "pelicula.fecha.formato",
             "Formato de fecha inválido",
-            f"{campo} debe tener formato YYYY-MM-DDTHH:MM:SS.ffffff-03:00.",
+            f"{campo} debe tener formato YYYY-MM-DDTHH:MM:SS-03:00.",
         ), 400)
 
     try:
@@ -144,7 +144,7 @@ def convertir_fecha_existente(valor):
     if isinstance(valor, datetime):
         if valor.tzinfo is None:
             valor = valor.replace(tzinfo=timezone(timedelta(hours=-3)))
-        return valor.isoformat(timespec="microseconds")
+        return valor.isoformat(timespec="seconds")
     return valor
 
 

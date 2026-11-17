@@ -15,4 +15,4 @@ def test_reserva_expiracion():
         "total": 7500,
     })
 #la fecha de expiración esperada sumando 8 minutos a la fecha de compra
-    assert reserva["fecha_expiracion"] == "2026-11-06T10:08:00.000000-03:00"
+    assert reserva["fecha_expiracion"] == "2026-11-06T10:08:00-03:00"
