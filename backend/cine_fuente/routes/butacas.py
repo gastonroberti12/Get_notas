@@ -13,7 +13,6 @@ from cine_fuente.repositories.butacas import (
 from cine_fuente.repositories.salas import consultar_sala_por_id
 from cine_fuente.utils import (
     respuesta_error as error,
-    respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
@@ -27,11 +26,8 @@ butacas_bp = Blueprint("butacas", __name__)
 def listar_butacas_sala(sala_id):
     if consultar_sala_por_id(sala_id) is None:
         return error("sala.not.found", "Sala no encontrada", "La sala solicitada no existe.", 404)
-    try:
-        limit, offset = validar_paginacion(request.args)
-        butacas = consultar_butacas_por_sala(sala_id)
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
+    limit, offset = validar_paginacion(request.args)
+    butacas = consultar_butacas_por_sala(sala_id)
     return respuesta_paginada("butacas", butacas[offset:offset + limit], len(butacas), limit, offset)
 
 
