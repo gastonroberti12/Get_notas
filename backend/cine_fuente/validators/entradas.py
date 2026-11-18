@@ -1,4 +1,8 @@
-from cine_fuente.utils import construir_error_api
+from cine_fuente.validators.comunes import (
+    error_validacion,
+    validar_campos,
+    validar_texto,
+)
 from cine_fuente.validators.reservas import validar_entero_positivo, validar_estado_propio
 
 
@@ -17,23 +21,17 @@ def validar_filtros_listado(parametros):
         "estado": validar_estado_propio(parametros),
     }
 
+
 def validar_body(datos):
-    if not isinstance(datos, dict):
-        raise ValueError(construir_error_api(
-            "ERROR_VALIDACION", "Cuerpo inválido", "Se debe enviar un objeto JSON."
-        ), 400)
-
-    if "codigo_qr" not in datos or len(datos) != 1:
-        raise ValueError(construir_error_api(
-            "ERROR_VALIDACION", "Cuerpo inválido",
-            "Se debe enviar únicamente el campo codigo_qr."
-        ), 400)
-
+    validar_campos(
+        datos,
+        {"codigo_qr"},
+        {"codigo_qr"},
+        error_cuerpo=("Cuerpo inválido", "Se debe enviar un objeto JSON."),
+        error_desconocidos=("Cuerpo inválido", "Se debe enviar únicamente el campo codigo_qr."),
+        error_faltantes=("Cuerpo inválido", "Se debe enviar únicamente el campo codigo_qr."),
+    )
     codigo = datos["codigo_qr"]
     if not isinstance(codigo, str) or not codigo.strip() or len(codigo) > 64:
-        raise ValueError(construir_error_api(
-            "ERROR_VALIDACION", "Código QR inválido",
-            "codigo_qr debe ser un texto no vacío de hasta 64 caracteres."
-        ), 400)
-
-    return codigo.strip()
+        error_validacion("Código QR inválido", "codigo_qr debe ser un texto no vacío de hasta 64 caracteres.")
+    return validar_texto(codigo, "codigo_qr", 64)
