@@ -55,6 +55,8 @@ def registro():
 
 @users_bp.route("/logout", methods=['POST'])
 def logout():
+    if esta_logueado():
+        llamar_api('POST', '/auth/logout')
     session.clear()
     flash('Sesión cerrada con éxito.', 'exito')
     return redirect(url_for('peliculas.inicio'))
