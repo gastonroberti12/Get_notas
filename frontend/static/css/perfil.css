@@ -472,8 +472,7 @@
   .perfil {
     grid-template-columns: 1fr;            /* una sola columna */
     margin: 16px auto;
-    padding: 0;                            /* <main> ya aplica su padding */
-  }
+    padding: 0;                            /*gi
   .perfil_datos { position: static; }      /* sin sticky en mobile */
 }
 
