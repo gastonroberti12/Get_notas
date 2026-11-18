@@ -17,30 +17,19 @@ from cine_fuente.validators.servicios import (
 )
 
 from cine_fuente.utils import (
-    mensaje_validacion,
     validar_paginacion,
     respuesta_paginada,
-    respuesta_error as respuesta_error_compartida,
+    respuesta_error as error,
 )
 
 servicios_bp = Blueprint("servicios", __name__)
-
-
-# AUXILIAR - Respuestas de error
-def error_servicio(codigo, mensaje, estado, descripcion=None):
-    return respuesta_error_compartida(
-        codigo, mensaje, descripcion or mensaje, estado
-    )
 
 
 # 1. GET /servicios
 @servicios_bp.route("/servicios", methods=["GET"])
 def listar_servicios():
 
-    try:
-        limit, offset = validar_paginacion(request.args)
-    except ValueError as error:
-        return jsonify(error.args[0]), error.args[1]
+    limit, offset = validar_paginacion(request.args)
 
     nombre = request.args.get("nombre")
     activo_param = request.args.get("activo")
@@ -50,9 +39,7 @@ def listar_servicios():
     elif activo_param.lower() in ("true", "false"):
         activo = activo_param.lower() == "true"
     else:
-        return error_servicio(
-            "ERROR_VALIDACION", "Filtro activo inválido", 400
-        )
+        return error("ERROR_VALIDACION", "Filtro activo inválido", "Filtro activo inválido", 400)
 
     total = servicios_repo.contar_servicios(nombre, activo)
     servicios = servicios_repo.consultar_servicios(nombre, activo, limit, offset)
@@ -67,14 +54,12 @@ def listar_servicios():
 def obtener_servicio_por_id(servicio_id):
 
     if servicio_id <= 0:
-        return error_servicio("ERROR_VALIDACION", "ID inválido", 400)
+        return error("ERROR_VALIDACION", "ID inválido", "ID inválido", 400)
 
     servicio = servicios_repo.consultar_servicio_por_id(servicio_id)
 
     if servicio is None:
-        return error_servicio(
-            "SERVICIO_NO_ENCONTRADO", "Servicio no encontrado", 404
-        )
+        return error("SERVICIO_NO_ENCONTRADO", "Servicio no encontrado", "Servicio no encontrado", 404)
 
     return jsonify(servicio), 200
 
@@ -84,12 +69,7 @@ def obtener_servicio_por_id(servicio_id):
 @requiere_rol("administrador")
 def crear_servicio():
 
-    try:
-        campos = validar_creacion_servicio(request.get_json(silent=True))
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    campos = validar_creacion_servicio(request.get_json(silent=True))
 
     id_creado = servicios_repo.insertar_servicio(
         campos["nombre"],
@@ -107,16 +87,11 @@ def crear_servicio():
 @requiere_rol("administrador")
 def modificar_servicio(servicio_id):
 
-    error = verificar_servicio(servicio_id)
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    fallo = verificar_servicio(servicio_id)
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
-    try:
-        campos = validar_campos_servicio(request.get_json(silent=True))
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    campos = validar_campos_servicio(request.get_json(silent=True))
 
     servicios_repo.actualizar_servicio(servicio_id, campos)
 
@@ -128,16 +103,12 @@ def modificar_servicio(servicio_id):
 @requiere_rol("administrador")
 def eliminar_servicio_endpoint(servicio_id):
 
-    error = verificar_servicio(servicio_id)
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    fallo = verificar_servicio(servicio_id)
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
     if servicios_repo.servicio_tiene_reservas(servicio_id):
-        return error_servicio(
-            "SERVICIO_CON_RESERVAS",
-            "El servicio tiene reservas asociadas",
-            409
-        )
+        return error("SERVICIO_CON_RESERVAS", "El servicio tiene reservas asociadas", "El servicio tiene reservas asociadas", 409)
 
     servicios_repo.eliminar_servicio(servicio_id)
 
@@ -148,36 +119,26 @@ def eliminar_servicio_endpoint(servicio_id):
 @servicios_bp.route("/reservas/<int:reserva_id>/servicios", methods=["POST"])
 @requiere_rol("cliente")
 def agregar_servicio_reserva(reserva_id):
-    error = verificar_reserva(reserva_id, g.usuario, modificar=True)
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    fallo = verificar_reserva(reserva_id, g.usuario, modificar=True)
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
     datos = request.get_json(silent=True)
     if not isinstance(datos, dict):
-        return error_servicio(
-            "ERROR_VALIDACION", "Cuerpo JSON inválido", 400
-        )
+        return error("ERROR_VALIDACION", "Cuerpo JSON inválido", "Cuerpo JSON inválido", 400)
 
     try:
         servicio_id = int(datos["servicio_id"])
         cantidad = validar_cantidad(datos["cantidad"])
     except (KeyError, TypeError, ValueError):
-        return error_servicio(
-            "ERROR_VALIDACION",
-            "Se requieren servicio_id y una cantidad válida",
-            400,
-        )
+        return error("ERROR_VALIDACION", "Se requieren servicio_id y una cantidad válida", "Se requieren servicio_id y una cantidad válida", 400)
 
-    error = verificar_servicio(servicio_id)
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    fallo = verificar_servicio(servicio_id)
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
     if servicios_repo.insertar_servicio_reserva(reserva_id, servicio_id, cantidad) == 0:
-        return error_servicio(
-            "SERVICIO_INACTIVO",
-            "El servicio seleccionado no está activo",
-            409,
-        )
+        return error("SERVICIO_INACTIVO", "El servicio seleccionado no está activo", "El servicio seleccionado no está activo", 409)
 
     return "", 201
 
@@ -186,9 +147,9 @@ def agregar_servicio_reserva(reserva_id):
 @requiere_rol("cliente", "administrador")
 def listar_servicios_reserva(reserva_id):
 
-    error = verificar_reserva(reserva_id, g.usuario)
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    fallo = verificar_reserva(reserva_id, g.usuario)
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
     servicios = servicios_repo.consultar_servicios_reserva(reserva_id)
 
@@ -203,20 +164,15 @@ def listar_servicios_reserva(reserva_id):
 @requiere_rol("cliente")
 def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
 
-    error = verificar_servicio_reservado(
+    fallo = verificar_servicio_reservado(
         reserva_id, servicio_reserva_id, g.usuario
     )
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
-    try:
-        cantidad = validar_modificacion_servicio_reserva(
-            request.get_json(silent=True)
-        )
-    except ValueError as error:
-        return error_servicio(
-            "ERROR_VALIDACION", mensaje_validacion(error), 400
-        )
+    cantidad = validar_modificacion_servicio_reserva(
+        request.get_json(silent=True)
+    )
 
     servicios_repo.actualizar_cantidad_servicio_reserva(
         reserva_id, servicio_reserva_id, cantidad
@@ -233,11 +189,11 @@ def modificar_servicio_reserva(reserva_id, servicio_reserva_id):
 @requiere_rol("cliente")
 def eliminar_servicio_de_reserva(reserva_id, servicio_reserva_id):
 
-    error = verificar_servicio_reservado(
+    fallo = verificar_servicio_reservado(
         reserva_id, servicio_reserva_id, g.usuario
     )
-    if error is not None:
-        return jsonify(error[0]), error[1]
+    if fallo is not None:
+        return jsonify(fallo[0]), fallo[1]
 
     servicios_repo.eliminar_servicio_reserva(reserva_id, servicio_reserva_id)
     return "", 204

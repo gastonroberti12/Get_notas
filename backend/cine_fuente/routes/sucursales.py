@@ -4,17 +4,13 @@ from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
 from cine_fuente.utils import (
     construir_error_api,
-    respuesta_error_api,
+    respuesta_error as error,
     respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
 
 sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/sucursales")
-
-
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 def validar_texto(datos, campo, maximo):

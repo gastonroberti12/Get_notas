@@ -1,44 +1,29 @@
 from constants import CAMPOS_SERVICIOS_PERMITIDOS
-from functools import partial 
+from functools import partial
 from cine_fuente.utils import validar_precio
+from cine_fuente.validators.comunes import error_validacion, validar_texto
 
-
-# Validar nombre
 def validar_nombre(nombre):
-
-    if not isinstance(nombre, str) or not nombre.strip():
-        raise ValueError("El nombre es obligatorio")
-
-    nombre = nombre.strip()
-
-    if len(nombre) > 100:
-        raise ValueError("El nombre no puede superar los 100 caracteres")
-
-    return nombre
+    return validar_texto(nombre, "nombre", 100)
 
 
-# Validar descripción
+# Validar descripción (opcional: None o texto vacío se guardan como None)
 def validar_descripcion(descripcion):
 
     if descripcion is None:
         return None
 
-    if not isinstance(descripcion, str):
-        raise ValueError("La descripción debe ser un texto")
+    if isinstance(descripcion, str) and not descripcion.strip():
+        return None
 
-    descripcion = descripcion.strip()
-
-    if len(descripcion) > 255:
-        raise ValueError("La descripción no puede superar los 255 caracteres")
-
-    return descripcion or None
+    return validar_texto(descripcion, "descripcion", 255)
 
 
 # Validar activo
 def validar_activo(activo):
 
     if not isinstance(activo, bool):
-        raise ValueError("El campo activo debe ser true o false")
+        error_validacion("Valor invalido", "El campo activo debe ser true o false")
 
     return activo
 
@@ -47,11 +32,10 @@ def validar_activo(activo):
 def validar_cantidad(cantidad):
 
     if type(cantidad) is not int:
-        raise ValueError("La cantidad debe ser un número entero")
+        error_validacion("Cantidad invalida", "La cantidad debe ser un numero entero")
 
     if cantidad <= 0:
-        raise ValueError("La cantidad debe ser mayor a cero")
-
+        error_validacion("Cantidad invalida", "La cantidad debe ser mayor a cero")
     return cantidad
 
 
@@ -59,7 +43,7 @@ def validar_cantidad(cantidad):
 def validar_campos_servicio(datos):
 
     if not isinstance(datos, dict) or not datos:
-        raise ValueError("No se enviaron datos válidos")
+        error_validacion("Cuerpo JSON invalido", "No se enviaron datos validos")
 
     validadores = {
         "nombre": validar_nombre,
@@ -73,7 +57,7 @@ def validar_campos_servicio(datos):
     for campo, valor in datos.items():
 
         if campo not in CAMPOS_SERVICIOS_PERMITIDOS or campo not in validadores:
-            raise ValueError(f"Campo no permitido: {campo}")
+            error_validacion("Campo no permitido", f"Campo no permitido: {campo}")
 
         campos[campo] = validadores[campo](valor)
 
@@ -86,7 +70,7 @@ def validar_creacion_servicio(datos):
     campos = validar_campos_servicio(datos)
 
     if "nombre" not in campos or "precio" not in campos:
-        raise ValueError("El nombre y el precio son obligatorios")
+        error_validacion("Campos obligatorios faltantes", "El nombre y el precio son obligatorios")
 
     if "descripcion" not in campos:
         campos["descripcion"] = None
@@ -100,10 +84,10 @@ def validar_creacion_servicio(datos):
 # En una reserva solamente se puede modificar la cantidad del servicio.
 def validar_modificacion_servicio_reserva(datos):
     if not isinstance(datos, dict):
-        raise ValueError("Se debe enviar un objeto JSON")
+        error_validacion("Cuerpo JSON invalido", "Se debe enviar un objeto JSON")
 
     if "cantidad" not in datos or len(datos) != 1:
-        raise ValueError("Se debe enviar únicamente el campo cantidad")
+        error_validacion("Campos invalidos", "Se debe enviar únicamente el campo cantidad")
 
     return validar_cantidad(datos["cantidad"])
 

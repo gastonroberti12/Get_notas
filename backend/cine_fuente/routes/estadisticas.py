@@ -2,10 +2,6 @@ from flask import Blueprint, jsonify, request
 
 from cine_fuente.services import estadisticas as estadisticas_service
 from cine_fuente.services.seguridad import requiere_rol
-from cine_fuente.utils import (
-    respuesta_error_excepcion,
-    respuesta_error_interno,
-)
 from cine_fuente.validators.estadisticas import validar_filtros_estadisticas
 
 estadisticas_bp = Blueprint("estadisticas", __name__)
@@ -13,13 +9,8 @@ estadisticas_bp = Blueprint("estadisticas", __name__)
 
 # Ejecuta la validación común de filtros y delega el cálculo en el servicio.
 def ejecutar(operacion):
-    try:
-        filtros = validar_filtros_estadisticas(request.args)
-        return jsonify(operacion(filtros)), 200
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    filtros = validar_filtros_estadisticas(request.args)
+    return jsonify(operacion(filtros)), 200
 
 
 # GET /admin/estadisticas/ocupacion/general: devuelve la ocupación total del cine.

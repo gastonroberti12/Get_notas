@@ -1,21 +1,17 @@
-from cine_fuente.utils import construir_error_api
+from cine_fuente.validators.comunes import error_validacion, validar_campos
 
 CAMPOS_PERMITIDOS = {"calificacion", "comentario"}
 COMENTARIO_MAXIMO = 500
 
 
-def error_validacion(titulo, detalle):
-    raise ValueError(construir_error_api("ERROR_VALIDACION", titulo, detalle), 400)
-
-
 def validar_body_resena(datos):
     """Valida el JSON de una reseña y devuelve (calificacion, comentario)."""
-    if not isinstance(datos, dict):
-        error_validacion("Cuerpo inválido", "Se debe enviar un objeto JSON.")
-
-    sobrantes = set(datos) - CAMPOS_PERMITIDOS
-    if sobrantes:
-        error_validacion("Cuerpo inválido", f"Campos no permitidos: {', '.join(sorted(sobrantes))}.")
+    validar_campos(
+        datos,
+        CAMPOS_PERMITIDOS,
+        error_cuerpo=("Cuerpo inválido", "Se debe enviar un objeto JSON."),
+        error_desconocidos=("Cuerpo inválido", "Campos no permitidos: {campos}."),
+    )
 
     calificacion = datos.get("calificacion")
     if not isinstance(calificacion, int) or isinstance(calificacion, bool) or not 1 <= calificacion <= 5:
