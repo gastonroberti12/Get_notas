@@ -32,14 +32,6 @@ def panel():
     resumen = armar_dashboard({}, ("ocupacion", "entradas", "importe", "cancelaciones", "generos", "franjas"))
     return render_template("backadmin/panel.html", d=resumen)
 
-@backoffice_bp.route("/backoffice/locales")
-def locales_admin():
-
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-
-    return render_template("backadmin/locales.html")
-
 
 @backoffice_bp.route("/backoffice/salas")
 def salas_admin():

@@ -5,7 +5,7 @@ from flask import session
 API_URL = os.getenv('BACKEND_URL', 'http://127.0.0.1:5001')
 
 MENSAJE_SIN_CONEXION = 'No se pudo conectar con el servidor.'
-MENSAJE_GENERICO = 'OcurriÃ³ un error inesperado.'
+MENSAJE_GENERICO = 'Ocurrió un error inesperado.'
 
 
 def llamar_api(metodo, endpoint, datos=None):

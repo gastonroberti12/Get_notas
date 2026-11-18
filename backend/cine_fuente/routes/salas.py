@@ -6,7 +6,7 @@ from cine_fuente.repositories.sucursales import consultar_sucursal_por_id
 from cine_fuente.utils import (
     construir_error_api,
     respuesta_error_api,
-    respuesta_error_excepcion,
+    respuesta_error as error,
     respuesta_paginada,
     validar_paginacion,
 )
@@ -14,18 +14,11 @@ from cine_fuente.utils import (
 salas_bp = Blueprint("salas", __name__, url_prefix="/salas")
 
 
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
-
-
 @salas_bp.route("", methods=["GET"])
 # Lista las salas disponibles.
 def listar_salas():
-    try:
-        limit, offset = validar_paginacion(request.args)
-        salas = consultar_salas(request.args.get("sucursal_id", type=int))
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
+    limit, offset = validar_paginacion(request.args)
+    salas = consultar_salas(request.args.get("sucursal_id", type=int))
     return respuesta_paginada("salas", salas[offset:offset + limit], len(salas), limit, offset)
 
 

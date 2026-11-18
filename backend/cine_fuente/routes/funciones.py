@@ -77,8 +77,8 @@ def modificar_funcion(funcion_id):
 @requiere_rol("administrador")
 # Elimina o desactiva una función.
 def borrar_funcion(funcion_id):
-    datos = request.get_json(silent=True) or {}
-    service.eliminar_funcion_por_id(funcion_id, datos.get('fisica') is True)
+    fisica = validator.validar_eliminacion(request.get_json(silent=True))
+    service.eliminar_funcion_por_id(funcion_id, fisica)
     return '', 204
 
 

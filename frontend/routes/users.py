@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from api_cliente import llamar_api, mensaje_error
 from routes.roles import esta_logueado, es_cliente
-from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva
+from datos_perfil import SIN_DATO, armar_reserva, clasificar_reserva, parsear_fecha
 
 
 users_bp = Blueprint("users", __name__)
@@ -55,6 +55,8 @@ def registro():
 
 @users_bp.route("/logout", methods=['POST'])
 def logout():
+    if esta_logueado():
+        llamar_api('POST', '/auth/logout')
     session.clear()
     flash('Sesión cerrada con éxito.', 'exito')
     return redirect(url_for('peliculas.inicio'))
@@ -79,11 +81,15 @@ def profile():
         'anio_registro': (usuario.get('fecha_registro') or '')[:4] or SIN_DATO,
     }
 
+    # las reservas del perfil las devuelve /usuarios/me/reservas (solo clientes; 204 = sin reservas)
     reservas_api = []
     if es_cliente():
-        status, cuerpo = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
-        reservas_api = cuerpo.get('reservas', []) if status in (200, 204) else []
-   
+        status_reservas, cuerpo_reservas = llamar_api('GET', '/usuarios/me/reservas?_limit=100')
+        if status_reservas == 200:
+            reservas_api = cuerpo_reservas.get('reservas', [])
+        elif status_reservas != 204:
+            flash('No se pudieron cargar tus reservas. Probá de nuevo en unos minutos.', 'error')
+            
     proximas = []
     historial = []
     for reserva in reservas_api:
@@ -108,3 +114,63 @@ def actualizar_perfil():
     if status == 204:
         session['usuario'] = {**session['usuario'], 'nombre': datos['nombre']}  # el navbar muestra el nombre
     return redirect(url_for('users.profile'))
+
+
+CONTRASENIA_MINIMA = 8    # mismos límites que valida el back (validators/auth.py)
+CONTRASENIA_MAXIMA = 128
+
+    
+@users_bp.route("/perfil/contrasenia", methods=['GET', 'POST'])
+def cambiar_contrasenia():
+    if not esta_logueado():
+        return redirect(url_for('users.login', next=request.path))
+
+    if request.method == 'POST':
+        actual = request.form.get('actual', '')
+        nueva = request.form.get('nueva', '')
+        repetir = request.form.get('repetir', '')
+
+        error = None
+        if not actual or not nueva or not repetir:
+            error = 'Completá todos los campos.'
+        elif nueva != repetir:
+            error = 'La nueva contraseña y su repetición no coinciden.'
+        elif len(nueva) < CONTRASENIA_MINIMA or len(nueva) > CONTRASENIA_MAXIMA:
+            error = f'La nueva contraseña debe tener entre {CONTRASENIA_MINIMA} y {CONTRASENIA_MAXIMA} caracteres.'
+
+        if error is None:
+            # el back verifica la actual, rechaza una nueva igual y cierra las sesiones anteriores
+            status, cuerpo = llamar_api('POST', '/usuarios/me/contrasenia', {'contrasenia_actual': actual, 'contrasenia_nueva': nueva})
+            if status == 204:
+                session.clear()
+                flash('Contraseña actualizada. Iniciá sesión con la nueva.', 'exito')
+                return redirect(url_for('users.login'))
+            if status == 401:  # token vencido
+                session.clear()
+                return redirect(url_for('users.login'))
+            error = mensaje_error(status, cuerpo, 'No se pudo cambiar la contraseña.')
+
+        return render_template('cambiar_contrasenia.html', error=error, minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
+
+    return render_template('cambiar_contrasenia.html', minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
+
+
+# Página con todas las reseñas que escribió el cliente
+@users_bp.route("/perfil/resenas")
+def mis_resenas():
+    if not esta_logueado():
+        return redirect(url_for('users.login', next=request.path))
+    if not es_cliente():
+        return redirect(url_for('users.profile'))
+
+    status, cuerpo = llamar_api('GET', '/usuarios/me/resenas?_limit=100')
+    if status not in (200, 204):
+        flash(mensaje_error(status, cuerpo, 'No se pudieron cargar tus reseñas.'), 'error')
+        return redirect(url_for('users.profile'))
+
+    resenas = cuerpo.get('resenas', [])
+    for r in resenas:
+        fecha = parsear_fecha(r.get('fecha'))
+        r['fecha_texto'] = fecha.strftime('%d/%m/%Y') if fecha else ''
+
+    return render_template('mis_resenas.html', resenas=resenas)

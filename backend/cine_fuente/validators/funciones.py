@@ -1,6 +1,10 @@
 from datetime import datetime
 
-from cine_fuente.utils import construir_error_api,validar_precio
+from cine_fuente.utils import (
+    construir_error_api,
+    validar_id_query,
+    validar_precio,
+)
 
 
 # Valida la fecha y hora de una función.
@@ -21,11 +25,32 @@ def validar_filtros(parametros):
         if activa_texto.lower() not in {"true", "false"}:
             raise ValueError(construir_error_api("invalid.activa.format", "Formato inválido", "activa debe ser true o false."))
         activa = activa_texto.lower() == "true"
+
+    fecha = parametros.get("fecha")
+    if fecha is not None:
+        try:
+            fecha_validada = datetime.strptime(fecha, "%Y-%m-%d").date()
+        except (TypeError, ValueError) as causa:
+            raise ValueError(construir_error_api(
+                "invalid.fecha.format",
+                "Formato de fecha inválido",
+                "fecha debe tener formato YYYY-MM-DD.",
+            )) from causa
+        if fecha_validada.isoformat() != fecha:
+            raise ValueError(construir_error_api(
+                "invalid.fecha.format",
+                "Formato de fecha inválido",
+                "fecha debe tener formato YYYY-MM-DD.",
+            ))
+    else:
+        fecha_validada = None
+
     return {
-        "pelicula_id": parametros.get("pelicula_id", type=int),
-        "sala_id": parametros.get("sala_id", type=int),
-        "sucursal_id": parametros.get("sucursal_id", type=int),
+        "pelicula_id": validar_id_query(parametros, "pelicula_id"),
+        "sala_id": validar_id_query(parametros, "sala_id"),
+        "sucursal_id": validar_id_query(parametros, "sucursal_id"),
         "activa": activa,
+        "fecha": fecha_validada,
     }
 
 
@@ -48,6 +73,12 @@ def validar_creacion(datos):
 
 # Valida los datos enviados para modificar una función.
 def validar_modificacion(datos):
+    if not isinstance(datos, dict):
+        raise ValueError(construir_error_api(
+            "invalid.body", "Datos inválidos",
+            "El cuerpo de la solicitud debe ser un objeto JSON.",
+        ), 400)
+
     cambios = {}
     if "pelicula_id" in datos:
         try:
@@ -70,3 +101,21 @@ def validar_modificacion(datos):
     if not cambios:
         raise ValueError(construir_error_api("invalid.body", "Datos inválidos", "No se enviaron campos para modificar."))
     return cambios
+
+
+def validar_eliminacion(datos):
+    if datos is None:
+        return False
+    if not isinstance(datos, dict):
+        raise ValueError(construir_error_api(
+            "invalid.body", "Datos inválidos",
+            "El cuerpo de la solicitud debe ser un objeto JSON.",
+        ), 400)
+
+    fisica = datos.get("fisica", False)
+    if not isinstance(fisica, bool):
+        raise ValueError(construir_error_api(
+            "invalid.fisica.format", "Formato inválido",
+            "fisica debe ser true o false.",
+        ), 400)
+    return fisica

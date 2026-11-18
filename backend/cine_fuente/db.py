@@ -1,4 +1,4 @@
-﻿import os
+import os
 import certifi # Para obtener los certificados de confianza
 import pymysql
 
@@ -26,6 +26,9 @@ def obtener_conexion():
         database=DB_NAME,
         charset="utf8mb4",
         cursorclass=DictCursor,
+        read_timeout=60,
+        write_timeout=60,
+        connect_timeout=15, # Por TiDB tarda en responder, la petición no queda colgada y corta a los 15 s
         **configuracion_ssl
     )
 
@@ -48,3 +51,17 @@ def ejecutar_actualizacion(sql, params=None):
         cursor.execute(sql, params)
         conexion.commit()
         return cursor.rowcount
+
+
+def ejecutar_transaccion(operacion):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            resultado = operacion(cursor)
+        conexion.commit()
+        return resultado
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        conexion.close()

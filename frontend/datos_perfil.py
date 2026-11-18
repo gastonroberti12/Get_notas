@@ -4,6 +4,11 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 ESTADOS_PROXIMAS = ('confirmada',)
 ESTADOS_HISTORIAL = ('finalizada', 'cancelada')
 SIN_DATO = '—'
+TOLERANCIA_INGRESO_MIN_DEFAULT = 15
+
+
+def ahora_argentina():
+    return datetime.now(timezone(timedelta(hours=-3)))
 
 
 def formatear_total(pesos):
@@ -36,6 +41,25 @@ def funcion_ya_comenzo(fecha_hora):
 
     return fecha <= datetime.now(zona_argentina)
 
+
+def funcion_termino_tolerancia(reserva):
+    inicio = parsear_fecha(reserva.get("fecha_hora"))
+    if inicio is None:
+        return False
+
+    zona_argentina = timezone(timedelta(hours=-3))
+    if inicio.tzinfo is None:
+        inicio = inicio.replace(tzinfo=zona_argentina)
+
+    tolerancia = reserva.get("tolerancia_ingreso_min", TOLERANCIA_INGRESO_MIN_DEFAULT)
+    try:
+        tolerancia = int(tolerancia)
+    except (TypeError, ValueError):
+        tolerancia = TOLERANCIA_INGRESO_MIN_DEFAULT
+
+    limite = inicio + timedelta(minutes=tolerancia)
+    return ahora_argentina() > limite
+
 def clasificar_reserva(reserva):
     estado = reserva.get("estado")
 
@@ -43,11 +67,14 @@ def clasificar_reserva(reserva):
         return "historial"
 
     if estado in ESTADOS_PROXIMAS:
-        if funcion_ya_comenzo(reserva.get("fecha_hora")):
+        # Si todas las entradas ya se usaron, no hay nada próximo: va al historial.
+        entradas = reserva.get("entradas", [])
+        todas_usadas = bool(entradas) and all(e.get("fecha_uso") for e in entradas)
+
+        if todas_usadas or funcion_termino_tolerancia(reserva):
             return "historial"
 
         return "proximas"
-
     return None
 
 def formatear_fecha(valor, formato, sin_dato=SIN_DATO):
@@ -59,7 +86,7 @@ def armar_reserva(reserva):
     """Prepara los datos de una reserva para mostrarlos en el perfil."""
 
     entradas = []
-    funcion_comenzada = funcion_ya_comenzo(reserva.get('fecha_hora'))
+    ingreso_vencido = funcion_termino_tolerancia(reserva)
 
     for entrada in reserva.get('entradas', []):
         
@@ -70,15 +97,17 @@ def armar_reserva(reserva):
             estado = 'cancelada'
         elif usada:
             estado = 'usada'
-        elif reserva['estado'] == 'confirmada' and not funcion_comenzada:
+        elif reserva['estado'] == 'confirmada' and not ingreso_vencido:
             estado = 'confirmada'
-        elif reserva['estado'] in ('confirmada', 'finalizada'):
+        elif reserva['estado'] in ('confirmada', 'finalizada') and ingreso_vencido:
             estado = 'no_usada'
         else:
             estado = reserva['estado']
             
         entradas.append({
             'butaca': entrada.get('butaca', SIN_DATO),
+            'codigo': entrada.get('codigo_qr'),
+            'qr': entrada.get('qr_base64'),
             'usada': usada,
             'estado': estado,
             'fecha_uso': formatear_fecha(
@@ -98,6 +127,9 @@ def armar_reserva(reserva):
     #comprobar si puede cancelarse
     inicio = parsear_fecha(reserva.get('fecha_hora'))
 
+    if inicio is not None and inicio.tzinfo is None:
+        inicio = inicio.replace(tzinfo=timezone(timedelta(hours=-3)))
+
     faltan_mas_de_1h = (
         inicio is not None
         and inicio - datetime.now(timezone.utc) > timedelta(hours=1)
@@ -107,6 +139,7 @@ def armar_reserva(reserva):
         'id': reserva['id'],
         'estado': reserva['estado'],
         'pelicula': reserva.get('pelicula') or SIN_DATO,
+        'pelicula_id': reserva.get('pelicula_id'),
         'poster': reserva.get('poster_url'),
         'fecha_funcion': formatear_fecha(
             reserva.get('fecha_hora'), '%d/%m/%Y'

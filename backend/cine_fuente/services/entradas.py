@@ -51,8 +51,8 @@ def validar_entrada(entrada_id, codigo_qr):
 
     ahora = ahora_gmt3()
     inicio = normalizar_fecha_local(entrada["fecha_hora"])
-    fin = inicio + timedelta(minutes=int(duracion))
-    if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora >= fin:
+    limite_ingreso = inicio + timedelta(minutes=TOLERANCIA_INGRESO_MIN)
+    if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora > limite_ingreso:
         error_entrada("FUNCION_FUERA_DE_HORARIO", "La entrada aún no está habilitada o la función ya terminó", 409)
 
     # MySQL guarda DATETIME sin zona horaria; mantenemos la hora local GMT-3.
@@ -75,17 +75,8 @@ def validar_entrada(entrada_id, codigo_qr):
     }
     return resultado   
 
-def normalizar_codigo(codigo):
-    """Acepta el código con o sin guion y con espacios: 'xfrm m9vs' -> 'XFRM-M9VS'."""
-    limpio = codigo.strip().replace(" ", "")
-    if "-" not in limpio and len(limpio) == 8:
-        limpio = f"{limpio[:4]}-{limpio[4:]}"
-    return limpio.upper()
-
 def validar_por_qr(codigo_qr):
     entrada = entradas_repo.obtener_entrada_por_codigo_qr(codigo_qr)
-    if entrada is None:
-        entrada = entradas_repo.obtener_entrada_por_codigo_qr(normalizar_codigo(codigo_qr))
     if entrada is None:
         error_entrada("ENTRADA_NO_ENCONTRADA", "Entrada no encontrada", 404)
     return validar_entrada(entrada["id"], entrada["codigo_qr"])

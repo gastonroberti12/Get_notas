@@ -1,6 +1,7 @@
 import pymysql
 
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.utils import ahora_gmt3
 
 
 MYSQL_ERROR_DUPLICADO = 1062
@@ -105,14 +106,15 @@ def obtener_usuario_por_email(email):
 def crear_usuario(nombre, apellido, email, contrasenia):
     """Inserta un usuario cliente y devuelve su id o None si el email ya existe."""
     sql = """
-        INSERT INTO usuarios (nombre, apellido, email, contrasena, rol)
-        VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente')
+        INSERT INTO usuarios (nombre, apellido, email, contrasena, rol, fecha_registro)
+        VALUES (%(nombre)s, %(apellido)s, %(email)s, %(contrasena)s, 'cliente', %(fecha)s)
     """
     return _escribir_usuario(sql, {
         "nombre": nombre,
         "apellido": apellido,
         "email": email,
         "contrasena": contrasenia,
+        "fecha": ahora_gmt3().replace(tzinfo=None),  # la base de TiDB está en UTC
     }, devolver_id=True)
 
 
@@ -131,6 +133,21 @@ def actualizar_usuario(id_usuario, cambios):
         f"UPDATE usuarios SET {asignaciones} WHERE id = %(id)s",
         {**cambios, "id": id_usuario},
     )
+
+def obtener_hash_contrasenia(id_usuario):
+    """Devuelve el hash guardado de la contraseña del usuario"""
+    filas = ejecutar_consulta("SELECT contrasena FROM usuarios WHERE id = %(id)s LIMIT 1", {"id": id_usuario})
+    return filas[0]["contrasena"] if filas else None
+
+
+def cambiar_contrasenia(id_usuario, hash_nuevo):
+    """Guarda la contrasena nueva e invalida los tokens anteriores en un solo UPDATE."""
+    sql = """
+        UPDATE usuarios
+        SET contrasena = %(contrasena)s, fecha_ultimo_logout = UTC_TIMESTAMP()
+        WHERE id = %(id)s
+    """
+    ejecutar_escritura(sql, {"contrasena": hash_nuevo, "id": id_usuario})
 
 def actualizar_fecha_logout(id_usuario):
     """Actualiza la fecha del último logout usando UTC explícito en MySQL."""

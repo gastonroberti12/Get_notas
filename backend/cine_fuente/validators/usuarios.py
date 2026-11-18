@@ -1,5 +1,6 @@
 from cine_fuente.validators.auth import validar_contrasenia, validar_email
-from cine_fuente.validators.reservas import error_validacion, validar_entero_positivo
+from cine_fuente.validators.comunes import error_validacion, validar_campos
+from cine_fuente.validators.reservas import validar_entero_positivo
 
 ROLES_VALIDOS = ("cliente", "administrador")
 # Longitudes máximas según las columnas de la tabla usuarios.
@@ -62,12 +63,7 @@ def _validar_campo(campo, valor):
 
 def validar_body_crear_usuario(body) -> dict:
     """Valida el JSON de POST /usuarios: los cuatro campos son obligatorios y de tipo texto."""
-    if not isinstance(body, dict):
-        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
-
-    faltantes = [campo for campo in CAMPOS_REGISTRO if campo not in body]
-    if faltantes:
-        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(faltantes)}.")
+    validar_campos(body, obligatorios=CAMPOS_REGISTRO)
 
     datos = {}
     for campo in CAMPOS_REGISTRO:
@@ -81,12 +77,23 @@ def validar_body_actualizar_usuario(body) -> dict:
     if not isinstance(body, dict) or not body:
         error_validacion("Cuerpo JSON inválido", "Envíe un objeto JSON con al menos un campo a modificar.")
 
-    desconocidos = set(body) - set(CAMPOS_EDITABLES)
-    if desconocidos:
-        error_validacion("Campos desconocidos", f"No se admiten estos campos: {', '.join(sorted(desconocidos))}.")
+    validar_campos(body, CAMPOS_EDITABLES)
 
     return {campo: _validar_campo(campo, valor) for campo, valor in body.items()}
 
+def validar_body_cambiar_contrasenia(body) -> tuple:
+    """Valida el JSON de POST /usuarios/me/contrasenia. Devuelve (actual, nueva)."""
+    if not isinstance(body, dict):
+        error_validacion("Cuerpo JSON inválido", "El cuerpo debe ser un objeto JSON.")
+
+    faltantes = [c for c in ("contrasenia_actual", "contrasenia_nueva") if c not in body]
+    if faltantes:
+        error_validacion("Faltan campos obligatorios", f"Se requieren: {', '.join(faltantes)}.")
+
+    actual = body["contrasenia_actual"]
+    if not isinstance(actual, str) or not actual:
+        error_validacion("Campo inválido", "'contrasenia_actual' debe ser un texto no vacío.")
+    return actual, validar_contrasenia(body["contrasenia_nueva"])
 
 def validar_id_usuario(id_usuario) -> int:
     """Valida el ID de la URL para GET/PATCH /usuarios/{id}."""

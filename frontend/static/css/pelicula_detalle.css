@@ -189,6 +189,172 @@
     text-align: center;
 }
 
+/*  Reseñas  */
+
+.resenas {
+    margin-top: 48px;
+}
+
+.resenas h2 {
+    margin-bottom: 20px;
+    padding: 12px;
+
+    background: var(--red);
+    border-radius: 8px;
+
+    text-align: center;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.resenas-resumen {
+    margin-bottom: 20px;
+    color: var(--text-muted);
+}
+
+.resenas-promedio {
+    color: var(--gold);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.resena-aviso {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.resena-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding: 20px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.resena-form-titulo {
+    font-weight: 600;
+}
+
+/* Estrellas: van en orden inverso en el HTML para poder iluminar las anteriores con ~ */
+.estrellas {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-self: flex-start;
+}
+
+.estrellas input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.estrellas label {
+    padding: 0 3px;
+    color: var(--border-input);
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.estrellas input:checked ~ label,
+.estrellas label:hover,
+.estrellas label:hover ~ label {
+    color: var(--gold);
+}
+
+.estrellas input:focus-visible + label {
+    outline: 2px solid var(--gold);
+    border-radius: 4px;
+}
+
+.resena-form textarea {
+    width: 100%;
+    padding: 12px;
+
+    background: var(--surface-dark);
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+}
+
+.resena-form textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.resena-boton {
+    align-self: flex-end;
+    padding: 10px 22px;
+
+    background: var(--gold);
+    border: 0;
+    border-radius: 8px;
+
+    color: #141416;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.resena-boton:hover {
+    background: var(--gold-hover);
+}
+
+.resenas-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.resena {
+    padding: 16px 18px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.resena-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+}
+
+.resena-estrellas {
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+
+.resena-fecha {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-size: 13px;
+}
+
+.resena-comentario {
+    margin-top: 10px;
+    color: var(--text-soft);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
 
 /*  Responsive  */
 

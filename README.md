@@ -17,18 +17,18 @@ Trabajo final de la cátedra Lanzillotta.
 ## Requisitos previos
 
 - Docker Desktop con Docker Compose.
-- Python 3.
-- Git.
-- Postman para ejecutar las pruebas manuales.
+- Python 3, solo si vas a ejecutar los servicios fuera de Docker.
+- Git, para clonar o actualizar el repositorio.
+- Postman, opcional, para ejecutar las pruebas manuales.
 
 ---
 
 ## 1. Levantar todo el proyecto con Docker
 
-Desde la raíz del proyecto:
+En la primera ejecución, prepará los archivos de entorno según el paso 2 y luego, desde la raíz del proyecto:
 
 ```powershell
-docker compose up -d
+docker compose up -d --build
 ```
 
 Para construir o reconstruir las imágenes después de actualizar el código (Repo remoto):
@@ -47,7 +47,7 @@ Comprobar el contenedor:
 docker compose ps
 ```
 
-Detener la base de datos:
+Detener todos los servicios:
 
 ```powershell
 docker compose down
@@ -60,7 +60,9 @@ docker compose down -v
 docker compose up -d
 ```
 
-El contenedor usa el nombre `mysql-cine-paradiso` y expone MySQL en `localhost:3306`.
+> **Atención:** `docker compose down -v` elimina el volumen de MySQL y todos los datos guardados.
+
+El contenedor usa el nombre `mysql-cine-paradiso`. MySQL se expone por defecto en `localhost:3306`. Si ese puerto está ocupado, podés definir `DB_PORT=3307` en un archivo `.env` junto a `docker-compose.yml`; esto cambia el puerto del host, mientras que el backend sigue conectándose al puerto `3306` dentro de Docker.
 
 ### Consultar la base desde la consola
 
@@ -80,15 +82,25 @@ SELECT * FROM funcion;
 
 ## 2. Configuración inicial del entorno (Opcional si no utilizas el Docker )
 
-Primero copiá el archivo de ejemplo:
+Copiá los archivos de ejemplo:
 
 ```powershell
 Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
 ```
 
-Configurá en `backend/.env` la contraseña y la clave de OMDb. El archivo `.env` está excluido por Git y no debe subirse al repositorio.
+En Linux o macOS:
 
-> Este paso se ejecuta una sola vez al clonar el repositorio o inicializar el proyecto.
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+En `backend/.env`, configurá las credenciales de MySQL y `JWT_SECRET_KEY`. La clave `OMDB_API_KEY` es necesaria para buscar películas en OMDb; las variables `SMTP_*` se usan para enviar correos. En `frontend/.env`, reemplazá `SECRET_KEY` por una clave propia para las sesiones.
+
+No subas estos archivos ni sus claves al repositorio.
+
+> Este paso se ejecuta una sola vez al clonar el repositorio o inicializar el proyecto. Docker Compose necesita ambos archivos porque los dos servicios los declaran como `env_file`.
 
 ### Opción A: virtualenv
 
@@ -189,6 +201,8 @@ La API queda disponible en:
 http://localhost:5001
 ```
 
+Este comando inicia solo el backend. Para usar la aplicación completa, es más simple iniciar también el frontend mediante Docker Compose, como se describe en la sección 1.
+
 Con Docker Compose, no es necesario activar un entorno virtual ni ejecutar Flask manualmente.
 Los servicios pueden levantarse o actualizarse con:
 
@@ -214,6 +228,13 @@ Las películas consultadas también pueden almacenarse localmente y sus pósters
 ---
 
 ## 6. Endpoints principales (Backend) 
+
+### Autenticación
+
+```text
+POST /auth/login
+POST /auth/logout
+```
 
 ### Películas
 
@@ -272,9 +293,29 @@ DELETE /salas/{id}
 GET    /salas/{sala_id}/butacas
 POST   /salas/{sala_id}/butacas/generar
 POST   /butacas
+PATCH  /butacas/{id}
 DELETE /butacas/{id}
 DELETE /salas/{sala_id}/butacas
 ```
+
+### Reservas y entradas
+
+```text
+GET    /reservas                         (administrador)
+GET    /usuarios/me/reservas             (cliente autenticado)
+GET    /reservas/{id}
+GET    /reservas/{id}/entradas
+POST   /reservas                         (crear reserva)
+POST   /reservas/{id}/pago
+PATCH  /reservas/{id}                    (cancelar reserva)
+
+GET    /entradas                         (administrador)
+GET    /usuarios/me/entradas             (cliente autenticado)
+GET    /entradas/{id}
+POST   /entradas/validacion              (validar QR)
+```
+
+Las reservas pendientes vencen según `RESERVA_EXPIRACION_MINUTOS` (8 minutos por defecto). El backend valida el vencimiento al confirmar el pago.
 
 ### Servicios
 
@@ -284,6 +325,10 @@ GET    /servicios/{id}
 POST   /servicios
 PATCH  /servicios/{id}
 DELETE /servicios/{id}
+GET    /reservas/{reserva_id}/servicios
+POST   /reservas/{reserva_id}/servicios
+PATCH  /reservas/{reserva_id}/servicios/{servicio_reserva_id}
+DELETE /reservas/{reserva_id}/servicios/{servicio_reserva_id}
 ```
 
 Los listados admiten paginación con `_limit` y `_offset`:
@@ -299,7 +344,7 @@ GET /salas?_limit=10&_offset=0
 
 1. Levantar el proyecto con `docker compose up -d`.
 2. Usar el frontend o ejecutar una consulta de prueba.
-3. Crear una colección de Postman o importar la colección del repositorio si está disponible.
+3. Importar `backend/tests/Cine Paradiso - Suite de pruebas API.postman_collection.json` en Postman.
 4. Usar `http://localhost:5001` como URL base.
 5. Para endpoints `POST` o `PATCH`, seleccionar `Body > raw > JSON` y agregar el header:
 
@@ -319,6 +364,77 @@ Ejemplo para crear una función:
   "precio": 8500
 }
 ```
+
+## 8. Despliegue en la nube (Render + TiDB Cloud)
+
+**Demo online:** https://get-notas-web-zo6s.onrender.com
+
+### Arquitectura
+
+| Componente | Servicio | Descripción |
+|---|---|---|
+| Base de datos | TiDB Cloud | Compatible con MySQL, puerto 4000, conexión con TLS |
+| Backend (API) | Render, Web Service | Flask + Gunicorn, imagen desde `backend/Dockerfile` |
+| Frontend | Render, Web Service | Flask + Gunicorn, imagen desde `frontend/Dockerfile` |
+
+El frontend consume la API del backend y el backend se conecta a TiDB Cloud.
+
+### 8.1 Base de datos en TiDB Cloud
+
+1. Creá un cluster (plan gratuito) y anotá host, puerto, usuario y contraseña.
+2. Creá la base `cine_paradiso`.
+3. Importá en este orden `backend/db/cine_paradiso.sql` y `backend/db/seed.sql`.
+4. El usuario de TiDB lleva un prefijo propio, por ejemplo `<prefijo>.root`.
+
+### 8.2 Backend en Render
+
+1. Creá un **Web Service** desde el repositorio, con runtime Docker y directorio raíz `backend`.
+2. Cargá estas variables de entorno:
+
+| Variable | Valor |
+|---|---|
+| `DB_HOST` | host de TiDB Cloud |
+| `DB_PORT` | `4000` |
+| `DB_USER` | `<prefijo>.root` |
+| `DB_PASSWORD` | contraseña de TiDB |
+| `DB_NAME` | `cine_paradiso` |
+| `DB_SSL` | `true` |
+| `JWT_SECRET_KEY` | clave larga y aleatoria |
+| `OMDB_API_KEY` | clave de OMDb |
+| `FRONTEND_URL` | URL pública del frontend en Render |
+| `RENDER` | `true` |
+
+### 8.3 Frontend en Render
+
+1. Creá otro **Web Service** con runtime Docker y directorio raíz `frontend`.
+2. Cargá estas variables:
+
+| Variable | Valor |
+|---|---|
+| `BACKEND_URL` | URL pública del backend en Render |
+| `SECRET_KEY` | clave larga y aleatoria |
+
+### 8.4 Orden de alta
+
+Cada servicio necesita la URL del otro, así que seguí este orden:
+1. Creá primero el backend y copiá su URL.
+2. Creá el frontend con esa URL en `BACKEND_URL`.
+3. Volvé al backend y cargá `FRONTEND_URL` con la URL del frontend.
+
+### 8.5 Despliegue automático
+
+Cada push a la rama `<rama>` redespliega ambos servicios.
+
+### 8.6 Limitaciones conocidas
+
+- **Arranque en frío:** en el plan gratuito, Render duerme los servicios tras un período sin tráfico. La primera petición puede tardar hasta 60 segundos.
+- **Correo:** Render bloquea los puertos SMTP. Con `RENDER=true` la aplicación no envía mails; la reserva y los QR funcionan igual. El envío por correo solo funciona en local.
+- **Un solo worker:** Gunicorn corre con un worker y varios hilos, porque el backend ejecuta en segundo plano el job que expira las reservas pendientes. Con más workers se duplicaría.
+- **Seguridad:** nunca subas los `.env` ni claves al repositorio. Los secretos de producción se cargan solo en el panel de Render.
+
+### 8.7 Alternar entre local y nube
+
+Los archivos `backend/.env.example` y `frontend/.env.example` traen dos bloques por variable: el activo es para localhost y el comentado, para la nube. Para pasar de uno a otro, comentá un bloque y descomentá el otro.
 ## 8. Ingresar a la pagina (front)
 Después de levantar todo (con el docker o el entorno virtual). 
 En su navegador, de preferencia, entrar al siguiente puerto: http://localhost:5000/

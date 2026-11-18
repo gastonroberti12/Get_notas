@@ -2,7 +2,7 @@
 
 {% block title %}Salas | Cine Paradiso{% endblock %}
 {% block titulo_admin %}Salas{% endblock %}
-{% block subtitulo %}<p class="admin-subtitle">Consultá las salas y capacidades de Cine Paradiso.</p>{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Consultá las salas y sus capacidades.</p>{% endblock %}
 
 {% block contenido_admin %}
 <div class="admin-section-heading">
@@ -24,7 +24,6 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Local</th>
                     <th>Sala</th>
                     <th>Capacidad</th>
                 </tr>
@@ -32,7 +31,6 @@
             <tbody>
                 {% for s in salas %}
                 <tr>
-                    <td data-label="Local">{{ s.sucursal or "—" }}</td>
                     <td data-label="Sala">{{ s.nombre }}</td>
                     <td data-label="Capacidad">{{ s.capacidad }} butacas</td>
                 </tr>

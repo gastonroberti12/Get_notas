@@ -1,31 +1,13 @@
-{% extends "base.html" %}
+{% extends "backadmin/base_backoffice.html" %}
 
 {% block title %}Panel de administración | Cine Paradiso{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
+{% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice_dashboard.css') }}">
 {% endblock %}
+{% block titulo_admin %}Panel de administración{% endblock %}
+{% block subtitulo %}<p class="admin-subtitle">Gestioná el cine y consultá los indicadores de actividad.</p>{% endblock %}
 
-{% block content %}
-
-<section class="admin-panel">
-
-    <div class="admin-header">
-        <div>
-            <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
-            <h1>Panel de administración</h1>
-            <p class="admin-subtitle">Gestioná el cine y consultá los indicadores de actividad.</p>
-        </div>
-
-        <span class="admin-role">Administrador</span>
-    </div>
-
-    <div class="admin-layout">
-
-        {% include "backadmin/barralateral.html" %}
-
-        <div class="admin-content">
+{% block contenido_admin %}
 
             <div class="admin-section-heading">
                 <h2>Estadísticas</h2>
@@ -92,11 +74,4 @@
                     {% endif %}
                 </section>
             </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-{% endblock %}
+{% endblock contenido_admin %}

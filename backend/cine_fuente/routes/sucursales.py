@@ -4,17 +4,12 @@ from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
 from cine_fuente.utils import (
     construir_error_api,
-    respuesta_error_api,
-    respuesta_error_excepcion,
+    respuesta_error as error,
     respuesta_paginada,
     validar_paginacion,
 )
 
 sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/sucursales")
-
-
-def error(codigo, mensaje, descripcion, estado):
-    return respuesta_error_api(construir_error_api(codigo, mensaje, descripcion), estado)
 
 
 def validar_texto(datos, campo, maximo):
@@ -30,11 +25,8 @@ def validar_texto(datos, campo, maximo):
 @sucursales_bp.route("", methods=["GET"])
 # Lista las sucursales disponibles.
 def listar_sucursales():
-    try:
-        limit, offset = validar_paginacion(request.args)
-        sucursales = consultar_sucursales()
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
+    limit, offset = validar_paginacion(request.args)
+    sucursales = consultar_sucursales()
     return respuesta_paginada("sucursales", sucursales[offset:offset + limit], len(sucursales), limit, offset)
 
 
@@ -52,14 +44,11 @@ def obtener_sucursal(sucursal_id):
 # Registra una nueva sucursal.
 def crear_sucursal():
     datos = request.get_json(silent=True) or {}
-    try:
-        nombre = validar_texto(datos, "nombre", 100)
-        direccion = validar_texto(datos, "direccion", 200)
-        telefono = datos.get("telefono")
-        if telefono is not None:
-            telefono = str(telefono).strip() or None
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
+    nombre = validar_texto(datos, "nombre", 100)
+    direccion = validar_texto(datos, "direccion", 200)
+    telefono = datos.get("telefono")
+    if telefono is not None:
+        telefono = str(telefono).strip() or None
     sucursal_id = insertar_sucursal(nombre, direccion, telefono)
     return jsonify(consultar_sucursal_por_id(sucursal_id)), 201
 
@@ -72,14 +61,11 @@ def modificar_sucursal(sucursal_id):
         return error("sucursal.not.found", "Sucursal no encontrada", "La sucursal solicitada no existe.", 404)
     datos = request.get_json(silent=True) or {}
     cambios = {}
-    try:
-        for campo, maximo in (("nombre", 100), ("direccion", 200)):
-            if campo in datos:
-                cambios[campo] = validar_texto(datos, campo, maximo)
-        if "telefono" in datos:
-            cambios["telefono"] = str(datos["telefono"]).strip() or None
-    except ValueError as error_validacion:
-        return respuesta_error_excepcion(error_validacion)
+    for campo, maximo in (("nombre", 100), ("direccion", 200)):
+        if campo in datos:
+            cambios[campo] = validar_texto(datos, campo, maximo)
+    if "telefono" in datos:
+        cambios["telefono"] = str(datos["telefono"]).strip() or None
     if not cambios:
         return error("invalid.body", "Datos inválidos", "No se enviaron campos para modificar.", 400)
     actualizar_sucursal(sucursal_id, cambios)

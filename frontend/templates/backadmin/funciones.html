@@ -9,7 +9,7 @@
         <a href="{{ url_for('backoffice.nueva_funcion') }}" class="admin-btn-primary">Agregar función</a>
       </div>
       
-      {% with etiqueta_activos="Activas", etiqueta_bajas="Dadas de baja" %}
+      {% with etiqueta_activos="Próximas", etiqueta_bajas="Pasadas o dadas de baja" %}
         {% include "backadmin/filtro_estado.html" %}
       {% endwith %}
 
@@ -21,7 +21,6 @@
             <tr>
               <th>Película</th>
               <th>Sala</th>
-              <th>Local</th>
               <th>Fecha y hora</th>
               <th>Precio</th>
               <th>Acciones</th>
@@ -32,7 +31,6 @@
             <tr>
               <td data-label="Película">{{ f.pelicula }}</td>
               <td data-label="Sala">{{ f.sala }}</td>
-              <td data-label="Local">{{ f.sucursal }}</td>
               <td data-label="Fecha y hora">{{ f.fecha_texto }}</td>
               <td data-label="Precio">${{ f.precio }}</td>
               <td data-label="Acciones">
@@ -40,6 +38,9 @@
 
                   <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
                     class="admin-btn-secondary">Editar</a>
+                  {% if ver_inactivos and f.activa %}
+                  <span class="admin-btn-secondary">Finalizada</span>
+                  {% else %}
                   <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"
                     data-confirmar="{{ '¿Dar de baja esta función?' if f.activa else '¿Dar de alta esta función?' }}"
                     onsubmit="return confirm(this.dataset.confirmar)">
@@ -47,6 +48,7 @@
                     <input type="hidden" name="activa" value="{{ 'false' if f.activa else 'true' }}">
                     <button type="submit" class="admin-btn-secondary">{{ 'Dar de baja' if f.activa else 'Dar de alta' }}</button>
                   </form>
+                  {% endif %}
                 </div>
               </td>
             </tr>

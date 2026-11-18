@@ -1,10 +1,14 @@
 import logging
 import secrets
-
+import base64
 from datetime import timedelta, timezone
 
 
-from constants import RESERVA_CANCELACION_MINUTOS, RESERVA_EXPIRACION_MINUTOS
+from constants import (
+    RESERVA_CANCELACION_MINUTOS,
+    RESERVA_EXPIRACION_MINUTOS,
+    TOLERANCIA_INGRESO_MIN,
+)
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
 from cine_fuente.repositories.butacas import obtener_butacas
@@ -15,6 +19,7 @@ from cine_fuente.services.notificaciones_service import (
     enviar_estado_reserva,
     mail_posible,
 )
+from cine_fuente.services.qr_service import generar_qr_png
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +59,7 @@ def reserva_api(fila):
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
+        "tolerancia_ingreso_min": TOLERANCIA_INGRESO_MIN,
     }
 
 
@@ -73,9 +79,14 @@ def entrada_api(fila):
 
 def procesar_expiraciones():
     for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
-        datos = compras_repo.obtener_datos_notificacion(id_reserva)
-        if datos and mail_posible(datos):
-            enviar_en_segundo_plano(enviar_estado_reserva, datos)
+        if not mail_posible({"email": True}):  # en Render no hay mails: evita consultas innecesarias
+            continue
+        try:
+            datos = compras_repo.obtener_datos_notificacion(id_reserva)
+            if datos and mail_posible(datos):
+                enviar_en_segundo_plano(enviar_estado_reserva, datos)
+        except Exception:
+            logger.exception("No se pudo preparar el mail de la reserva %s", id_reserva)
 
 
 def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
@@ -87,19 +98,17 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
 #obtiene las reservas del usuario con todos sus detalles
 def listar_reservas_perfil(filtros, limit, offset, usuario_id):
 
-
-    #obtenemos las reservas
-    reservas = compras_repo.listar_reservas_perfil(
+    # una sola conexion a la base para todo el perfil
+    reservas, total, entradas, servicios = compras_repo.obtener_datos_perfil(
         filtros, limit, offset, usuario_id
     )
 
-    total = compras_repo.contar_reservas(filtros, usuario_id)
-
-    reserva_ids = [reserva["id"] for reserva in reservas]
-
-    #consultamos entradas y servicios
-    entradas = compras_repo.listar_entradas_perfil(reserva_ids)
-    servicios = compras_repo.listar_servicios_perfil(reserva_ids)
+    # agrupamos por reserva una sola vez
+    entradas_por_reserva, servicios_por_reserva = {}, {}
+    for entrada in entradas:
+        entradas_por_reserva.setdefault(entrada["reserva_id"], []).append(entrada)
+    for servicio in servicios:
+        servicios_por_reserva.setdefault(servicio["reserva_id"], []).append(servicio)
 
     resultado = []
 
@@ -107,6 +116,7 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
         datos = reserva_api(reserva)
 
         datos["pelicula"] = reserva["pelicula"]
+        datos["pelicula_id"] = reserva["pelicula_id"]
         datos["poster_url"] = reserva["poster_url"]
         datos["fecha_hora"] = formatear_fecha_hora(reserva["fecha_hora"])
         datos["sala"] = reserva["sala"]
@@ -115,21 +125,25 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
         datos["entradas"] = []
         datos["servicios"] = []
 
-        # asociamos las entradas
-        for entrada in entradas:
-            if entrada["reserva_id"] == reserva["id"]:
-                datos["entradas"].append({
-                    "butaca": f"{entrada['fila']}{entrada['numero']}",
-                    "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
-                })
+        for entrada in entradas_por_reserva.get(reserva["id"], []):
+            item = {
+                "butaca": f"{entrada['fila']}{entrada['numero']}",
+                "codigo_qr": entrada["codigo_qr"],
+                "fecha_uso": formatear_fecha_hora(entrada["fecha_uso"])
+            }
+            # el QR solo se genera para entradas confirmadas y sin usar
+            if (reserva["estado"] == "confirmada"
+                    and entrada["codigo_qr"]
+                    and entrada["fecha_uso"] is None):
+                png = generar_qr_png(entrada["codigo_qr"])
+                item["qr_base64"] = base64.b64encode(png).decode("ascii")
+            datos["entradas"].append(item)
 
-        # asociamos los servicios que corresponden
-        for servicio in servicios:
-            if servicio["reserva_id"] == reserva["id"]:
-                datos["servicios"].append({
-                    "nombre": servicio["nombre"],
-                    "cantidad": servicio["cantidad"]
-                })
+        for servicio in servicios_por_reserva.get(reserva["id"], []):
+            datos["servicios"].append({
+                "nombre": servicio["nombre"],
+                "cantidad": servicio["cantidad"]
+            })
 
         resultado.append(datos)
 
@@ -284,9 +298,15 @@ def confirmar_pago(reserva_id, usuario):
         )
 
     reserva_actualizada = compras_repo.obtener_reserva_por_id(reserva_id)
-    datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
-    if reserva_actualizada is None or datos_notificacion is None:
+    if reserva_actualizada is None:
         raise RuntimeError("No se pudieron recuperar los datos de la reserva confirmada.")
+
+    # El pago ya está confirmado: los datos para el mail son opcionales y nunca deben dar error 500.
+    try:
+        datos_notificacion = compras_repo.obtener_datos_notificacion(reserva_id)
+    except Exception:
+        logger.exception("No se pudieron obtener los datos de notificación de la reserva %s", reserva_id)
+        datos_notificacion = None
 
     return reserva_api(reserva_actualizada), datos_notificacion
 
@@ -337,6 +357,10 @@ def cancelar_reserva(reserva_id, usuario):
         )
 
     datos = compras_repo.obtener_datos_notificacion(reserva_id)
-    if datos and mail_posible(datos):
-        enviar_en_segundo_plano(enviar_estado_reserva, datos)
-
+    try:
+        if mail_posible({"email": True}):
+            datos = compras_repo.obtener_datos_notificacion(reserva_id)
+            if datos and mail_posible(datos):
+                enviar_en_segundo_plano(enviar_estado_reserva, datos)
+    except Exception:
+        logger.exception("No se pudo preparar el mail de la reserva %s", reserva_id)

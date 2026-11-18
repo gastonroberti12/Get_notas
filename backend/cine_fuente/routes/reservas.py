@@ -13,8 +13,6 @@ from cine_fuente.services.notificaciones_service import (
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.utils import (
     respuesta_paginada,
-    respuesta_error_excepcion,
-    respuesta_error_interno,
     validar_paginacion,
 )
 from cine_fuente.validators.reservas import (
@@ -34,109 +32,74 @@ reservas_bp = Blueprint("reservas", __name__)
 @reservas_bp.route("/reservas", methods=["GET"])
 @requiere_rol("administrador")
 def get_reservas():
-    try:
-        filtros = validar_filtros_listado(request.args)
-        limit, offset = validar_paginacion(request.args)
-        reservas, total = compras_service.listar_reservas(filtros, limit, offset)
-        return respuesta_paginada("reservas", reservas, total, limit, offset)
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    filtros = validar_filtros_listado(request.args)
+    limit, offset = validar_paginacion(request.args)
+    reservas, total = compras_service.listar_reservas(filtros, limit, offset)
+    return respuesta_paginada("reservas", reservas, total, limit, offset)
 
 
 # Endpoint GET /usuarios/me/reservas: devuelve solo las reservas del usuario autenticado.
 @reservas_bp.route("/usuarios/me/reservas", methods=["GET"])
 @requiere_rol("cliente")
 def get_mis_reservas():
-    try:
-        estado = validar_estado_propio(request.args)
-        limit, offset = validar_paginacion(request.args)
-        filtros = {"usuario_id": None, "funcion_id": None, "estado": estado, "fecha_desde": None, "fecha_hasta": None}
-        reservas, total = compras_service.listar_reservas_perfil(filtros, limit, offset, usuario_id=int(g.usuario["id"]))
-        
-        return respuesta_paginada("reservas", reservas, total, limit, offset)
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    estado = validar_estado_propio(request.args)
+    limit, offset = validar_paginacion(request.args)
+    filtros = {"usuario_id": None, "funcion_id": None, "estado": estado, "fecha_desde": None, "fecha_hasta": None}
+    reservas, total = compras_service.listar_reservas_perfil(filtros, limit, offset, usuario_id=int(g.usuario["id"]))
+    
+    return respuesta_paginada("reservas", reservas, total, limit, offset)
 
 
 # Endpoint GET /reservas/{id}: devuelve una reserva solo al titular o al administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["GET"])
 @requiere_rol("cliente", "administrador")
 def get_reserva_id(id_reserva):
-    try:
-        id_valido = validar_id_reserva(id_reserva)
-        reserva = compras_service.obtener_reserva(id_valido, g.usuario)
-        return jsonify(reserva), 200
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    id_valido = validar_id_reserva(id_reserva)
+    reserva = compras_service.obtener_reserva(id_valido, g.usuario)
+    return jsonify(reserva), 200
 
 
 # Endpoint GET /reservas/{id}/entradas: devuelve las entradas con paginación, al titular o administrador.
 @reservas_bp.route("/reservas/<int:id_reserva>/entradas", methods=["GET"])
 @requiere_rol("cliente", "administrador")
 def get_entradas_reserva(id_reserva):
-    try:
-        id_valido = validar_id_reserva(id_reserva)
-        limit, offset = validar_paginacion(request.args)
-        entradas, total = compras_service.listar_entradas_reserva(id_valido, g.usuario, limit, offset)
-        return respuesta_paginada("entradas", entradas, total, limit, offset)
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    id_valido = validar_id_reserva(id_reserva)
+    limit, offset = validar_paginacion(request.args)
+    entradas, total = compras_service.listar_entradas_reserva(id_valido, g.usuario, limit, offset)
+    return respuesta_paginada("entradas", entradas, total, limit, offset)
 
 
 # Endpoint POST /reservas: el cliente crea una reserva pendiente y bloquea temporalmente sus butacas.
 @reservas_bp.route("/reservas", methods=["POST"])
 @requiere_rol("cliente")
 def post_reserva():
-    try:
-        body = request.get_json(silent=True)
-        datos = validar_body_crear_reserva(body)
-        reserva_id = compras_service.crear_reserva(
-            int(g.usuario["id"]), datos["funcion_id"], datos["butaca_ids"]
-        )
-        respuesta = make_response(jsonify({"id": reserva_id}), 201)
-        respuesta.headers["Location"] = f"/reservas/{reserva_id}"
-        return respuesta
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    body = request.get_json(silent=True)
+    datos = validar_body_crear_reserva(body)
+    reserva_id = compras_service.crear_reserva(
+        int(g.usuario["id"]), datos["funcion_id"], datos["butaca_ids"]
+    )
+    respuesta = make_response(jsonify({"id": reserva_id}), 201)
+    respuesta.headers["Location"] = f"/reservas/{reserva_id}"
+    return respuesta
 
 
 # Endpoint POST /reservas/{id}/pago: confirma el pago simulado, genera los QR e intenta enviar el correo.
 @reservas_bp.route("/reservas/<int:id_reserva>/pago", methods=["POST"])
 @requiere_rol("cliente")
 def post_pago_reserva(id_reserva):
-    try:
-        id_valido = validar_id_reserva(id_reserva)
-        validar_body_pago(request.get_json(silent=True))
-        reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
-        enviado = mail_posible(datos_notificacion)
-        if enviado:
-            enviar_en_segundo_plano(enviar_confirmacion_pago, datos_notificacion)
-        return jsonify({**reserva, "mail_enviado": enviado}), 200
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    id_valido = validar_id_reserva(id_reserva)
+    validar_body_pago(request.get_json(silent=True))
+    reserva, datos_notificacion = compras_service.confirmar_pago(id_valido, g.usuario)
+    enviado = bool(datos_notificacion) and mail_posible(datos_notificacion)
+    if enviado:
+        enviar_en_segundo_plano(enviar_confirmacion_pago, datos_notificacion)
+    return jsonify({**reserva, "mail_enviado": enviado}), 200
 
 # Endpoint PATCH /reservas/{id}: solo permite cancelar y libera todas las entradas de la reserva.
 @reservas_bp.route("/reservas/<int:id_reserva>", methods=["PATCH"])
 @requiere_rol("cliente", "administrador")
 def patch_cancelar_reserva(id_reserva):
-    try:
-        id_valido = validar_id_reserva(id_reserva)
-        validar_body_cancelar_reserva(request.get_json(silent=True))
-        compras_service.cancelar_reserva(id_valido, g.usuario)
-        return "", 204
-    except ValueError as error:
-        return respuesta_error_excepcion(error)
-    except Exception as error:
-        return respuesta_error_interno(error)
+    id_valido = validar_id_reserva(id_reserva)
+    validar_body_cancelar_reserva(request.get_json(silent=True))
+    compras_service.cancelar_reserva(id_valido, g.usuario)
+    return "", 204

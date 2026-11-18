@@ -15,18 +15,39 @@ def consultar_pelicula_por_imdb(imdb_id):
 
 
 # Consulta las películas almacenadas; con activa, filtra por ese estado.
-def consultar_peliculas(activa=None):
-    if activa is False:
-        return ejecutar_consulta(
-            "SELECT * FROM pelicula WHERE activa = FALSE ORDER BY id"
-        )
+def consultar_peliculas(activa=None, sucursal_id=None, titulo=None, genero=None):
     ahora = ahora_gmt3().replace(tzinfo=None)
+    condiciones = []
+    parametros = []
+
+    if sucursal_id is not None:
+        condiciones.extend([
+            "activa = TRUE",
+            "fecha_fin_cartelera >= %s",
+            "id IN ("
+            "SELECT f.pelicula_id FROM funcion f "
+            "JOIN salas s ON s.id = f.sala_id "
+            "WHERE f.activa = TRUE AND s.sucursal_id = %s AND f.fecha_hora > %s"
+            ")",
+        ])
+        parametros.extend([ahora, sucursal_id, ahora])
+    elif activa is False:
+        condiciones.append("(activa = FALSE OR fecha_fin_cartelera < %s)")
+        parametros.append(ahora)
+    else:
+        condiciones.extend(["activa = TRUE", "fecha_fin_cartelera >= %s"])
+        parametros.append(ahora)
+
+    if titulo is not None:
+        condiciones.append("LOWER(titulo) LIKE LOWER(%s)")
+        parametros.append(f"%{titulo}%")
+    if genero is not None:
+        condiciones.append("LOWER(genero) LIKE LOWER(%s)")
+        parametros.append(f"%{genero}%")
+
     return ejecutar_consulta(
-        "SELECT * FROM pelicula "
-        "WHERE activa = TRUE "
-        "AND fecha_fin_cartelera >= %s "
-        "ORDER BY id",
-        (ahora,),
+        f"SELECT * FROM pelicula WHERE {' AND '.join(condiciones)} ORDER BY id",
+        tuple(parametros),
     )
 
 
@@ -64,14 +85,6 @@ def tiene_reservas_activas(pelicula_id):
     return filas[0]["cantidad"] > 0
 
 
-# Consulta las películas activas con funciones futuras en una sucursal.
-def consultar_peliculas_por_sucursal(sucursal_id, desde):
-    return ejecutar_consulta(
-        "SELECT p.* FROM pelicula p "
-        "JOIN funcion f ON f.pelicula_id = p.id "
-        "JOIN salas s ON s.id = f.sala_id "
-        "WHERE p.activa = TRUE "
-        "AND s.sucursal_id = %s AND f.fecha_hora > %s "
-        "GROUP BY p.id ORDER BY p.id",
-        (sucursal_id, desde),
-    )
+def consultar_peliculas_por_sucursal(sucursal_id, desde=None):
+    """Compatibilidad para consultas por sucursal; `desde` se conserva por API interna."""
+    return consultar_peliculas(sucursal_id=sucursal_id)
