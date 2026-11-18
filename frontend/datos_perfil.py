@@ -4,6 +4,11 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 ESTADOS_PROXIMAS = ('confirmada',)
 ESTADOS_HISTORIAL = ('finalizada', 'cancelada')
 SIN_DATO = '—'
+TOLERANCIA_INGRESO_MIN_DEFAULT = 15
+
+
+def ahora_argentina():
+    return datetime.now(timezone(timedelta(hours=-3)))
 
 
 def formatear_total(pesos):
@@ -36,6 +41,25 @@ def funcion_ya_comenzo(fecha_hora):
 
     return fecha <= datetime.now(zona_argentina)
 
+
+def funcion_termino_tolerancia(reserva):
+    inicio = parsear_fecha(reserva.get("fecha_hora"))
+    if inicio is None:
+        return False
+
+    zona_argentina = timezone(timedelta(hours=-3))
+    if inicio.tzinfo is None:
+        inicio = inicio.replace(tzinfo=zona_argentina)
+
+    tolerancia = reserva.get("tolerancia_ingreso_min", TOLERANCIA_INGRESO_MIN_DEFAULT)
+    try:
+        tolerancia = int(tolerancia)
+    except (TypeError, ValueError):
+        tolerancia = TOLERANCIA_INGRESO_MIN_DEFAULT
+
+    limite = inicio + timedelta(minutes=tolerancia)
+    return ahora_argentina() > limite
+
 def clasificar_reserva(reserva):
     estado = reserva.get("estado")
 
@@ -47,7 +71,7 @@ def clasificar_reserva(reserva):
         entradas = reserva.get("entradas", [])
         todas_usadas = bool(entradas) and all(e.get("fecha_uso") for e in entradas)
 
-        if todas_usadas or funcion_ya_comenzo(reserva.get("fecha_hora")):
+        if todas_usadas or funcion_termino_tolerancia(reserva):
             return "historial"
 
         return "proximas"
@@ -62,7 +86,7 @@ def armar_reserva(reserva):
     """Prepara los datos de una reserva para mostrarlos en el perfil."""
 
     entradas = []
-    funcion_comenzada = funcion_ya_comenzo(reserva.get('fecha_hora'))
+    ingreso_vencido = funcion_termino_tolerancia(reserva)
 
     for entrada in reserva.get('entradas', []):
         
@@ -73,9 +97,9 @@ def armar_reserva(reserva):
             estado = 'cancelada'
         elif usada:
             estado = 'usada'
-        elif reserva['estado'] == 'confirmada' and not funcion_comenzada:
+        elif reserva['estado'] == 'confirmada' and not ingreso_vencido:
             estado = 'confirmada'
-        elif reserva['estado'] in ('confirmada', 'finalizada'):
+        elif reserva['estado'] in ('confirmada', 'finalizada') and ingreso_vencido:
             estado = 'no_usada'
         else:
             estado = reserva['estado']

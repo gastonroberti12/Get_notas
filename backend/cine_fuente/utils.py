@@ -19,7 +19,7 @@ PAGINACION_OFFSET_MINIMO = 0
 logger = logging.getLogger(__name__)
 
 
-def construir_error_api(code: str, message: str, description: str) -> dict:
+def construir_error_api(code: str, message: str, description: str, level: str = "error") -> dict:
     """Construye el formato de error para cualquier endpoint."""
     return {
         "errors": [{
@@ -64,6 +64,11 @@ def respuesta_error_interno(error: Exception | None = None):
     ), 500)
 
 
+def mensaje_validacion(error: ValueError) -> str:
+    detalle = error.args[0]
+    return detalle["errors"][0]["mensaje"] if isinstance(detalle, dict) else str(detalle)
+
+
 def formatear_fecha_hora(valor):
     if valor is None:
         return None
@@ -79,7 +84,7 @@ def formatear_fecha_hora(valor):
     else:
         valor = valor.astimezone(zona_gmt3)
 
-    return valor.strftime("%Y-%m-%dT%H:%M:%S.%f-03:00")
+    return valor.strftime("%Y-%m-%dT%H:%M:%S-03:00")
 
 
 def ahora_gmt3() -> datetime:
@@ -206,6 +211,16 @@ def respuesta_paginada(
     )
 
     return jsonify({clave: registros, "_links": enlaces}), 200
+
+
+def construir_links_paginacion(total: int, limit: int, offset: int) -> dict:
+    return construir_links(
+        request.base_url,
+        request.args.to_dict(flat=True),
+        total,
+        limit,
+        offset
+    )
 
 def validar_precio(valor, minimo=1):
     """Precio en pesos enteros; rechaza decimales, strings y booleanos."""

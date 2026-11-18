@@ -51,3 +51,17 @@ def ejecutar_actualizacion(sql, params=None):
         cursor.execute(sql, params)
         conexion.commit()
         return cursor.rowcount
+
+
+def ejecutar_transaccion(operacion):
+    conexion = obtener_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            resultado = operacion(cursor)
+        conexion.commit()
+        return resultado
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        conexion.close()

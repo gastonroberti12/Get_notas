@@ -3,19 +3,19 @@ import pymysql
 from cine_fuente.repositories.peliculas import (
     actualizar_pelicula,
     consultar_peliculas,
-    consultar_peliculas_por_sucursal,
     insertar_pelicula,
     tiene_reservas_activas,
 )
-from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
+from cine_fuente.utils import construir_error_api, formatear_fecha_hora
 
 
 # Lista las películas; con sucursal, solo las que tienen funciones futuras ahí.
 def obtener_peliculas(filtros):
-    if filtros["sucursal_id"] is None:
-        return consultar_peliculas(filtros["activa"])
-    return consultar_peliculas_por_sucursal(
-        filtros["sucursal_id"], ahora_gmt3().replace(tzinfo=None)
+    return consultar_peliculas(
+        activa=filtros["activa"],
+        sucursal_id=filtros["sucursal_id"],
+        titulo=filtros["titulo"],
+        genero=filtros["genero"],
     )
 
 

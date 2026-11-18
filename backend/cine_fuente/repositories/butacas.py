@@ -1,4 +1,5 @@
-from cine_fuente.db import ejecutar_consulta, ejecutar_escritura
+from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, ejecutar_transaccion
+from cine_fuente.utils import construir_error_api
 
 
 # Consulta las butacas de una sala.
@@ -54,6 +55,52 @@ def eliminar_butaca(butaca_id):
 def contar_butacas(sala_id):
     filas = ejecutar_consulta("SELECT COUNT(*) AS total FROM butacas WHERE sala_id = %s", (sala_id,),)
     return filas[0]["total"] if filas else 0
+
+
+def generar_butacas_atomico(sala_id):
+    def operacion(cursor):
+        cursor.execute(
+            "SELECT capacidad FROM salas WHERE id = %s FOR UPDATE",
+            (sala_id,),
+        )
+        sala = cursor.fetchone()
+        if sala is None:
+            raise ValueError(construir_error_api(
+                "sala.not.found",
+                "Sala no encontrada",
+                "La sala solicitada no existe.",
+            ), 404)
+
+        capacidad = sala["capacidad"]
+        if capacidad % 10 != 0:
+            raise ValueError(construir_error_api(
+                "sala.capacidad.invalid",
+                "Capacidad inválida",
+                "La capacidad debe ser múltiplo de 10 para generar butacas.",
+            ), 400)
+
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM butacas WHERE sala_id = %s",
+            (sala_id,),
+        )
+        if cursor.fetchone()["total"] != 0:
+            raise ValueError(construir_error_api(
+                "butacas.already.generated",
+                "Butacas ya generadas",
+                "La sala ya tiene butacas generadas.",
+            ), 409)
+
+        cantidad = capacidad
+        for fila_numero in range(1, capacidad // 10 + 1):
+            fila = chr(64 + fila_numero)
+            for numero in range(1, 11):
+                cursor.execute(
+                    "INSERT INTO butacas (sala_id, fila, numero) VALUES (%s, %s, %s)",
+                    (sala_id, fila, numero),
+                )
+        return cantidad
+
+    return ejecutar_transaccion(operacion)
 
 
 # Elimina todas las butacas de una sala.
