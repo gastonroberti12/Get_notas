@@ -66,7 +66,7 @@ def crear_app():
 
     @app.errorhandler(500)
     def manejar_error_interno(error):
-        return respuesta_error_interno(error)
+        return respuesta_error_interno(getattr(error, "original_exception", None) or error)
 
     return app
 
