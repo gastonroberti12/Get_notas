@@ -47,6 +47,9 @@ tags:
   - name: Estadísticas
     description: Backoffice. `fecha_desde` y `fecha_hasta` filtran por fecha de la
       función (ocupación) o de la compra (ventas y cancelaciones)
+  - name: Reseñas
+    description: Calificación y comentario de las películas. Solo puede reseñar el
+      cliente que ya validó una entrada de esa película, una vez por película
 paths:
   /usuarios:
     get:
@@ -203,7 +206,32 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/InternalServerError"
-  /usuarios/{id}:
+  
+  /usuarios/me/resenas:
+    get:
+      summary: Listar las reseñas propias
+      description: Devuelve las reseñas que escribió el cliente autenticado, de la
+        más nueva a la más vieja, con el título y el póster de cada película.
+        **Rol autorizado:** Cliente.
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          $ref: "#/components/responses/GetMisResenasList200"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    /usuarios/{id}:
     parameters:
       - $ref: "#/components/parameters/Id"
     get:
@@ -408,6 +436,87 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /peliculas/{id}/resenas:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      summary: Listar las reseñas de una película
+      description: Devuelve las reseñas de la película, de la más nueva a la más
+        vieja, junto con la cantidad total y la calificación promedio (un
+        decimal; `null` si todavía no tiene reseñas). De cada autor solo se
+        muestra el nombre y la inicial del apellido. **Rol autorizado:** Público
+        general.
+      tags:
+        - Reseñas
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          $ref: "#/components/responses/GetResenasList200"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Reseñar una película
+      description: Crea la reseña del cliente autenticado. Solo se permite si el
+        cliente tiene al menos una entrada de la película con `fecha_uso`, es
+        decir, ya validada en el cine (aunque la función haya terminado), y una
+        sola vez por película. Errores de negocio — 403 `RESENA_NO_PERMITIDA`
+        si no validó ninguna entrada; 409 `RESENA_DUPLICADA` si ya reseñó la
+        película. **Rol autorizado:** Cliente.
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResenaCreate"
+      responses:
+        "201":
+          $ref: "#/components/responses/CreatedResena"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /peliculas/{id}/resenas/estado:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      summary: Consultar si el cliente puede reseñar la película
+      description: Indica si el cliente autenticado ya vio la película (tiene una
+        entrada validada), si ya la reseñó y si puede reseñarla ahora. Lo usa el
+        frontend para decidir si muestra el formulario. **Rol autorizado:**
+        Cliente.
+      tags:
+        - Reseñas
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/GetResenaEstado200"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /funciones:
@@ -2456,6 +2565,119 @@ components:
             $ref: "#/components/schemas/Entrada"
         _links:
           $ref: "#/components/schemas/Links"
+    ResenaCreate:
+      type: object
+      required:
+        - calificacion
+      properties:
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Puntaje de 1 a 5 estrellas
+          example: 4
+        comentario:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Opcional. Se recorta; si queda vacío se guarda como null
+          example: Muy buena película, la sala y el sonido estuvieron excelentes.
+    ResenaCreada:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador de la reseña
+          example: 5
+        pelicula_id:
+          type: integer
+          example: 1
+        calificacion:
+          type: integer
+          example: 4
+        comentario:
+          type: string
+          nullable: true
+          example: Muy buena película, la sala y el sonido estuvieron excelentes.
+    Resena:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        comentario:
+          type: string
+          nullable: true
+          example: Muy buena película, la sala y el sonido estuvieron excelentes.
+        fecha:
+          $ref: "#/components/schemas/FechaHora"
+        autor:
+          type: string
+          description: Nombre y primera letra del apellido
+          example: Alexis B.
+    ResenasListResponse:
+      type: object
+      properties:
+        resenas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Resena"
+        total:
+          type: integer
+          description: Cantidad total de reseñas de la película
+          example: 12
+        promedio:
+          type: number
+          format: float
+          nullable: true
+          description: Calificación promedio con un decimal. Es null si no hay reseñas
+          example: 4.5
+    ResenaEstado:
+      type: object
+      properties:
+        vio_pelicula:
+          type: boolean
+          description: El cliente tiene una entrada de la película ya validada
+          example: true
+        ya_reseno:
+          type: boolean
+          description: El cliente ya escribió su reseña de la película
+          example: false
+        puede_resenar:
+          type: boolean
+          description: Verdadero si vio la película y todavía no la reseñó
+          example: true
+    MiResena:
+      allOf:
+        - $ref: "#/components/schemas/Resena"
+        - type: object
+          properties:
+            pelicula_id:
+              type: integer
+              example: 1
+            pelicula:
+              type: string
+              example: The Godfather
+            poster_url:
+              type: string
+              nullable: true
+              example: https://m.media-amazon.com/images/M/poster.jpg
+    MisResenasListResponse:
+      type: object
+      properties:
+        resenas:
+          type: array
+          items:
+            $ref: "#/components/schemas/MiResena"
+        total:
+          type: integer
+          description: Cantidad total de reseñas del cliente
+          example: 3
     ServiciosListResponse:
       type: object
       properties:
@@ -2737,6 +2959,30 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EntradasListResponse"
+    GetResenasList200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResenasListResponse"
+    GetMisResenasList200:
+      description: Reseñas del cliente con los datos de cada película
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MisResenasListResponse"
+    GetResenaEstado200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResenaEstado"
+    CreatedResena:
+      description: Reseña creada
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResenaCreada"
     GetSesion200:
       description: OK
       content:
