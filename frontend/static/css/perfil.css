@@ -462,3 +462,35 @@
 .tab-enlace:hover {
   color: var(--text);
 }
+
+
+/* ===== Responsive ===== */
+.perfil > * { min-width: 0; }              /* evita que una columna empuje a la otra */
+.perfil_nombre { overflow-wrap: anywhere; }
+
+@media (max-width: 860px) {
+  .perfil {
+    grid-template-columns: 1fr;            /* una sola columna */
+    margin: 16px auto;
+    padding: 0;                            /* <main> ya aplica su padding */
+  }
+  .perfil_datos { position: static; }      /* sin sticky en mobile */
+}
+
+@media (max-width: 600px) {
+  .tabs { overflow-x: auto; }              /* scroll horizontal si no entran */
+  .tab, .tab-enlace { padding: 10px 12px; font-size: 14px; white-space: nowrap; }
+
+  .reserva { gap: 12px; padding: 12px; }
+  .reserva_poster { flex-basis: 72px; width: 72px; height: 108px; }
+  .reserva_titulo { font-size: 18px; }
+  .reserva_cabecera { flex-wrap: wrap; }   /* el estado baja si no entra */
+  .reserva_botones { margin-left: 0; width: 100%; }
+  .reserva_cancelar { width: 100%; }
+  .perfil_acciones { justify-content: center; }
+}
+
+@media (max-width: 400px) {
+  .reserva { flex-direction: column; }     /* póster arriba, info abajo */
+  .reserva_poster { flex: none; width: 96px; height: 144px; }
+}
