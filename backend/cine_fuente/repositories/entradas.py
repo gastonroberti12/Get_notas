@@ -87,7 +87,7 @@ def registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, tolerancia):
           AND r.estado = 'confirmada'
           AND p.duracion_min > 0
           AND DATE_SUB(f.fecha_hora, INTERVAL %(tolerancia)s MINUTE) <= %(fecha_uso)s
-          AND %(fecha_uso)s < DATE_ADD(f.fecha_hora, INTERVAL p.duracion_min MINUTE)
+          AND %(fecha_uso)s <= DATE_ADD(f.fecha_hora, INTERVAL %(tolerancia)s MINUTE)
     """
     parametros = {
         "entrada_id": entrada_id,

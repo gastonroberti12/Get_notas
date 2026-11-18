@@ -51,8 +51,8 @@ def validar_entrada(entrada_id, codigo_qr):
 
     ahora = ahora_gmt3()
     inicio = normalizar_fecha_local(entrada["fecha_hora"])
-    fin = inicio + timedelta(minutes=int(duracion))
-    if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora >= fin:
+    limite_ingreso = inicio + timedelta(minutes=TOLERANCIA_INGRESO_MIN)
+    if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora > limite_ingreso:
         error_entrada("FUNCION_FUERA_DE_HORARIO", "La entrada aún no está habilitada o la función ya terminó", 409)
 
     # MySQL guarda DATETIME sin zona horaria; mantenemos la hora local GMT-3.

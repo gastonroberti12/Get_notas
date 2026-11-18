@@ -4,7 +4,11 @@ import base64
 from datetime import timedelta, timezone
 
 
-from constants import RESERVA_CANCELACION_MINUTOS, RESERVA_EXPIRACION_MINUTOS
+from constants import (
+    RESERVA_CANCELACION_MINUTOS,
+    RESERVA_EXPIRACION_MINUTOS,
+    TOLERANCIA_INGRESO_MIN,
+)
 from cine_fuente.repositories import reservas as compras_repo
 from cine_fuente.repositories.funciones_repository import consultar_funcion_por_id as obtener_funcion
 from cine_fuente.repositories.butacas import obtener_butacas
@@ -55,6 +59,7 @@ def reserva_api(fila):
         "estado": fila["estado"],
         "fecha_cancelacion": formatear_fecha_hora(fila.get("fecha_cancelacion")),
         "total": int(fila["total"]),
+        "tolerancia_ingreso_min": TOLERANCIA_INGRESO_MIN,
     }
 
 
@@ -359,4 +364,3 @@ def cancelar_reserva(reserva_id, usuario):
                 enviar_en_segundo_plano(enviar_estado_reserva, datos)
     except Exception:
         logger.exception("No se pudo preparar el mail de la reserva %s", reserva_id)
-
