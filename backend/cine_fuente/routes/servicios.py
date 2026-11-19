@@ -15,6 +15,7 @@ from cine_fuente.validators.servicios import (
     validar_cantidad,
     validar_modificacion_servicio_reserva
 )
+from cine_fuente.validators.comunes import validar_booleano_query
 
 from cine_fuente.utils import (
     validar_paginacion,
@@ -32,14 +33,9 @@ def listar_servicios():
     limit, offset = validar_paginacion(request.args)
 
     nombre = request.args.get("nombre")
-    activo_param = request.args.get("activo")
-
-    if activo_param is None:
-        activo = None
-    elif activo_param.lower() in ("true", "false"):
-        activo = activo_param.lower() == "true"
-    else:
-        return error("ERROR_VALIDACION", "Filtro activo inválido", "Filtro activo inválido", 400)
+    activo = validar_booleano_query(
+        request.args, "activo", "ERROR_VALIDACION", "Filtro activo inválido", "Filtro activo inválido"
+    )
 
     total = servicios_repo.contar_servicios(nombre, activo)
     servicios = servicios_repo.consultar_servicios(nombre, activo, limit, offset)
