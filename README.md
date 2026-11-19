@@ -80,7 +80,7 @@ SELECT * FROM funcion;
 
 ---
 
-## 2. Configuración inicial del entorno
+## 2. Configuración inicial del entorno (Opcional si no utilizas el Docker )
 
 Copiá los archivos de ejemplo:
 
@@ -227,7 +227,7 @@ Las películas consultadas también pueden almacenarse localmente y sus pósters
 
 ---
 
-## 6. Endpoints principales
+## 6. Endpoints principales (Backend) 
 
 ### Autenticación
 
@@ -340,7 +340,7 @@ GET /salas?_limit=10&_offset=0
 
 ---
 
-## 7. Pruebas con Postman
+## 7. Pruebas con Postman (Backend) 
 
 1. Levantar el proyecto con `docker compose up -d`.
 2. Usar el frontend o ejecutar una consulta de prueba.
@@ -356,9 +356,95 @@ Ejemplo para crear una función:
 
 ```json
 {
+
+
   "pelicula_id": 1,
   "sala_id": 1,
   "fecha_hora": "2026-11-01T18:00:00",
   "precio": 8500
 }
 ```
+
+## 8. Despliegue en la nube (Render + TiDB Cloud)
+
+**Demo online:** https://get-notas-web-zo6s.onrender.com
+
+### Arquitectura
+
+| Componente | Servicio | Descripción |
+|---|---|---|
+| Base de datos | TiDB Cloud | Compatible con MySQL, puerto 4000, conexión con TLS |
+| Backend (API) | Render, Web Service | Flask + Gunicorn, imagen desde `backend/Dockerfile` |
+| Frontend | Render, Web Service | Flask + Gunicorn, imagen desde `frontend/Dockerfile` |
+
+El frontend consume la API del backend y el backend se conecta a TiDB Cloud.
+
+### 8.1 Base de datos en TiDB Cloud
+
+1. Creá un cluster (plan gratuito) y anotá host, puerto, usuario y contraseña.
+2. Creá la base `cine_paradiso`.
+3. Importá en este orden `backend/db/cine_paradiso.sql` y `backend/db/seed.sql`.
+4. El usuario de TiDB lleva un prefijo propio, por ejemplo `<prefijo>.root`.
+
+### 8.2 Backend en Render
+
+1. Creá un **Web Service** desde el repositorio, con runtime Docker y directorio raíz `backend`.
+2. Cargá estas variables de entorno:
+
+| Variable | Valor |
+|---|---|
+| `DB_HOST` | host de TiDB Cloud |
+| `DB_PORT` | `4000` |
+| `DB_USER` | `<prefijo>.root` |
+| `DB_PASSWORD` | contraseña de TiDB |
+| `DB_NAME` | `cine_paradiso` |
+| `DB_SSL` | `true` |
+| `JWT_SECRET_KEY` | clave larga y aleatoria |
+| `OMDB_API_KEY` | clave de OMDb |
+| `FRONTEND_URL` | URL pública del frontend en Render |
+| `RENDER` | `true` |
+
+### 8.3 Frontend en Render
+
+1. Creá otro **Web Service** con runtime Docker y directorio raíz `frontend`.
+2. Cargá estas variables:
+
+| Variable | Valor |
+|---|---|
+| `BACKEND_URL` | URL pública del backend en Render |
+| `SECRET_KEY` | clave larga y aleatoria |
+
+### 8.4 Orden de alta
+
+Cada servicio necesita la URL del otro, así que seguí este orden:
+1. Creá primero el backend y copiá su URL.
+2. Creá el frontend con esa URL en `BACKEND_URL`.
+3. Volvé al backend y cargá `FRONTEND_URL` con la URL del frontend.
+
+### 8.5 Despliegue automático
+
+Cada push a la rama `<rama>` redespliega ambos servicios.
+
+### 8.6 Limitaciones conocidas
+
+- **Arranque en frío:** en el plan gratuito, Render duerme los servicios tras un período sin tráfico. La primera petición puede tardar hasta 60 segundos.
+- **Correo:** Render bloquea los puertos SMTP. Con `RENDER=true` la aplicación no envía mails; la reserva y los QR funcionan igual. El envío por correo solo funciona en local.
+- **Un solo worker:** Gunicorn corre con un worker y varios hilos, porque el backend ejecuta en segundo plano el job que expira las reservas pendientes. Con más workers se duplicaría.
+- **Seguridad:** nunca subas los `.env` ni claves al repositorio. Los secretos de producción se cargan solo en el panel de Render.
+
+### 8.7 Alternar entre local y nube
+
+Los archivos `backend/.env.example` y `frontend/.env.example` traen dos bloques por variable: el activo es para localhost y el comentado, para la nube. Para pasar de uno a otro, comentá un bloque y descomentá el otro.
+## 8. Ingresar a la pagina (front)
+Después de levantar todo (con el docker o el entorno virtual). 
+En su navegador, de preferencia, entrar al siguiente puerto: http://localhost:5000/
+Dónde se va a poder crear un usuario y registrarse
+## 9. Ingresar como administrador (front)
+Existen usuarios precargados con el rol de administrador ya configurados desde la base de datos un usuario para testiar las otras funciones es 
+{
+  "email": "admin@cineparadiso.com",
+  "contrasenia": "Admin1234"
+}
+## 10. pagina web (Host)
+Host de la pagina en Render
+https://get-notas-web-zo6s.onrender.com/

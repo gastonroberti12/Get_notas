@@ -223,8 +223,9 @@ def consultar_pelicula(pelicula_id):
 
 
 @peliculas_bp.route("/buscar", methods=["GET"])
-# Busca películas mediante OMDb.
+@requiere_rol("administrador")
 def buscar_peliculas():
+    """Busca películas mediante OMDb."""
     query = request.args.get("q", "").strip()
     if not query:
         return respuesta_error_api(construir_error_api(
@@ -269,8 +270,9 @@ def buscar_peliculas():
 
 
 @peliculas_bp.route("/<imdb_id>", methods=["GET"])
-# Obtiene el detalle de una película externa.
+@requiere_rol("administrador")
 def detalle_pelicula(imdb_id):
+    """Obtiene el detalle de una película externa."""
     try:
         movie = obtener_detalle_pelicula(imdb_id)
     except ValueError as error:

@@ -16,7 +16,7 @@
             <select id="pelicula_id" name="pelicula_id" required>
               <option value="">Seleccioná una película</option>
               {% for p in peliculas %}
-              <option value="{{ p.id }}" {{ 'selected' if funcion.pelicula_id|string == p.id|string }}>{{ p.titulo }}</option>
+              <option value="{{ p.id }}" {{ 'selected' if funcion and funcion.pelicula_id|string == p.id|string }}>{{ p.titulo }}</option>
               {% endfor %}
             </select>
           </div>

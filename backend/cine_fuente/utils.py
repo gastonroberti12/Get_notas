@@ -79,7 +79,7 @@ def formatear_fecha_hora(valor):
     else:
         valor = valor.astimezone(zona_gmt3)
 
-    return valor.strftime("%Y-%m-%dT%H:%M:%S.%f-03:00")
+    return valor.strftime("%Y-%m-%dT%H:%M:%S-03:00")
 
 
 def ahora_gmt3() -> datetime:
