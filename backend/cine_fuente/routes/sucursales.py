@@ -3,23 +3,13 @@ import pymysql
 from cine_fuente.services.seguridad import requiere_rol
 from cine_fuente.repositories.sucursales import actualizar_sucursal, consultar_sucursal_por_id, consultar_sucursales, eliminar_sucursal, insertar_sucursal
 from cine_fuente.utils import (
-    construir_error_api,
     respuesta_error as error,
     respuesta_paginada,
     validar_paginacion,
 )
+from cine_fuente.validators.comunes import validar_texto
 
 sucursales_bp = Blueprint("sucursales", __name__, url_prefix="/sucursales")
-
-
-def validar_texto(datos, campo, maximo):
-    valor = datos.get(campo)
-    if not isinstance(valor, str) or not valor.strip():
-        raise ValueError(construir_error_api(f"required.{campo}", f"Campo requerido: '{campo}'", f"El campo '{campo}' es obligatorio."))
-    valor = valor.strip()
-    if len(valor) > maximo:
-        raise ValueError(construir_error_api(f"invalid.{campo}.max", "Valor demasiado largo", f"{campo} no puede superar {maximo} caracteres."))
-    return valor
 
 
 @sucursales_bp.route("", methods=["GET"])
@@ -44,8 +34,8 @@ def obtener_sucursal(sucursal_id):
 # Registra una nueva sucursal.
 def crear_sucursal():
     datos = request.get_json(silent=True) or {}
-    nombre = validar_texto(datos, "nombre", 100)
-    direccion = validar_texto(datos, "direccion", 200)
+    nombre = validar_texto(datos.get("nombre"), "nombre", 100)
+    direccion = validar_texto(datos.get("direccion"), "direccion", 200)
     telefono = datos.get("telefono")
     if telefono is not None:
         telefono = str(telefono).strip() or None
@@ -63,7 +53,7 @@ def modificar_sucursal(sucursal_id):
     cambios = {}
     for campo, maximo in (("nombre", 100), ("direccion", 200)):
         if campo in datos:
-            cambios[campo] = validar_texto(datos, campo, maximo)
+            cambios[campo] = validar_texto(datos[campo], campo, maximo)
     if "telefono" in datos:
         cambios["telefono"] = str(datos["telefono"]).strip() or None
     if not cambios:

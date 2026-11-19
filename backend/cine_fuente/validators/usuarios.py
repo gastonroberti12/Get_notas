@@ -1,6 +1,10 @@
 from cine_fuente.validators.auth import validar_contrasenia, validar_email
-from cine_fuente.validators.comunes import error_validacion, validar_campos, validar_texto
-from cine_fuente.validators.reservas import validar_entero_positivo
+from cine_fuente.validators.comunes import (
+    error_validacion,
+    validar_campos,
+    validar_entero_positivo,
+    validar_texto,
+)
 
 ROLES_VALIDOS = ("cliente", "administrador")
 # Longitudes máximas según las columnas de la tabla usuarios.

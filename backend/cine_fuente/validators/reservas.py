@@ -1,35 +1,16 @@
-from datetime import datetime
 import re
 
-from cine_fuente.utils import construir_error_api, ahora_gmt3
+from cine_fuente.utils import ahora_gmt3
 from cine_fuente.validators.comunes import (
     error_validacion,
     validar_campos,
+    validar_entero_json_positivo,
+    validar_entero_positivo,
+    validar_id_opcional,
+    validar_rango_fechas,
 )
 
 ESTADOS_VALIDOS = ("pendiente", "confirmada", "cancelada", "expirada", "finalizada")
-
-
-def validar_entero_positivo(valor, nombre: str) -> int:
-    """Valida IDs usados por reservas y entradas."""
-    if isinstance(valor, bool):
-        error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo.")
-    if isinstance(valor, int):
-        entero = valor
-    elif isinstance(valor, str) and valor.strip().isdecimal():
-        entero = int(valor.strip())
-    else:
-        error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo.")
-    if entero <= 0:
-        error_validacion("Identificador inválido", f"'{nombre}' debe ser mayor que cero.")
-    return entero
-
-
-def validar_entero_json_positivo(valor, nombre: str) -> int:
-    """Valida enteros JSON estrictos, rechazando strings y booleanos."""
-    if not isinstance(valor, int) or isinstance(valor, bool) or valor <= 0:
-        error_validacion("Identificador inválido", f"'{nombre}' debe ser un entero positivo en el JSON.")
-    return valor
 
 
 def validar_body_crear_reserva(body) -> dict:
@@ -76,29 +57,10 @@ def validar_id_reserva(id_reserva) -> int:
 
 def validar_filtros_listado(args) -> dict:
     """Valida filtros admitidos."""
-    filtros = {}
-    for campo in ("usuario_id", "funcion_id"):
-        valor = args.get(campo)
-        filtros[campo] = validar_entero_positivo(valor, campo) if valor is not None else None
+    filtros = {campo: validar_id_opcional(args, campo) for campo in ("usuario_id", "funcion_id")}
 
     filtros["estado"] = validar_estado_propio(args)
-    fechas = {}
-    for campo in ("fecha_desde", "fecha_hasta"):
-        texto = args.get(campo)
-        if texto is None:
-            fechas[campo] = None
-            continue
-        try:
-            fecha = datetime.strptime(texto, "%Y-%m-%d").date()
-        except (TypeError, ValueError):
-            error_validacion("Fecha inválida", f"'{campo}' debe tener formato YYYY-MM-DD.")
-        if fecha.isoformat() != texto:
-            error_validacion("Fecha inválida", f"'{campo}' debe tener formato YYYY-MM-DD.")
-        fechas[campo] = fecha.isoformat()
-
-    if fechas["fecha_desde"] and fechas["fecha_hasta"] and fechas["fecha_desde"] > fechas["fecha_hasta"]:
-        error_validacion("Rango de fechas inválido", "'fecha_desde' no puede ser posterior a 'fecha_hasta'.")
-    filtros.update(fechas)
+    filtros.update(validar_rango_fechas(args, "ERROR_VALIDACION", "ERROR_VALIDACION"))
     return filtros
 
 

@@ -10,6 +10,7 @@ from cine_fuente.utils import (
     respuesta_paginada,
     validar_paginacion,
 )
+from cine_fuente.validators.comunes import validar_texto
 
 salas_bp = Blueprint("salas", __name__, url_prefix="/salas")
 
@@ -38,10 +39,9 @@ def crear_sala():
     datos = request.get_json(silent=True) or {}
     try:
         sucursal_id = int(datos["sucursal_id"])
-        nombre = str(datos["nombre"]).strip()
+        nombre = datos["nombre"]
         capacidad = int(datos["capacidad"])
-        if not nombre or len(nombre) > 50:
-            raise ValueError(construir_error_api("invalid.nombre.value", "Nombre inválido", "nombre debe tener entre 1 y 50 caracteres."))
+        nombre = validar_texto(nombre, "nombre", 50)
         if capacidad < 1:
             raise ValueError(construir_error_api("invalid.capacidad.value", "Capacidad inválida", "capacidad debe ser mayor que cero."))
     except KeyError as campo:
@@ -67,10 +67,7 @@ def modificar_sala(sala_id):
     datos = request.get_json(silent=True) or {}
     cambios = {}
     if "nombre" in datos:
-        nombre = str(datos["nombre"]).strip()
-        if not nombre or len(nombre) > 50:
-            return error("invalid.nombre.value", "Nombre inválido", "nombre debe tener entre 1 y 50 caracteres.", 400)
-        cambios["nombre"] = nombre
+        cambios["nombre"] = validar_texto(datos["nombre"], "nombre", 50)
     if "capacidad" in datos:
         try:
             capacidad = int(datos["capacidad"])

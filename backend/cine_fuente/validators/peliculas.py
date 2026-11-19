@@ -4,9 +4,8 @@ from datetime import datetime, timedelta, timezone
 from cine_fuente.utils import (
     ahora_gmt3,
     construir_error_api,
-    validar_id_query,
 )
-from cine_fuente.validators.comunes import error_validacion
+from cine_fuente.validators.comunes import error_validacion, validar_booleano_query, validar_id_opcional
 
 
 PATRON_FECHA_CARTELERA = re.compile(
@@ -142,9 +141,5 @@ def convertir_fecha_existente(valor):
 
 # Lee los filtros disponibles para las películas.
 def validar_filtros(parametros):
-    activa = parametros.get("activa")
-    if activa not in (None, "true", "false"):
-        raise ValueError(construir_error_api(
-            "invalid.activa.format", "Formato inválido", "activa debe ser true o false."), 400)
-    return {"sucursal_id": validar_id_query(parametros, "sucursal_id"),
-            "activa": None if activa is None else activa == "true"}
+    return {"sucursal_id": validar_id_opcional(parametros, "sucursal_id"),
+            "activa": validar_booleano_query(parametros, "activa")}

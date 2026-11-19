@@ -1,9 +1,10 @@
 from cine_fuente.validators.comunes import (
     error_validacion,
     validar_campos,
+    validar_entero_positivo,
     validar_texto,
 )
-from cine_fuente.validators.reservas import validar_entero_positivo, validar_estado_propio
+from cine_fuente.validators.reservas import validar_estado_propio
 
 
 def validar_id_entrada(entrada_id):
