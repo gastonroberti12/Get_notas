@@ -1,20 +1,9 @@
 from datetime import datetime
 
-from cine_fuente.utils import construir_error_api
+from cine_fuente.validators.comunes import error_validacion
 
 
 # Valida fechas usadas por todos los GET /admin/estadisticas/*.
-def error_fecha(campo):
-    raise ValueError(
-        construir_error_api(
-            "fecha.invalid",
-            "Fecha inválida",
-            f"'{campo}' debe tener formato YYYY-MM-DD.",
-        ),
-        400,
-    )
-
-
 def validar_filtros_estadisticas(parametros):
     """Valida fecha_desde y fecha_hasta"""
     filtros = {}
@@ -28,22 +17,19 @@ def validar_filtros_estadisticas(parametros):
             try:
                 fecha = datetime.strptime(valor, "%Y-%m-%d").date()
             except (TypeError, ValueError):
-                error_fecha(campo)
+                error_validacion("Fecha inválida", f"'{campo}' debe tener formato YYYY-MM-DD.", "fecha.invalid")
 
             if fecha.isoformat() != valor:
-                error_fecha(campo)
+                error_validacion("Fecha inválida", f"'{campo}' debe tener formato YYYY-MM-DD.", "fecha.invalid")
             filtros[campo] = fecha.isoformat()
 
     desde = filtros["fecha_desde"]
     hasta = filtros["fecha_hasta"]
     if desde is not None and hasta is not None and desde > hasta:
-        raise ValueError(
-            construir_error_api(
-                "fecha.range.invalid",
-                "Rango de fechas inválido",
-                "'fecha_desde' no puede ser posterior a 'fecha_hasta'.",
-            ),
-            400,
+        error_validacion(
+            "Rango de fechas inválido",
+            "'fecha_desde' no puede ser posterior a 'fecha_hasta'.",
+            "fecha.range.invalid",
         )
 
     return filtros

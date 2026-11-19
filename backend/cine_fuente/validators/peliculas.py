@@ -20,18 +20,9 @@ LONGITUDES_PELICULA = {
 }
 
 
-def error_pelicula(campo, mensaje):
-    error_validacion(
-        "Datos de película inválidos",
-        mensaje,
-        f"pelicula.{campo}.invalid",
-        400,
-    )
-
-
 def validar_modificacion_pelicula(datos):
     if not isinstance(datos, dict) or not datos:
-        error_pelicula("body", "Se debe enviar un objeto con campos para modificar.")
+        error_validacion("Datos de película inválidos", "Se debe enviar un objeto con campos para modificar.", "pelicula.body.invalid")
 
     permitidos = set(LONGITUDES_PELICULA) | {
         "sinopsis", "duracion_min", "fecha_inicio_cartelera",
@@ -39,41 +30,44 @@ def validar_modificacion_pelicula(datos):
     }
     desconocidos = set(datos) - permitidos
     if desconocidos:
-        error_pelicula(
-            "campo",
+        error_validacion(
+            "Datos de película inválidos",
             f"Campo(s) no permitido(s): {', '.join(sorted(desconocidos))}.",
+            "pelicula.campo.invalid",
         )
 
     cambios = {}
     for campo, valor in datos.items():
         if campo in LONGITUDES_PELICULA or campo == "sinopsis":
             if valor is not None and not isinstance(valor, str):
-                error_pelicula(campo, f"{campo} debe ser un texto o null.")
+                error_validacion("Datos de película inválidos", f"{campo} debe ser un texto o null.", f"pelicula.{campo}.invalid")
             if campo == "titulo" and valor is None:
-                error_pelicula(campo, "titulo es obligatorio.")
+                error_validacion("Datos de película inválidos", "titulo es obligatorio.", f"pelicula.{campo}.invalid")
             if isinstance(valor, str):
                 valor = valor.strip() or None
                 if campo == "titulo" and valor is None:
-                    error_pelicula(campo, "titulo es obligatorio.")
+                    error_validacion("Datos de película inválidos", "titulo es obligatorio.", f"pelicula.{campo}.invalid")
                 maximo = LONGITUDES_PELICULA.get(campo)
                 if maximo is not None and valor is not None and len(valor) > maximo:
-                    error_pelicula(
-                        campo,
+                    error_validacion(
+                        "Datos de película inválidos",
                         f"{campo} no puede superar los {maximo} caracteres.",
+                        f"pelicula.{campo}.invalid",
                     )
         elif campo == "duracion_min":
             if valor is not None and (
                 type(valor) is not int or valor <= 0
             ):
-                error_pelicula(
-                    campo,
+                error_validacion(
+                    "Datos de película inválidos",
                     "duracion_min debe ser un número entero mayor que cero o null.",
+                    f"pelicula.{campo}.invalid",
                 )
         elif campo == "activa" and type(valor) is not bool:
-            error_pelicula(campo, "activa debe ser true o false.")
+            error_validacion("Datos de película inválidos", "activa debe ser true o false.", f"pelicula.{campo}.invalid")
         elif campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
             if valor is not None and not isinstance(valor, str):
-                error_pelicula(campo, f"{campo} debe ser una fecha o null.")
+                error_validacion("Datos de película inválidos", f"{campo} debe ser una fecha o null.", f"pelicula.{campo}.invalid")
             cambios[campo] = convertir_fecha_existente(valor)
             continue
         cambios[campo] = valor
