@@ -20,7 +20,7 @@ def actualizar_usuario(usuario_id, datos):
     return llamar_api("PATCH", f"/usuarios/{usuario_id}", datos)
 
 
-def cambiar_contrasenia(actual, nueva):
+def actualizar_contrasenia(actual, nueva):
     datos = {"contrasenia_actual": actual, "contrasenia_nueva": nueva}
     return llamar_api("POST", "/usuarios/me/contrasenia", datos)
 
