@@ -1,6 +1,14 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, abort
 
 errores_bp = Blueprint("errores", __name__)
+
+def abortar_por_status(status):
+    # una sola forma de cortar una ruta cuando el backend responde con error:
+    if status in (403, 404):
+        abort(status)
+    if status is None:
+        abort(503)
+    abort(500)
 
 
 

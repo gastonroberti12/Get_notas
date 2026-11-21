@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from services.api_cliente import llamar_api, mensaje_error
 from services.peliculas import listar_peliculas, obtener_pelicula, obtener_resenas, obtener_estado_resena, publicar_resena
 from services.funciones import listar_funciones
@@ -6,6 +6,7 @@ from logica.formato import formatear_fecha
 from logica.sucursales import filtro_sucursal
 from logica.roles import es_cliente, solo_logueado
 from logica.validaciones import validar_entero
+from routes.errores import abortar_por_status
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
@@ -62,13 +63,9 @@ def listado_peliculas():
 @peliculas_bp.route("/peliculas/<int:pelicula_id>")
 def detalle_pelicula(pelicula_id):
     status, pelicula = obtener_pelicula(pelicula_id)
-    if status == 404:
-        abort(404)
-    if status is None:
-        abort(503)
     if status != 200:
-        abort(500)
-
+        abortar_por_status(status)
+        
     status, datos = listar_funciones(f"&pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
     funciones = datos.get("funciones", []) if status == 200 else []
     for f in funciones:

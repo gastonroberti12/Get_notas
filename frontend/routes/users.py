@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from services.api_cliente import mensaje_error
 from services.usuarios import (iniciar_sesion, cerrar_sesion, registrar_usuario, obtener_mi_usuario,
                                actualizar_usuario, actualizar_contrasenia, listar_mis_reservas, listar_mis_resenas)
@@ -6,7 +6,7 @@ from logica.roles import esta_logueado, es_cliente, solo_logueado
 from logica.formato import formatear_fecha
 from logica.reservas import armar_reserva, clasificar_reserva
 from logica.validaciones import CONTRASENIA_MINIMA, CONTRASENIA_MAXIMA, validar_cambio_contrasenia
-
+from routes.errores import abortar_por_status
 
 users_bp = Blueprint("users", __name__)
 
@@ -73,10 +73,8 @@ def profile():
     if status in (401, 404):  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
         session.clear()
         return redirect(url_for('users.login'))
-    if status is None:
-        abort(503)  # el backend no responde
     if status != 200:
-        abort(500)
+        abortar_por_status(status)
 
     perfil = {
         'nombre': usuario['nombre'],
