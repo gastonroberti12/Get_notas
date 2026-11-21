@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from services.api_cliente import llamar_api, mensaje_error
+from services.api_cliente import mensaje_error
 from services.peliculas import listar_peliculas, obtener_pelicula, obtener_resenas, obtener_estado_resena, publicar_resena
 from services.funciones import listar_funciones
 from logica.formato import formatear_fecha
@@ -11,14 +11,6 @@ from routes.errores import abortar_por_status
 
 peliculas_bp = Blueprint("peliculas", __name__)
 
-def obtener_listado(endpoint, clave, filtros=""):
-    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100{filtros}")
-
-    if status not in (200, 204):
-        return [], mensaje_error(status, datos, "No se pudieron obtener los datos.")
-
-    #204 el cuerpo viene vacio,devuelve una lista vacia.
-    return datos.get(clave, []), None
 
 @peliculas_bp.route("/")
 def inicio():
@@ -65,7 +57,7 @@ def detalle_pelicula(pelicula_id):
     status, pelicula = obtener_pelicula(pelicula_id)
     if status != 200:
         abortar_por_status(status)
-        
+
     status, datos = listar_funciones(f"&pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
     funciones = datos.get("funciones", []) if status == 200 else []
     for f in funciones:
