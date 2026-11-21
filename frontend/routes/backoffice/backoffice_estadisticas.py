@@ -1,5 +1,5 @@
 from flask import render_template, request
-from dashboard import armar_dashboard, leer_filtros
+from logica.dashboard import armar_dashboard, leer_filtros
 from routes.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp
 
