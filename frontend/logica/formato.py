@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 ZONA_ARGENTINA = timezone(timedelta(hours=-3))
 SIN_DATO = '—'
+FORMATO_INPUT_FECHA = '%Y-%m-%dT%H:%M'  # formato de los <input type="datetime-local">
 TOLERANCIA_INGRESO_MIN_DEFAULT = 15
 
 

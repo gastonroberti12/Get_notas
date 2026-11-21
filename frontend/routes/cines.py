@@ -13,11 +13,7 @@ MAPAS_EMBEBIDOS = {
 # Guarda la sucursal elegida y vuelve a la cartelera.
 @cines_bp.route("/sucursal/<int:sucursal_id>")
 def elegir_sucursal(sucursal_id):
-    sucursales, _ = contexto_sucursales() #uso solo el primer parametro, el _ establece una variable que no voy a usar
-    
-    if any(sucursal["id"] == sucursal_id for sucursal in sucursales):
-        session["sucursal_id"] = sucursal_id
-    else:
+    if not guardar_sucursal(sucursal_id):
         flash("La sucursal elegida no existe.", "error")
 
     return redirect(url_for("peliculas.inicio"))
