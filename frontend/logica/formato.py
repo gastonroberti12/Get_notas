@@ -3,15 +3,14 @@ from datetime import datetime, timedelta, timezone
 ZONA_ARGENTINA = timezone(timedelta(hours=-3))
 SIN_DATO = '—'
 FORMATO_INPUT_FECHA = '%Y-%m-%dT%H:%M'  # formato de los <input type="datetime-local">
-TOLERANCIA_INGRESO_MIN_DEFAULT = 15
 
 
 def ahora_argentina():
-    return datetime.now(timezone(timedelta(hours=-3)))
+    return datetime.now(ZONA_ARGENTINA)
 
 def parsear_fecha(valor):  # convierte el texto ISO del backend en datetime, si viene sin zona, le pone la argentina.
     try:
-        return datetime.fromisoformat(valor)
+        fecha = datetime.fromisoformat(valor)
     except (TypeError, ValueError):
         return None
     if fecha.tzinfo is None:  #tzinfo es el atributo de un datetime que guarda en QUE zona horaria esta esa fecha
