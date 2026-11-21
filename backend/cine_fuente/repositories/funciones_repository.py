@@ -71,13 +71,19 @@ def bloquear_sala_para_funcion(cursor, sala_id):
     return cursor.fetchone()
 
 
-def consultar_funciones_sala_en_transaccion(cursor, sala_id):
-    cursor.execute(
-        "SELECT f.fecha_hora, p.duracion_min "
+def consultar_funciones_sala_en_transaccion(
+    cursor, sala_id, excluir_funcion_id=None
+):
+    sql = (
+        "SELECT f.id, f.fecha_hora, p.duracion_min "
         "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
-        "WHERE f.sala_id = %s",
-        (sala_id,),
+        "WHERE f.sala_id = %s"
     )
+    parametros = [sala_id]
+    if excluir_funcion_id is not None:
+        sql += " AND f.id <> %s"
+        parametros.append(excluir_funcion_id)
+    cursor.execute(sql, tuple(parametros))
     return cursor.fetchall()
 
 
@@ -92,7 +98,7 @@ def insertar_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, pr
 
 def obtener_funcion_para_actualizar(cursor, funcion_id):
     cursor.execute(
-        "SELECT id, pelicula_id, sala_id, fecha_hora "
+        "SELECT id, pelicula_id, sala_id, fecha_hora, activa "
         "FROM funcion WHERE id = %s FOR UPDATE",
         (funcion_id,),
     )

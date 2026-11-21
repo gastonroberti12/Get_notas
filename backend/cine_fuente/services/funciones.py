@@ -7,11 +7,9 @@ from cine_fuente.repositories.funciones_repository import (
     desactivar_funcion, eliminar_funcion, bloquear_sala_para_funcion,
     consultar_funciones_sala_en_transaccion, insertar_funcion_en_transaccion,
     obtener_pelicula_para_funcion, obtener_funcion_para_actualizar,
-    contar_reservas_de_funcion, existe_pelicula, existe_sala,
-    actualizar_funcion_en_transaccion,
+    contar_reservas_de_funcion,
+    actualizar_funcion_en_transaccion as guardar_cambios_funcion_en_transaccion,
 )
-from cine_fuente.repositories.peliculas import consultar_pelicula_por_id
-from cine_fuente.repositories.salas import consultar_sala_por_id
 from cine_fuente.utils import construir_error_api, formatear_fecha_hora
 
 
@@ -53,6 +51,17 @@ def crear_funcion(pelicula_id, sala_id, fecha_hora, precio):
 
 
 def _crear_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, precio):
+    inicio = validar_programacion_funcion_pelicula(
+        cursor, pelicula_id, sala_id, fecha_hora
+    )
+    return insertar_funcion_en_transaccion(
+        cursor, pelicula_id, sala_id, inicio, precio
+    )
+
+
+def validar_programacion_funcion_pelicula(
+    cursor, pelicula_id, sala_id, fecha_hora, excluir_funcion_id=None
+):
     pelicula = obtener_pelicula_para_funcion(cursor, pelicula_id)
     if pelicula is None:
         raise ValueError(construir_error_api(
@@ -96,7 +105,9 @@ def _crear_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, prec
         ), 409)
 
     fin_intervalo = fin_proyeccion + timedelta(minutes=30)
-    for funcion in consultar_funciones_sala_en_transaccion(cursor, sala_id):
+    for funcion in consultar_funciones_sala_en_transaccion(
+        cursor, sala_id, excluir_funcion_id
+    ):
         existente_inicio = _fecha_local_sin_zona(funcion["fecha_hora"])
         existente_duracion = funcion["duracion_min"]
         if existente_inicio is None or existente_duracion is None:
@@ -110,9 +121,7 @@ def _crear_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, prec
                 "La sala no tiene el margen necesario entre funciones.",
             ), 409)
 
-    return insertar_funcion_en_transaccion(
-        cursor, pelicula_id, sala_id, inicio, precio
-    )
+    return inicio
 
 
 def _fecha_local_sin_zona(valor):
@@ -123,19 +132,11 @@ def _fecha_local_sin_zona(valor):
     return valor
 
 
-# Verifica las relaciones necesarias para una función.
-def validar_relaciones(pelicula_id, sala_id):
-    if consultar_pelicula_por_id(pelicula_id) is None:
-        raise ValueError(construir_error_api("pelicula.not.found", "Película no encontrada", "La película indicada no existe."))
-    if consultar_sala_por_id(sala_id) is None:
-        raise ValueError(construir_error_api("sala.not.found", "Sala no encontrada", "La sala indicada no existe."))
-
-
 # Actualiza los datos de una función existente.
 def actualizar_funcion_por_id(funcion_id, cambios):
     try:
         ejecutar_transaccion(
-            lambda cursor: _actualizar_funcion_en_transaccion(
+            lambda cursor: actualizar_funcion_en_transaccion(
                 cursor, funcion_id, cambios
             )
         )
@@ -143,7 +144,7 @@ def actualizar_funcion_por_id(funcion_id, cambios):
         raise ValueError(construir_error_api("funcion.overlap", "Horario ocupado", "Ya existe una función en esa sala y horario.")) from causa
 
 
-def _actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
+def actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
     funcion = obtener_funcion_para_actualizar(cursor, funcion_id)
     if funcion is None:
         raise ValueError(construir_error_api(
@@ -160,20 +161,25 @@ def _actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
             "La función tiene reservas asociadas y no se puede cambiar su película, sala u horario.",
         ), 409)
 
-    if "pelicula_id" in cambios and not existe_pelicula(
-        cursor, cambios["pelicula_id"]
-    ):
-        raise ValueError(construir_error_api(
-            "pelicula.not.found", "Película no encontrada",
-            "La película indicada no existe.",
-        ))
-    if "sala_id" in cambios and not existe_sala(cursor, cambios["sala_id"]):
-        raise ValueError(construir_error_api(
-            "sala.not.found", "Sala no encontrada",
-            "La sala indicada no existe.",
-        ))
+    pelicula_id = cambios.get("pelicula_id", funcion["pelicula_id"])
+    sala_id = cambios.get("sala_id", funcion["sala_id"])
+    fecha_hora = cambios.get("fecha_hora", funcion["fecha_hora"])
+    reactivando = cambios.get("activa") is True and not funcion["activa"]
+    requiere_validar_programacion = (
+        bool(campos_protegidos.intersection(cambios)) or reactivando
+    )
+    if requiere_validar_programacion:
+        inicio = validar_programacion_funcion_pelicula(
+            cursor,
+            pelicula_id,
+            sala_id,
+            fecha_hora,
+            excluir_funcion_id=funcion_id,
+        )
+        if "fecha_hora" in cambios:
+            cambios["fecha_hora"] = inicio
 
-    actualizar_funcion_en_transaccion(cursor, funcion_id, cambios)
+    guardar_cambios_funcion_en_transaccion(cursor, funcion_id, cambios)
 
 
 # Elimina o desactiva una función.
