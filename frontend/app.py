@@ -27,7 +27,7 @@ def create_app():
     # Expone sucursales y sucursal_actual a todas las plantillas que se renderizan
     app.context_processor(lambda: dict(zip(("sucursales", "sucursal_actual"), contexto_sucursales())))
     
-    # Context processors para que las funciones de roles estén disponibles en todas las plantillas. esto le pasa al render_template el rol segun lo q tenga el template
+    # Expone las funciones de roles a todas las plantillas, para mostrar u ocultar partes segun el rol
     app.context_processor(lambda: {'esta_logueado': esta_logueado, 'es_admin': es_admin, 'es_cliente': es_cliente})
     
     return app

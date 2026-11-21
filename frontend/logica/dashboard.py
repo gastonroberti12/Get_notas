@@ -15,7 +15,7 @@ def leer_filtros(args):
 
 
 def consultar(filtros, endpoints):
-    """Llama a cada endpoint por separado: si uno falla, los demás siguen mostrándose."""
+    """Pide cada estadistica por separado: si una falla, las demas siguen mostrándose."""
 
     respuestas, error_fatal = {}, None
     for clave in endpoints:
@@ -82,7 +82,7 @@ def grafico_salas(d):
 
 
 
-# nombre de sección -> (endpoint que la alimenta, función que prepara los datos para la vista)
+# nombre de seccion -> (consulta de services/estadisticas.py que la alimenta, funcion que prepara los datos para la vista)
 SECCIONES = {
     "ocupacion": ("general", tarjeta_ocupacion),
     "entradas": ("ventas", tarjeta_entradas),

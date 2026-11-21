@@ -81,7 +81,7 @@ def detalle_pelicula(pelicula_id):
     return render_template("pelicula_detalle.html", pelicula=pelicula, funciones=funciones, resenas=resenas, estado_resena=estado_resena)
 
 
-# para ubicar una reseña el backend valida que la entrada haya sido usada
+# para publicar una reseña, el backend valida que la entrada haya sido usada
 @peliculas_bp.route("/peliculas/<int:pelicula_id>/resenas", methods=["POST"])
 @solo_logueado
 def crear_resena(pelicula_id):

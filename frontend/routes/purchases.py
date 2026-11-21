@@ -18,7 +18,7 @@ purchases_bp = Blueprint("purchases", __name__)
 def cancelar_reserva(reserva_id):
     if request.method == 'GET':
         return render_template('cancelar_reserva.html', reserva_id=reserva_id)
-    # El back valida titularidad y la regla de 1 hora; si responde error, el perfil se recarga igual.
+        # El back valida titularidad y la regla de 1 hora, salga bien o mal, vuelve al inicio con el mensaje
     status, cuerpo = solicitar_cancelacion(reserva_id)
     if status in (200, 204):
         flash('Reserva cancelada con éxito.', 'exito')
@@ -158,8 +158,7 @@ def checkout():
                 "purchases.checkout",
                 reserva_id=reserva_id
             ))
-
-        #validamos todas las cantidades
+        # las cantidades se validan en logica/validaciones.py
         cantidades, error = validar_cantidades_servicios(request.form, cantidad_entradas)
         if error:
             flash(error, "error")

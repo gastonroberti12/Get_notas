@@ -83,7 +83,7 @@ def profile():
         'anio_registro': formatear_fecha(usuario.get('fecha_registro'), '%Y'),
     }
 
-    # las reservas del perfil las devuelve /usuarios/me/reservas (solo clientes; 204 = sin reservas)
+    # las reservas del perfil las trae listar_mis_reservas (solo clientes; 204 = sin reservas)
     reservas_api = []
     if es_cliente():
         status_reservas, cuerpo_reservas = listar_mis_reservas()
