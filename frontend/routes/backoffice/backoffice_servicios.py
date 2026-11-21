@@ -1,7 +1,8 @@
 from flask import render_template, redirect, url_for, request, flash
 from services.api_cliente import llamar_api, mensaje_error
-from logica.roles import es_admin
-from routes.backoffice.backoffice import backoffice_bp
+from logica.roles import es_admin, solo_admin
+from routes.backoffice.backoffice import backoffice_bp, cambiar_estado
+from services.servicios import actualizar_estado_servicio
 
 
 @backoffice_bp.route("/backoffice/servicios", methods=["GET", "POST"]) # asocio servicios_admin al bp backoffice
@@ -43,19 +44,10 @@ def servicios_admin():
     )
 
 @backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/estado", methods=["POST"])
+
+@solo_admin
 def servicios_estado(servicio_id):
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-    activo = request.form.get("activo") == "true"
-    accion = "dado de alta" if activo else "dado de baja"
-    status, cuerpo = llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": activo})
-    if status == 204:
-        flash(f"Servicio {accion}.", "ok")
-    else:
-        flash(mensaje_error(status, cuerpo, f"No se pudo dejar el servicio {accion}."), "error")
-    if activo:
-        return redirect(url_for("backoffice.servicios_admin", estado="inactivos"))
-    return redirect(url_for("backoffice.servicios_admin"))
+    return cambiar_estado(actualizar_estado_servicio, servicio_id, "Servicio dado", "backoffice.servicios_admin")
 
 @backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/editar", methods=["GET", "POST"])
 def servicios_editar(servicio_id):

@@ -3,6 +3,7 @@ from services.api_cliente import llamar_api, mensaje_error
 from logica.formato import formatear_fecha
 from routes.products import obtener_listado
 from logica.roles import solo_admin
+from services.funciones import actualizar_estado_funcion
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
 
 
@@ -40,7 +41,7 @@ def nueva_funcion():
     valores = _leer_formulario()
     status, cuerpo = llamar_api("POST", "/funciones", _payload(valores))
     if status == 201:
-        flash("Función creada.", "ok")
+        flash("Función creada.", "exito")
         return redirect(url_for("backoffice.funciones_admin"))
     return _formulario(valores, mensaje_error(status, cuerpo, "No se pudo crear la función."))
 
@@ -58,7 +59,7 @@ def editar_funcion(funcion_id):
     valores = _leer_formulario()
     status, cuerpo = llamar_api("PATCH", f"/funciones/{funcion_id}", _payload(valores))
     if status == 204:
-        flash("Función actualizada.", "ok")
+        flash("Función actualizada.", "exito")
         return redirect(url_for("backoffice.funciones_admin"))
     return _formulario({**valores, "id": funcion_id},
                        mensaje_error(status, cuerpo, "No se pudo actualizar la función."))
@@ -66,4 +67,4 @@ def editar_funcion(funcion_id):
 @backoffice_bp.route("/backoffice/funciones/<int:funcion_id>/estado", methods=["POST"])
 @solo_admin
 def cambiar_estado_funcion(funcion_id):
-    return cambiar_estado(f"/funciones/{funcion_id}", "Función", "backoffice.funciones_admin")
+    return cambiar_estado(actualizar_estado_funcion, funcion_id, "Función dada", "backoffice.funciones_admin")

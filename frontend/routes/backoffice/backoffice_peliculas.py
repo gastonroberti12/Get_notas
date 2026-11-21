@@ -5,6 +5,7 @@ from flask import abort, flash, redirect, render_template, request, session, url
 from services.api_cliente import llamar_api, mensaje_error
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
 from logica.roles import es_admin, solo_admin
+from services.peliculas import actualizar_estado_pelicula
 from routes.products import obtener_listado
 
 
@@ -103,7 +104,7 @@ def pelicula_nueva():
 
         status, cuerpo = llamar_api("POST", "/peliculas", datos)
         if status == 201:
-            flash("Película agregada correctamente.", "ok")
+            flash("Película agregada correctamente.", "exito")
             return redirect(url_listado())
         if status == 401:
             session.clear()
@@ -217,6 +218,4 @@ def pelicula_editar(pelicula_id):
 @backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/estado", methods=["POST"])
 @solo_admin
 def cambiar_estado_pelicula(pelicula_id):
-    return cambiar_estado(
-        f"/peliculas/{pelicula_id}", "Película", "backoffice.peliculas_admin"
-    )
+        return cambiar_estado(actualizar_estado_pelicula, pelicula_id, "Película dada", "backoffice.peliculas_admin")

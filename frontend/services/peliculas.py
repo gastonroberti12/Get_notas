@@ -20,7 +20,7 @@ def actualizar_pelicula(pelicula_id, cambios):
     return llamar_api("PATCH", f"/peliculas/{pelicula_id}", cambios)
 
 
-def cambiar_estado_pelicula(pelicula_id, activa):
+def actualizar_estado_pelicula(pelicula_id, activa):
     return llamar_api("PATCH", f"/peliculas/{pelicula_id}", {"activa": activa})
 
 

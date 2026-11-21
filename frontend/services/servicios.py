@@ -16,5 +16,5 @@ def actualizar_servicio(servicio_id, datos):
     return llamar_api("PATCH", f"/servicios/{servicio_id}", datos)
 
 
-def cambiar_estado_servicio(servicio_id, activo):
+def actualizar_estado_servicio(servicio_id, activo):
     return llamar_api("PATCH", f"/servicios/{servicio_id}", {"activo": activo})

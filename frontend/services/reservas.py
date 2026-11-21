@@ -21,5 +21,5 @@ def pagar_reserva(reserva_id, datos_pago):
     return llamar_api("POST", f"/reservas/{reserva_id}/pago", datos_pago)
 
 
-def cancelar_reserva(reserva_id):
+def solicitar_cancelacion(reserva_id):
     return llamar_api("PATCH", f"/reservas/{reserva_id}", {"estado": "cancelada"})

@@ -23,5 +23,5 @@ def actualizar_funcion(funcion_id, datos):
     return llamar_api("PATCH", f"/funciones/{funcion_id}", datos)
 
 
-def cambiar_estado_funcion(funcion_id, activa):
+def actualizar_estado_funcion(funcion_id, activa):
     return llamar_api("PATCH", f"/funciones/{funcion_id}", {"activa": activa})
