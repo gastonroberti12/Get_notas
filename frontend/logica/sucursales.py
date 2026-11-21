@@ -29,3 +29,14 @@ def filtro_sucursal():
     if actual is None:
         return ''
     return f"&sucursal_id={actual['id']}"
+
+
+
+def guardar_sucursal(sucursal_id):
+    # guarda en la sesion la sucursal elegida solo si existe. devuelve si se pudo guardar
+    sucursales, _ = contexto_sucursales()
+    for sucursal in sucursales:
+        if sucursal['id'] == sucursal_id:
+            session['sucursal_id'] = sucursal_id
+            return True
+    return False
