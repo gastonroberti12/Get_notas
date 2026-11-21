@@ -7,7 +7,7 @@ from routes.users import users_bp
 from routes.backoffice.backoffice import backoffice_bp
 from routes.purchases import purchases_bp
 from logica.roles import esta_logueado, es_admin, es_cliente
-from manejo_errorers import registrar_error_handlers
+from routes.errores import errores_bp
 from logica.sucursales import contexto_sucursales
 
 load_dotenv()
@@ -22,9 +22,7 @@ def create_app():
     app.register_blueprint(users_bp)
     app.register_blueprint(backoffice_bp)
     app.register_blueprint(purchases_bp)
-
-
-    registrar_error_handlers(app)
+    app.register_blueprint(errores_bp)
 
     # Expone sucursales y sucursal_actual a todas las plantillas que se renderizan
     app.context_processor(lambda: dict(zip(("sucursales", "sucursal_actual"), contexto_sucursales())))
