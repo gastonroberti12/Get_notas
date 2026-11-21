@@ -8,7 +8,7 @@ from routes.backoffice.backoffice import backoffice_bp
 from routes.purchases import purchases_bp
 from routes.roles import esta_logueado, es_admin, es_cliente
 from manejo_errorers import registrar_error_handlers
-from sucursales import contexto_sucursales
+from logica.sucursales import contexto_sucursales
 
 load_dotenv()
 

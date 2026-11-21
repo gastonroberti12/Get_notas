@@ -1,18 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
 from services.api_cliente import llamar_api, mensaje_error
 from logica.formato import parsear_fecha
-from sucursales import contexto_sucursales
+from logica.sucursales import filtro_sucursal
 from routes.roles import esta_logueado, es_cliente
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
-
-# Filtro de sucursal para el backend (vacío si no hay sucursales disponibles).
-def filtro_sucursal():
-    _, actual = contexto_sucursales()
-    if actual is None:
-        return ""
-    return f"&sucursal_id={actual['id']}"
 
 # Obtener listados del backend
 def obtener_listado(endpoint, clave, filtros=""):

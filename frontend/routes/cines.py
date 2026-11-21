@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, session, url_for
-from sucursales import contexto_sucursales, obtener_sucursales
+from logica.sucursales import contexto_sucursales
 
 cines_bp = Blueprint("cines", __name__)
 
@@ -7,7 +7,7 @@ cines_bp = Blueprint("cines", __name__)
 # Guarda la sucursal elegida y vuelve a la cartelera.
 @cines_bp.route("/sucursal/<int:sucursal_id>")
 def elegir_sucursal(sucursal_id):
-    sucursales = obtener_sucursales()
+    sucursales, _ = contexto_sucursales() #uso solo el primer parametro, el _ establece una variable que no voy a usar
     
     if any(sucursal["id"] == sucursal_id for sucursal in sucursales):
         session["sucursal_id"] = sucursal_id
