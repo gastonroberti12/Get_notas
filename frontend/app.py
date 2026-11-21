@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask
 from routes.products import peliculas_bp
 from routes.cines import cines_bp
 from routes.users import users_bp
