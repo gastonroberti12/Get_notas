@@ -92,3 +92,21 @@ def validar_modificacion_servicio_reserva(datos):
         error_faltantes=("Campos invalidos", "Se debe enviar únicamente el campo cantidad"),
     )
     return validar_cantidad(datos["cantidad"])
+
+
+def validar_agregado_servicio_reserva(datos):
+    if not isinstance(datos, dict):
+        error_validacion(
+            "Cuerpo JSON inválido",
+            "Cuerpo JSON inválido",
+        )
+
+    try:
+        servicio_id = int(datos["servicio_id"])
+        cantidad = validar_cantidad(datos["cantidad"])
+    except (KeyError, TypeError, ValueError):
+        error_validacion(
+            "Se requieren servicio_id y una cantidad válida",
+            "Se requieren servicio_id y una cantidad válida",
+        )
+    return servicio_id, cantidad
