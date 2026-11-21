@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from services.api_cliente import llamar_api, mensaje_error
-from routes.roles import esta_logueado, es_cliente
+from logica.roles import esta_logueado, es_cliente
 from logica.formato import SIN_DATO, parsear_fecha
 from logica.reservas import armar_reserva, clasificar_reserva
 

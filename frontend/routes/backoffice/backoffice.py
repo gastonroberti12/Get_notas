@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash , request
-from routes.roles import es_admin
+from logica.roles import es_admin
 from services.api_cliente import llamar_api, mensaje_error
 from logica.dashboard import armar_dashboard
 from routes.products import obtener_listado

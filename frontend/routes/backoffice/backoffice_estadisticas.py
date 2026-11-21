@@ -1,6 +1,6 @@
 from flask import render_template, request
 from logica.dashboard import armar_dashboard, leer_filtros
-from routes.roles import solo_admin
+from logica.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp
 
 SECCIONES_COMPLETAS = ("ocupacion", "entradas", "importe", "cancelaciones", "salas", "generos", "franjas")

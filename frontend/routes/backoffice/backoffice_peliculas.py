@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from flask import abort, flash, redirect, render_template, request, session, url_for
 from services.api_cliente import llamar_api, mensaje_error
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
-from routes.roles import es_admin, solo_admin
+from logica.roles import es_admin, solo_admin
 from routes.products import obtener_listado
 
 

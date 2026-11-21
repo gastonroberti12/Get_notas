@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, abort,
 from services.api_cliente import llamar_api, mensaje_error
 from logica.formato import parsear_fecha
 from logica.sucursales import filtro_sucursal
-from routes.roles import esta_logueado, es_cliente
+from logica.roles import esta_logueado, es_cliente
 
 
 peliculas_bp = Blueprint("peliculas", __name__)

@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, render_template, flash, request, abort
 from services.api_cliente import llamar_api, mensaje_error
 from logica.formato import formatear_numero, formatear_fecha
-from routes.roles import esta_logueado
+from logica.roles import esta_logueado
 
 purchases_bp = Blueprint("purchases", __name__)
 

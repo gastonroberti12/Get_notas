@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request
 from services.api_cliente import llamar_api, mensaje_error
 from logica.formato import formatear_fecha
 from routes.products import obtener_listado
-from routes.roles import solo_admin
+from logica.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
 
 
