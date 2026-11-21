@@ -6,7 +6,9 @@ API_URL = os.getenv('BACKEND_URL', 'http://127.0.0.1:5001')
 
 MENSAJE_SIN_CONEXION = 'No se pudo conectar con el servidor.'
 MENSAJE_GENERICO = 'Ocurrió un error inesperado.'
+LIMITE_LISTADOS = 100   
 
+#los archivos de services/ usan llamar_api, que siempre devuelve (status, datos).
 
 def llamar_api(metodo, endpoint, datos=None):
     # Si hay sesion, manda el token en Authorization: Bearer.
@@ -20,8 +22,8 @@ def llamar_api(metodo, endpoint, datos=None):
         return None, {}
 
 
-def mensaje_error(status, cuerpo, MENSAJE_GENERICO):
+def mensaje_error(status, cuerpo, por_defecto=MENSAJE_GENERICO):
     if status is None:
         return MENSAJE_SIN_CONEXION
     errores = cuerpo.get('errors') or [{}]
-    return errores[0].get('mensaje', MENSAJE_GENERICO)
+    return errores[0].get('mensaje', por_defecto)
