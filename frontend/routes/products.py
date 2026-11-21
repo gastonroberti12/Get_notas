@@ -1,42 +1,26 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
-from api_cliente import llamar_api, mensaje_error
-from datos_perfil import parsear_fecha
-from sucursales import contexto_sucursales
-from routes.roles import esta_logueado, es_cliente
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from services.api_cliente import mensaje_error
+from services.peliculas import listar_peliculas, obtener_pelicula, obtener_resenas, obtener_estado_resena, publicar_resena
+from services.funciones import listar_funciones
+from logica.formato import formatear_fecha
+from logica.sucursales import filtro_sucursal
+from logica.roles import es_cliente, solo_logueado
+from logica.validaciones import validar_entero
+from routes.errores import abortar_por_status
 
 
 peliculas_bp = Blueprint("peliculas", __name__)
 
-# Filtro de sucursal para el backend (vacío si no hay sucursales disponibles).
-def filtro_sucursal():
-    _, actual = contexto_sucursales()
-    if actual is None:
-        return ""
-    return f"&sucursal_id={actual['id']}"
 
-# Obtener listados del backend
-def obtener_listado(endpoint, clave, filtros=""):
-    status, datos = llamar_api("GET", f"/{endpoint}?_limit=100{filtros}")
-
-    if status not in (200, 204):
-        return [], mensaje_error(status, datos, "No se pudieron obtener los datos.")
-
-    # Con 204 el cuerpo viene vacío, así que devuelve una lista vacía.
-    return datos.get(clave, []), None
-
-
-# Página principal
 @peliculas_bp.route("/")
 def inicio():
 
-    # Obtener películas del backend
-    peliculas, error_peliculas = obtener_listado(
-        "peliculas",
-        "peliculas",
-        filtro_sucursal()
-    )
+    status, datos = listar_peliculas(filtro_sucursal())
+    peliculas = datos.get("peliculas", [])
+    error_peliculas = None
+    if status not in (200, 204):
+        error_peliculas = mensaje_error(status, datos, "No se pudieron obtener los datos.")
 
-    # Primeras cinco películas para el carrusel
     peliculas_destacadas = peliculas[:5]
 
     return render_template(
@@ -46,8 +30,6 @@ def inicio():
         error_cartelera=error_peliculas
     )
 
-
-# Redirección a la cartelera
 @peliculas_bp.route("/cartelera")
 def cartelera():
 
@@ -55,73 +37,62 @@ def cartelera():
         url_for("peliculas.inicio", _anchor="cartelera")
     )
 
-
-# Página con el catálogo completo
 @peliculas_bp.route("/peliculas")
 def listado_peliculas():
 
-    peliculas, error_peliculas = obtener_listado(
-        "peliculas",
-        "peliculas",
-        filtro_sucursal()
-    )
+    status, datos = listar_peliculas(filtro_sucursal())
+    peliculas = datos.get("peliculas", [])
+    error_peliculas = None
+    if status not in (200, 204):
+        error_peliculas = mensaje_error(status, datos, "No se pudieron obtener los datos.")
 
     return render_template(
         "peliculas.html",
         peliculas=peliculas,
         error_peliculas=error_peliculas
     )
-    
-# Detalle de una película con sus funciones disponibles
+
 @peliculas_bp.route("/peliculas/<int:pelicula_id>")
 def detalle_pelicula(pelicula_id):
-    status, pelicula = llamar_api("GET", f"/peliculas/{pelicula_id}")
-    if status == 404:
-        abort(404)
-    if status is None:
-        abort(503)  # el backend no responde
+    status, pelicula = obtener_pelicula(pelicula_id)
     if status != 200:
-        abort(500)
+        abortar_por_status(status)
 
-    status, datos = llamar_api("GET", f"/funciones?pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
+    status, datos = listar_funciones(f"&pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
     funciones = datos.get("funciones", []) if status == 200 else []
     for f in funciones:
-        fecha = parsear_fecha(f.get("fecha_hora"))
-        f["dia"] = fecha.strftime("%d/%m") if fecha else ""
-        f["hora"] = fecha.strftime("%H:%M") if fecha else ""
+        f["dia"] = formatear_fecha(f.get("fecha_hora"), "%d/%m", "")
+        f["hora"] = formatear_fecha(f.get("fecha_hora"), "%H:%M", "")
 
-    # Reseñas de la película (públicas) con su promedio
+    # reseñas de la película con su promedio
     resenas = {"resenas": [], "total": 0, "promedio": None}
-    status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}/resenas?_limit=50")
+    status, datos = obtener_resenas(pelicula_id)
     if status == 200:
         resenas = datos
     for r in resenas["resenas"]:
-        fecha = parsear_fecha(r.get("fecha"))
-        r["fecha_texto"] = fecha.strftime("%d/%m/%Y") if fecha else ""
+        r["fecha_texto"] = formatear_fecha(r.get("fecha"), "%d/%m/%Y", "")
 
-    # Solo los clientes consultan si pueden reseñar (entrada ya validada)
+    # Solo los clientes consultan si pueden reseñar
     estado_resena = None
     if es_cliente():
-        status, datos = llamar_api("GET", f"/peliculas/{pelicula_id}/resenas/estado")
+        status, datos = obtener_estado_resena(pelicula_id)
         if status == 200:
             estado_resena = datos
     return render_template("pelicula_detalle.html", pelicula=pelicula, funciones=funciones, resenas=resenas, estado_resena=estado_resena)
 
 
-# Publicar una reseña: el backend valida que la entrada haya sido usada
+# para ublicar una reseña el backend valida que la entrada haya sido usada
 @peliculas_bp.route("/peliculas/<int:pelicula_id>/resenas", methods=["POST"])
+@solo_logueado
 def crear_resena(pelicula_id):
-    if not esta_logueado():
-        return redirect(url_for("users.login"))
+    calificacion, error = validar_entero(request.form.get("calificacion"), "Elegí una calificación de 1 a 5.")
+    if error:
+        flash(error, "error")
+        return redirect(url_for("peliculas.detalle_pelicula", pelicula_id=pelicula_id, _anchor="resenas"))
 
-    calificacion = request.form.get("calificacion", type=int)
     comentario = request.form.get("comentario", "").strip()
 
-    status, cuerpo = llamar_api(
-        "POST",
-        f"/peliculas/{pelicula_id}/resenas",
-        {"calificacion": calificacion, "comentario": comentario or None},
-    )
+    status, cuerpo = publicar_resena(pelicula_id, calificacion, comentario)
     if status == 201:
         flash("¡Gracias por tu reseña!", "exito")
     else:
