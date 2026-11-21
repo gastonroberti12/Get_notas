@@ -28,7 +28,4 @@ def mapa():
         else ""
     )
     return render_template(
-        "maps.html",
-        sucursal_actual=sucursal_actual,
-        mapa_url=MAPAS_EMBEBIDOS.get(nombre),
-    )
+        "maps.html", mapa_url=MAPAS_EMBEBIDOS.get(nombre))
