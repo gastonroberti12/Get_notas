@@ -34,4 +34,4 @@ def formatear_numero(valor, decimales=0):
         texto = f'{valor:,.{decimales}f}'
     except (TypeError, ValueError):
         return '0'
-    return texto.replace(',', 'X').replace('.', ',').replace('X', '.') #la X funciona como variable auxiliar para intercambiar dos valores
+    return texto.replace(',', 'X').replace('.', ',').replace('X', '.')  # la X es un marcador temporal para intercambiar comas y puntos
