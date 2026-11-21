@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from api_cliente import llamar_api, mensaje_error
+from services.api_cliente import llamar_api, mensaje_error
 
 BASE = "/admin/estadisticas"
 RUTAS = {
