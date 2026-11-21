@@ -32,9 +32,9 @@ def login():
             return redirect(destino_seguro(siguiente))
 
         error = mensaje_error(status, cuerpo, 'Email o contraseña incorrectos.')
-        return render_template('login.html', error=error, email=email, siguiente=siguiente)
+        return render_template('login.html', error=error, email=email, siguiente=siguiente, maximo=CONTRASENIA_MAXIMA)
 
-    return render_template("login.html", siguiente=siguiente)
+    return render_template("login.html", siguiente=siguiente, maximo=CONTRASENIA_MAXIMA)
     
 
 @users_bp.route("/registro", methods=['GET', 'POST']) # el back no loguea al registrar, por eso redirigimos al login
@@ -53,9 +53,9 @@ def registro():
             return redirect(url_for('users.login'))
 
         error = mensaje_error(status, cuerpo, 'No se pudo crear la cuenta.')
-        return render_template('registro.html', error=error, nombre=datos['nombre'], apellido=datos['apellido'], email=datos['email'])
+        return render_template('registro.html', error=error, nombre=datos['nombre'], apellido=datos['apellido'], email=datos['email'], minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
 
-    return render_template("registro.html")
+    return render_template("registro.html", minimo=CONTRASENIA_MINIMA, maximo=CONTRASENIA_MAXIMA)
 
 @users_bp.route("/logout", methods=['POST'])
 def logout():

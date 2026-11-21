@@ -7,7 +7,7 @@ from services.servicios import listar_servicios
 from services.usuarios import listar_mis_reservas
 from logica.formato import formatear_numero, formatear_fecha
 from logica.roles import solo_logueado
-from logica.validaciones import validar_butacas, validar_cantidades_servicios
+from logica.validaciones import validar_butacas, validar_cantidades_servicios, SERVICIOS_POR_ENTRADA
 from routes.errores import abortar_por_status
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -238,4 +238,5 @@ def checkout():
         entradas=len(entradas),
         precio_entrada=float(funcion["precio"]),
         servicios=servicios,
+        servicios_por_entrada=SERVICIOS_POR_ENTRADA,
     )
