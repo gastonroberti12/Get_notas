@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
 from services.api_cliente import llamar_api, mensaje_error
-from datos_perfil import parsear_fecha
+from logica.formato import parsear_fecha
 from sucursales import contexto_sucursales
 from routes.roles import esta_logueado, es_cliente
 

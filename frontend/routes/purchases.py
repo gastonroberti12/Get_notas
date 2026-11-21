@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, url_for, render_template, flash, request, abort
 from services.api_cliente import llamar_api, mensaje_error
-from datos_perfil import formatear_total, formatear_fecha
+from logica.formato import formatear_numero, formatear_fecha
 from routes.roles import esta_logueado
 
 purchases_bp = Blueprint("purchases", __name__)
@@ -285,7 +285,7 @@ def checkout():
     status_servicios, servicios_data = llamar_api("GET", "/servicios?_limit=100&activo=true")
     servicios = servicios_data.get("servicios", []) if status_servicios == 200 else []
     for servicio in servicios:
-        servicio["precio_formateado"] = formatear_total(servicio["precio"])
+        servicio["precio_formateado"] = formatear_numero(servicio["precio"])
 
     return render_template(
         "checkout.html",
