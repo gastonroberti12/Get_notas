@@ -58,7 +58,7 @@ def estado_entrada(reserva, entrada, ingreso_vencido):
 
 
 def armar_reserva(reserva):
-    #repara los datos de una reserva para mostrarlos en el perfil
+    #prepara los datos de una reserva para mostrarlos en el perfil
     ingreso_vencido = funcion_termino_tolerancia(reserva)
 
     entradas = []
