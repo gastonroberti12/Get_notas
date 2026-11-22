@@ -3,7 +3,7 @@ from services.api_cliente import mensaje_error
 from services.funciones import listar_funciones, obtener_funcion, crear_funcion, actualizar_funcion, actualizar_estado_funcion
 from services.peliculas import listar_peliculas
 from services.salas import listar_salas
-from logica.formato import FORMATO_INPUT_FECHA, a_iso_gmt3, formatear_fecha
+from logica.formato import FORMATO_INPUT_FECHA, a_iso_gmt3, ahora_argentina, formatear_fecha, parsear_fecha
 from logica.roles import solo_admin
 from logica.validaciones import validar_entero
 from routes.backoffice.backoffice import backoffice_bp, cambiar_estado, ver_inactivos
@@ -19,8 +19,12 @@ def funciones_admin():
     error = None
     if status not in (200, 204):
         error = mensaje_error(status, datos, "No se pudieron obtener los datos.")
+    ahora = ahora_argentina()
     for f in funciones:
         f["fecha_texto"] = formatear_fecha(f["fecha_hora"], "%d/%m/%Y %H:%M")
+        # las funciones que ya pasaron no se pueden volver a dar de alta.
+        fecha = parsear_fecha(f["fecha_hora"])
+        f["pasada"] = fecha is not None and fecha < ahora
     return render_template("backadmin/funciones.html", funciones=funciones, error=error, ver_inactivos=inactivos)
 
 def _formulario(funcion=None, error=None):

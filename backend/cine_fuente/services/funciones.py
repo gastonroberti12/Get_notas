@@ -10,7 +10,7 @@ from cine_fuente.repositories.funciones_repository import (
     contar_reservas_de_funcion,
     actualizar_funcion_en_transaccion as guardar_cambios_funcion_en_transaccion,
 )
-from cine_fuente.utils import construir_error_api, formatear_fecha_hora
+from cine_fuente.utils import ahora_gmt3, construir_error_api, formatear_fecha_hora
 
 
 # Obtiene el listado de funciones según los filtros.
@@ -165,6 +165,12 @@ def actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
     sala_id = cambios.get("sala_id", funcion["sala_id"])
     fecha_hora = cambios.get("fecha_hora", funcion["fecha_hora"])
     reactivando = cambios.get("activa") is True and not funcion["activa"]
+    # Una función que ya pasó no se puede volver a dar de alta.
+    if reactivando and _fecha_local_sin_zona(fecha_hora) < ahora_gmt3().replace(tzinfo=None):
+        raise ValueError(construir_error_api(
+            "funcion.past", "Función ya realizada",
+            "No se puede dar de alta una función que ya pasó.",
+        ), 409)
     requiere_validar_programacion = (
         bool(campos_protegidos.intersection(cambios)) or reactivando
     )
