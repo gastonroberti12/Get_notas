@@ -493,14 +493,14 @@ def procesar_reservas_vencidas(ahora):
     limite = (ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)).replace(tzinfo=None)
     sql_vencidas = ("SELECT id FROM reservas "
                     "WHERE estado = 'pendiente' AND fecha_compra <= %(limite)s")
-    if not consultar(sql_vencidas, {"limite": limite}):  # caso habitual: una sola consulta, sin locks
+    if not consultar(sql_vencidas, {"limite": limite}):  # caso habitual: si no hay ninguna reserva vencida, termina la funcion aca, chequeo rapido
         return []
     with obtener_conexion() as conexion:
         conexion.begin()
         with conexion.cursor() as cursor:
             # Lectura actual + lock: si otro proceso ya las expiró, o se pagaron mientras tanto,
             # no vuelven a aparecer acá.
-            cursor.execute(sql_vencidas + " FOR UPDATE", {"limite": limite})
+            cursor.execute(sql_vencidas + " FOR UPDATE", {"limite": limite}) #con FOR UPDATE MySQL bloquea esas filas si otro pedido quiere modificarlas (pagar, cancelar, expirar), tiene que esperar al commit
             ids = [f["id"] for f in cursor.fetchall()]
             if ids:
                 cursor.execute("UPDATE reservas SET estado = 'expirada' WHERE id IN %(ids)s",

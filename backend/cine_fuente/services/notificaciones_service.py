@@ -147,19 +147,37 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
         logger.exception("No se pudo iniciar el hilo de envío de mail")
 
 def enviar_estado_reserva(d):
-    """Mail de cancelación o expiración, según d['estado']."""
-    expirada = d["estado"] == "expirada"
+    """Manda el mail que avisa que una reserva se canceló o expiró.
+
+    d: diccionario con los datos de la reserva (sale de obtener_datos_notificacion).
+       Usa: id, estado, email, nombre, pelicula, fecha_hora, sucursal, sala.
+    """
+    # 1) Elegir los textos según el motivo: un mismo mail sirve para los dos casos
+    expirada = d["estado"] == "expirada"          # True si expiró, False si se canceló
     titulo = "Tu reserva expiró" if expirada else "Tu reserva fue cancelada"
     detalle = ("No se registró el pago a tiempo y las butacas fueron liberadas."
                if expirada else "Las butacas fueron liberadas.")
+    fecha = _fecha(d)                             # "21/11/2026 a las 19:00 hs"
+
+    # 2) Crear el mail y completar los encabezados (el remitente lo pone _enviar_smtp)
     mensaje = EmailMessage()
     mensaje["Subject"] = f"{titulo} - Reserva #{d['id']}"
     mensaje["To"] = d["email"]
+
+    # 3) Versión en texto plano: la ven los clientes de correo que no muestran HTML
     mensaje.set_content(f"Hola {d['nombre']},\n\n{titulo}.\n{detalle}\n\n"
-                        f"Película: {d['pelicula']}\nFecha: {_fecha(d)}\n"
+                        f"Película: {d['pelicula']}\nFecha: {fecha}\n"
                         f"Lugar: {d['sucursal']} - {d['sala']}")
-    mensaje.add_alternative(_entorno.get_template("estado_reserva.html").render(
-        d=d, titulo=titulo, detalle=detalle, fecha=_fecha(d),
-        estilos=Markup(f"<style>{(DIR_CSS / 'confirmacion.css').read_text(encoding='utf-8')}</style>"),
-    ), subtype="html")
+
+    # 4) Versión HTML : se arma con el template de Jinja.
+    #    El CSS va pegado dentro del mail porque los correos no cargan archivos externos.
+    #    Markup avisa a Jinja que ese <style> es HTML seguro, para que no lo "escape".
+    css = (DIR_CSS / "confirmacion.css").read_text(encoding="utf-8")
+    html = _entorno.get_template("estado_reserva.html").render(
+        d=d, titulo=titulo, detalle=detalle, fecha=fecha,
+        estilos=Markup(f"<style>{css}</style>"),
+    )
+    mensaje.add_alternative(html, subtype="html")
+
+    # 5) Mandarlo por SMTP. Si falla, lanza un error que atrapa enviar_en_segundo_plano
     _enviar_smtp(mensaje)
