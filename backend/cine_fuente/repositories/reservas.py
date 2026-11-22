@@ -79,112 +79,6 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     """
     return consultar(sql, parametros)
 
-
-"""obtiene las reservas del usuario con los datos de la funcion y el cine"""
-# Lista las reservas de UN usuario (su perfil), con datos para mostrarlas en pantalla:
-# película, póster, sala, sucursal, horario y total pagado. Paginada y de la más nueva a la más vieja.
-
-def listar_reservas_perfil(filtros, limit, offset, usuario_id):
-
-    # WHERE con los filtros (estado/fechas); siempre filtra por usuario_id, nadie ve reservas ajenas.
-    where, parametros = _construir_filtros(filtros, usuario_id)
-    parametros.update({"limit": limit, "offset": offset})  # paginación
-
-    # Trae cada reserva con su total, horario, película, sala y sucursal.
-    # El total = entradas * precio de la función + servicios (lo arman TOTAL_RESERVA_SQL y _JOINS).
-    sql = f"""
-        SELECT
-            r.id,
-            r.usuario_id,
-            r.funcion_id,
-            r.fecha_compra,
-            r.estado,
-            r.fecha_cancelacion,
-            {TOTAL_RESERVA_SQL},
-            f.fecha_hora,
-            p.id AS pelicula_id,
-            p.titulo AS pelicula,
-            p.poster_url,
-            s.nombre AS sala,
-            su.nombre AS sucursal
-
-        FROM reservas r
-
-        INNER JOIN funcion f
-            ON r.funcion_id = f.id
-        {TOTAL_RESERVA_JOINS}
-
-        INNER JOIN pelicula p
-            ON f.pelicula_id = p.id
-
-        INNER JOIN salas s
-            ON f.sala_id = s.id
-
-        INNER JOIN sucursales su
-            ON s.sucursal_id = su.id
-
-        {where}
-
-        ORDER BY r.fecha_compra DESC, r.id DESC
-        LIMIT %(limit)s OFFSET %(offset)s
-    """
-    return consultar(sql, parametros)
-
-
-"""obtiene las entradas y sus butacas para varias reservas"""
-def listar_entradas_perfil(reserva_ids):
-
-    if not reserva_ids:
-        return []
-
-    marcadores, parametros = clausula_in(reserva_ids, "reserva")
-
-    sql = f"""
-        SELECT
-            e.reserva_id,
-            e.fecha_uso,
-            b.fila,
-            b.numero
-
-        FROM entrada e
-
-        INNER JOIN butacas b
-            ON e.butaca_id = b.id
-
-        WHERE e.reserva_id IN ({marcadores})
-
-        ORDER BY e.reserva_id, e.id
-    """
-
-    return consultar(sql, parametros)
-
-"""obtiene los servicios asociados a varias reservas"""
-def listar_servicios_perfil(reserva_ids):
-
-    if not reserva_ids:
-        return []
-
-    marcadores, parametros = clausula_in(reserva_ids, "reserva")
-
-    sql = f"""
-        SELECT
-            rs.reserva_id,
-            rs.cantidad,
-            s.nombre
-
-        FROM reserva_servicios rs
-
-        INNER JOIN servicios s
-            ON rs.servicio_id = s.id
-
-        WHERE rs.reserva_id IN ({marcadores})
-
-        ORDER BY rs.reserva_id, rs.id
-    """
-
-    return consultar(sql, parametros)
-
-
 def obtener_datos_perfil(filtros, limit, offset, usuario_id):
     """Trae reservas, total, entradas y servicios del perfil usando UNA sola conexión.
 
@@ -423,7 +317,15 @@ def restaurar_entrada_pendiente(entrada_id):
 
 
 def obtener_datos_notificacion(reserva_id):
-    """Obtiene email y datos necesarios para el comprobante y sus QR."""
+    """Obtiene email y datos necesarios para el comprobante y sus QR.
+
+    Devuelve un dict con los datos de la reserva, el usuario (nombre, apellido, email),
+    la función, película, sala y sucursal, el total, y además:
+    - "entradas": lista de dict con id, butaca_id, codigo_qr, fila y numero.
+    - "servicios": lista de dict con nombre, cantidad y precio_unitario.
+    Devuelve None si la reserva no existe.
+    """
+    # Una sola fila con todo lo que va en el mail: quién compró, qué vio, dónde, cuándo y cuánto pagó.
     sql = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
         f.precio AS precio_entrada, f.fecha_hora,
@@ -442,9 +344,11 @@ def obtener_datos_notificacion(reserva_id):
     """
     filas = consultar(sql, {"reserva_id": reserva_id})
     if not filas:
-        return None
+        return None  # la reserva no existe
 
-    datos = filas[0]
+    datos = filas[0]  # es por id, así que hay una sola fila
+
+    # Entradas de la reserva con su QR y butaca (para generar los QR del comprobante).
     datos["entradas"] = consultar(
         """
         SELECT e.id, e.butaca_id, e.codigo_qr, b.fila, b.numero
@@ -455,6 +359,8 @@ def obtener_datos_notificacion(reserva_id):
         """,
         {"reserva_id": reserva_id},
     )
+
+    # Servicios comprados (pochoclos, etc.) para el detalle del comprobante.
     datos["servicios"] = consultar(
         """
         SELECT s.nombre, rs.cantidad, rs.precio_unitario
@@ -465,6 +371,8 @@ def obtener_datos_notificacion(reserva_id):
         """,
         {"reserva_id": reserva_id},
     )
+
+    # dict con la reserva + listas "entradas" y "servicios" adentro.
     return datos
 
 
