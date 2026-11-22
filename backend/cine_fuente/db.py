@@ -54,6 +54,7 @@ def ejecutar_actualizacion(sql, params=None):
 
 
 def ejecutar_transaccion(operacion):
+    # recibe una funcion (casi siempre un lambda) y le pasa el cursor: si sale bien hace commit, si falla rollback
     conexion = obtener_conexion()
     try:
         with conexion.cursor() as cursor:

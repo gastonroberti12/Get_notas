@@ -57,6 +57,7 @@ def decodificar_token(token: str) -> dict:
         raise ValueError(construir_error_api(
             "TOKEN_EXPIRADO", "Token expirado", "La sesión venció."
         ), 401)
+    # tambien atrapa el ValueError del logout de arriba: igual responde 401 TOKEN_INVALIDO
     except (jwt.InvalidTokenError, ValueError):
         raise ValueError(construir_error_api(
             "TOKEN_INVALIDO", "Token inválido", "El token no es válido."
@@ -76,6 +77,7 @@ def requiere_login(funcion):
         claims = decodificar_token(partes[1].strip())
         g.usuario = {"id": int(claims["sub"]), "rol": claims["rol"]}
         return funcion(*args, **kwargs)
+    # hace lo mismo que @wraps: sin esto todas las rutas se llamarian "envoltura" y Flask tiraria error
     envoltura.__name__ = funcion.__name__
     return envoltura
 
@@ -92,6 +94,7 @@ def requiere_rol(*roles_permitidos):
                 ), 403)
             return funcion(*args, **kwargs)
         envoltura.__name__ = funcion.__name__
+         # requiere_login envuelve a esta funcion: primero valida el token (401) y deja g.usuario, despues se mira el rol (403)
         return requiere_login(envoltura)
     return decorador
 

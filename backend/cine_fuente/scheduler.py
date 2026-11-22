@@ -9,6 +9,7 @@ def iniciar_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         procesar_expiraciones, "interval", seconds=EXPIRACION_INTERVALO_SEGUNDOS,
+        # max_instances=1: no corren dos a la vez si una tarda. coalesce=True: si se atrasaron varias, corre una sola
         id="expirar_reservas", max_instances=1, coalesce=True,
     )
     scheduler.start()

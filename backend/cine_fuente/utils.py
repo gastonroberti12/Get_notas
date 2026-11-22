@@ -47,6 +47,7 @@ def respuesta_error_excepcion(error: ValueError):
     payload = error.args[0] if error.args and isinstance(error.args[0], dict) else construir_error_api(
         "ERROR_VALIDACION", "Solicitud inválida", "Los datos enviados no son válidos."
     )
+    # args[0] es el JSON del error y args[1] el codigo HTTP del raise ValueError(json, status).
     status = error.args[1] if len(error.args) > 1 and isinstance(error.args[1], int) else 400
     return respuesta_error_api(payload, status)
 

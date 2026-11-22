@@ -164,6 +164,7 @@ def actualizar_pelicula_por_id(pelicula_id, cambios):
                     validar_inicio_no_pasado(inicio_dt)
         _normalizar_fechas_para_bd(cambios)
 
+     # baja: no se puede si tiene reservas activas en funciones futuras. reactivar: exige un periodo de cartelera nuevo
     if cambios.get("activa") is False:
         if not dar_de_baja(pelicula_id):
             raise ValueError(construir_error_api(

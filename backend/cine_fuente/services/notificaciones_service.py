@@ -142,6 +142,7 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
         logger.error("Mail NO enviado tras %s intentos (reserva %s)", intentos, datos["id"])
 
     try:
+        #daemon=True: el hilo no frena el cierre del servidor, y la respuesta del pago no espera al mail
         threading.Thread(target=tarea, daemon=True).start()
     except Exception:
         logger.exception("No se pudo iniciar el hilo de envío de mail")
