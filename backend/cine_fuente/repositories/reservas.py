@@ -81,11 +81,17 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
 
 
 """obtiene las reservas del usuario con los datos de la funcion y el cine"""
+# Lista las reservas de UN usuario (su perfil), con datos para mostrarlas en pantalla:
+# película, póster, sala, sucursal, horario y total pagado. Paginada y de la más nueva a la más vieja.
+
 def listar_reservas_perfil(filtros, limit, offset, usuario_id):
 
+    # WHERE con los filtros (estado/fechas); siempre filtra por usuario_id, nadie ve reservas ajenas.
     where, parametros = _construir_filtros(filtros, usuario_id)
-    parametros.update({"limit": limit, "offset": offset})
+    parametros.update({"limit": limit, "offset": offset})  # paginación
 
+    # Trae cada reserva con su total, horario, película, sala y sucursal.
+    # El total = entradas * precio de la función + servicios (lo arman TOTAL_RESERVA_SQL y _JOINS).
     sql = f"""
         SELECT
             r.id,
@@ -122,7 +128,6 @@ def listar_reservas_perfil(filtros, limit, offset, usuario_id):
         ORDER BY r.fecha_compra DESC, r.id DESC
         LIMIT %(limit)s OFFSET %(offset)s
     """
-
     return consultar(sql, parametros)
 
 
@@ -181,10 +186,19 @@ def listar_servicios_perfil(reserva_ids):
 
 
 def obtener_datos_perfil(filtros, limit, offset, usuario_id):
-    """Trae reservas, total, entradas y servicios del perfil usando UNA sola conexión."""
-    where, parametros = _construir_filtros(filtros, usuario_id)
-    parametros_lista = {**parametros, "limit": limit, "offset": offset}
+    """Trae reservas, total, entradas y servicios del perfil usando UNA sola conexión.
 
+    Devuelve una tupla (reservas, total, entradas, servicios):
+    - reservas: lista de dict, una por reserva de la página (con total, película, sala, sucursal).
+    - total: int, cantidad total de reservas del usuario con esos filtros (para paginar).
+    - entradas: lista de dict con reserva_id, codigo_qr, fecha_uso, fila y numero de butaca.
+    - servicios: lista de dict con reserva_id, cantidad y nombre del servicio.
+    """
+    # WHERE con los filtros; siempre filtra por usuario_id, nadie ve reservas ajenas.
+    where, parametros = _construir_filtros(filtros, usuario_id)
+    parametros_lista = {**parametros, "limit": limit, "offset": offset}  # + paginación
+
+    # Reservas de la página con su total, horario, película, sala y sucursal.
     sql_reservas = f"""
         SELECT r.id, r.usuario_id, r.funcion_id, r.fecha_compra, r.estado,
                r.fecha_cancelacion, {TOTAL_RESERVA_SQL},
@@ -201,18 +215,25 @@ def obtener_datos_perfil(filtros, limit, offset, usuario_id):
         LIMIT %(limit)s OFFSET %(offset)s
     """
 
+    # Todas las consultas comparten la misma conexión y cursor.
     with obtener_conexion() as conexion, conexion.cursor() as cursor:
+        # 1. Reservas de la página actual.
         cursor.execute(sql_reservas, parametros_lista)
         reservas = cursor.fetchall()
 
+        # 2. Total de reservas con esos filtros, sin paginar (para armar los links de páginas).
         cursor.execute(f"SELECT COUNT(*) AS total FROM reservas AS r {where}", parametros)
         fila = cursor.fetchone()
         total = int(fila["total"]) if fila else 0
 
+        # 3 y 4. Entradas y servicios, solo de las reservas que se trajeron (si hay alguna).
         entradas, servicios = [], []
         ids = [r["id"] for r in reservas]
         if ids:
+            # Arma el "IN (...)" con un parámetro por id, sin meter valores a mano en el SQL.
             marcadores, params_in = clausula_in(ids, "reserva")
+
+            # Entradas con su QR y la butaca (fila y número).
             cursor.execute(f"""
                 SELECT e.reserva_id, e.codigo_qr, e.fecha_uso, b.fila, b.numero
                 FROM entrada e INNER JOIN butacas b ON e.butaca_id = b.id
@@ -221,6 +242,7 @@ def obtener_datos_perfil(filtros, limit, offset, usuario_id):
             """, params_in)
             entradas = cursor.fetchall()
 
+            # Servicios comprados (pochoclos, etc.) con su nombre y cantidad.
             cursor.execute(f"""
                 SELECT rs.reserva_id, rs.cantidad, s.nombre
                 FROM reserva_servicios rs INNER JOIN servicios s ON rs.servicio_id = s.id

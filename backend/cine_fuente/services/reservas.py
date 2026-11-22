@@ -76,16 +76,21 @@ def entrada_api(fila):
 
 # GET /reservas, /usuarios/me/reservas, /reservas/{id} y /reservas/{id}/entradas
 
-
+#se usa para expirar las reservas en estado "pendiente" una vez ya pasados el tiempo antes de varias operaciones (como cancelar)
 def procesar_expiraciones():
+    # Expira las pendientes vencidas y recorre los ids que expiró esta llamada
     for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
-        if not mail_posible({"email": True}):  # en Render no hay mails: evita consultas innecesarias
+        # Si no hay mail configurado (por ejemplo, en Render), no hay nada más que hacer con esta reserva
+        if not mail_posible({"email": True}):
             continue
         try:
+            # Datos del cliente para el mail (email, película, butacas...)
             datos = compras_repo.obtener_datos_notificacion(id_reserva)
             if datos and mail_posible(datos):
+                # Avisa "tu reserva expiró" en un hilo aparte, sin hacer esperar la respuesta
                 enviar_en_segundo_plano(enviar_estado_reserva, datos)
         except Exception:
+            # Un problema con el mail nunca corta el proceso: solo queda anotado en el log
             logger.exception("No se pudo preparar el mail de la reserva %s", id_reserva)
 
 
