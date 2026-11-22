@@ -28,14 +28,14 @@ def validar_filtros(parametros):
     fecha = parametros.get("fecha")
     if fecha is not None:
         try:
-            fecha_validada = datetime.strptime(fecha, "%Y-%m-%d").date()
+            fecha_validada = datetime.strptime(fecha, "%Y-%m-%d").date() ## Convierte el string a un objeto date y valida que tenga formato AAAA-MM-DD
         except (TypeError, ValueError) as causa:
             raise ValueError(construir_error_api(
                 "invalid.fecha.format",
                 "Formato de fecha inválido",
                 "fecha debe tener formato YYYY-MM-DD.",
             )) from causa
-        if fecha_validada.isoformat() != fecha:
+        if fecha_validada.isoformat() != fecha: #se hace esta verificacion porque strptime acepta la fecha sin los cero como: 2026-2-2 e isoformat agrega los "0", para comparar con la fecha enviada
             raise ValueError(construir_error_api(
                 "invalid.fecha.format",
                 "Formato de fecha inválido",

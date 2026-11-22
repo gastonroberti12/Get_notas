@@ -46,7 +46,7 @@ def decodificar_token(token: str) -> dict:
         filas = ejecutar_consulta("SELECT fecha_ultimo_logout FROM usuarios WHERE id = %(id)s", {"id": usuario_id})
         if filas and filas[0]["fecha_ultimo_logout"]:
             fecha_logout = filas[0]["fecha_ultimo_logout"]
-            iat_dt = datetime.fromtimestamp(claims["iat"], tz=timezone.utc).replace(tzinfo=None)
+            iat_dt = datetime.fromtimestamp(claims["iat"], tz=timezone.utc).replace(tzinfo=None) #se transcribe la fecha de creacion del token de segundos a tipo datetime  en UTC
             if iat_dt <= fecha_logout:
                 raise ValueError(construir_error_api(
                     "TOKEN_INVALIDO", "Token inválido", "La sesión fue cerrada. Iniciá sesión nuevamente."

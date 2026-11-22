@@ -1,27 +1,13 @@
-from urllib.parse import urlencode
+from services.api_cliente import mensaje_error 
+from services.estadisticas import obtener_estadistica
+from logica.formato import formatear_numero
 
-from api_cliente import llamar_api, mensaje_error
-
-BASE = "/admin/estadisticas"
-RUTAS = {
-    "general": "/ocupacion/general",
-    "salas": "/ocupacion/salas",
-    "franjas": "/ocupacion/franjas_horarias",
-    "ventas": "/ventas/total",
-    "generos": "/ventas/generos",
-    "cancelaciones": "/cancelaciones",
-}
 # Con estos estados el resto de las consultas fallaría igual: se corta y se reutiliza el error.
 ESTADOS_FATALES = (None, 400, 401, 403)
-def numero(valor, decimales=0):
-    # Formato es-AR: 1.234,5
-    texto = f"{valor:,.{decimales}f}"
-    return texto.replace(",", "X").replace(".", ",").replace("X", ".")
-
 
 def pesos(centavos):
     # El backend informa los montos en centavos.
-    return "$ " + numero(centavos / 100)
+    return "$ " + formatear_numero(centavos / 100)
 
 def leer_filtros(args):
     # Solo normaliza; la validación del rango la hace el backend.
@@ -29,15 +15,14 @@ def leer_filtros(args):
 
 
 def consultar(filtros, endpoints):
-    """Llama a cada endpoint por separado: si uno falla, los demás siguen mostrándose."""
-    query = urlencode({k: v for k, v in filtros.items() if v})
-    sufijo = f"?{query}" if query else ""
+    """Pide cada estadistica por separado: si una falla, las demas siguen mostrándose."""
+
     respuestas, error_fatal = {}, None
     for clave in endpoints:
         if error_fatal:
             respuestas[clave] = (None, error_fatal)
             continue
-        status, cuerpo = llamar_api("GET", BASE + RUTAS[clave] + sufijo)
+        status, cuerpo = obtener_estadistica(clave, filtros)
         if status == 200:
             respuestas[clave] = (cuerpo, None)
             continue
@@ -53,7 +38,7 @@ def barras(filas, etiqueta, valor, detalle, tope=None):
     maximo = tope or max((valor(f) for f in filas), default=0)
     return [{
         "etiqueta": etiqueta(f),
-        "valor": numero(valor(f)),
+        "valor": formatear_numero(valor(f)),
         "detalle": detalle(f),
         "ancho": min(100, round(valor(f) * 100 / maximo)) if maximo else 0,
         "destacada": maximo > 0 and valor(f) == maximo,
@@ -61,12 +46,12 @@ def barras(filas, etiqueta, valor, detalle, tope=None):
 
 
 def tarjeta_ocupacion(d):
-    return {"valor": numero(d["porcentaje_ocupacion"], 1) + " %",
-            "detalle": f"{numero(d['entradas_vendidas'])} de {numero(d['capacidad_total'])} butacas"}
+    return {"valor": formatear_numero(d["porcentaje_ocupacion"], 1) + " %",
+            "detalle": f"{formatear_numero(d['entradas_vendidas'])} de {formatear_numero(d['capacidad_total'])} butacas"}
 
 
 def tarjeta_entradas(d):
-    return {"valor": numero(d["entradas_vendidas"]), "detalle": "Entradas vendidas"}
+    return {"valor": formatear_numero(d["entradas_vendidas"]), "detalle": "Entradas vendidas"}
 
 
 def tarjeta_importe(d):
@@ -75,29 +60,29 @@ def tarjeta_importe(d):
 
 
 def tarjeta_cancelaciones(d):
-    return {"valor": numero(d["reservas_canceladas"]),
-            "detalle": f"{numero(d['porcentaje_cancelacion'], 1)} % de {numero(d['reservas_totales'])} reservas"}
+    return {"valor": formatear_numero(d["reservas_canceladas"]),
+            "detalle": f"{formatear_numero(d['porcentaje_cancelacion'], 1)} % de {formatear_numero(d['reservas_totales'])} reservas"}
 
 
 def grafico_generos(d):
     return barras(d["generos"], lambda f: f["genero"], lambda f: f["entradas_vendidas"],
-                  lambda f: f"{numero(f['entradas_vendidas'])} entradas · {pesos(f['monto_total'])}")
+                  lambda f: f"{formatear_numero(f['entradas_vendidas'])} entradas · {pesos(f['monto_total'])}")
 
 
 def grafico_franjas(d):
     return barras(d["franjas"], lambda f: f"{f['hora']:02d}:00", lambda f: f["entradas_vendidas"],
-                  lambda f: f"{f['hora']:02d}:00 hs · {numero(f['entradas_vendidas'])} entradas")
+                  lambda f: f"{f['hora']:02d}:00 hs · {formatear_numero(f['entradas_vendidas'])} entradas")
 
 
 def grafico_salas(d):
     return barras(d["salas"], lambda f: f["sala_nombre"], lambda f: f["porcentaje_ocupacion"],
-                  lambda f: (f"{numero(f['porcentaje_ocupacion'], 1)} % · "
-                             f"{numero(f['entradas_vendidas'])}/{numero(f['capacidad_total'])}"),
+                  lambda f: (f"{formatear_numero(f['porcentaje_ocupacion'], 1)} % · "
+                             f"{formatear_numero(f['entradas_vendidas'])}/{formatear_numero(f['capacidad_total'])}"),
                   tope=100)
 
 
 
-# nombre de sección -> (endpoint que la alimenta, función que prepara los datos para la vista)
+# nombre de seccion -> (consulta de services/estadisticas.py que la alimenta, funcion que prepara los datos para la vista)
 SECCIONES = {
     "ocupacion": ("general", tarjeta_ocupacion),
     "entradas": ("ventas", tarjeta_entradas),

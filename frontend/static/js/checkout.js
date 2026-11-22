@@ -62,8 +62,8 @@ function actualizarResumen() {
 
 
 //  Contadores de servicios (− / +)
-// maximo dos unidades por cada entrada comprada
-const MAX_CANTIDAD_SERVICIO = entradas * 2;
+// maximo de unidades por servicio: SERVICIOS_POR_ENTRADA (logica/validaciones.py) por cada entrada comprada
+const MAX_CANTIDAD_SERVICIO = entradas * Number(document.getElementById('servicios-por-entrada').value);
 
 for (const fila of document.getElementsByClassName('servicio')) {
   const campo = fila.querySelector('.cantidad');
