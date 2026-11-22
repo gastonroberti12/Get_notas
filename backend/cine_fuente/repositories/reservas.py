@@ -3,6 +3,8 @@ from datetime import timedelta
 from constants import RESERVA_EXPIRACION_MINUTOS
 from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion, ejecutar_actualizacion
 
+# Total de la reserva = cantidad de entradas * precio de la función + lo gastado en servicios.
+# COALESCE pone 0 si la reserva no tiene entradas o servicios.
 TOTAL_RESERVA_SQL = """
     (COALESCE(en.cantidad, 0) * f.precio + COALESCE(sv.monto, 0)) AS total
 """
@@ -29,7 +31,8 @@ def escribir(sql, parametros=None):
 
 
 def clausula_in(valores, prefijo):
-    """Genera parámetros individuales para las butacas de POST /reservas."""
+    """Arma los marcadores y el dict de parámetros para un IN (...) seguro, sin meter valores a mano en el SQL.
+    Ej: clausula_in([5, 8], "p") -> ("%(p_0)s, %(p_1)s", {"p_0": 5, "p_1": 8})"""
     nombres = [f"{prefijo}_{indice}" for indice in range(len(valores))]
     marcadores_parametros = ", ".join(f"%({nombre})s" for nombre in nombres)
     parametros = {nombre: valor for nombre, valor in zip(nombres, valores)}
@@ -37,9 +40,11 @@ def clausula_in(valores, prefijo):
 
 
 def _construir_filtros(filtros, usuario_propio_id=None):
+    """Arma el WHERE dinámico según los filtros que vinieron y devuelve (texto_where, parametros)."""
     condiciones = []
     parametros = {}
 
+    # Los nombres de columna salen de una tupla fija (por eso van en f-string); los valores siempre como parámetros.
     for campo in ("usuario_id", "funcion_id", "estado"):
         valor = filtros.get(campo)
         if valor is not None:
@@ -251,11 +256,14 @@ def obtener_entradas_para_pago(reserva_id):
 
 
 def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
-    """Confirma una reserva y asigna sus QR en una única transacción."""
+    """Confirma la reserva y asigna los QR en una sola transacción.
+    Devuelve 1 si confirmó, 0 si la reserva ya no estaba pendiente o se venció."""
     with obtener_conexion() as conexion:
         conexion.begin()
         try:
             with conexion.cursor() as cursor:
+                # Solo actualiza si sigue pendiente y dentro del plazo (fecha_compra > fecha_limite):
+                # así no se paga una reserva que otro proceso expiró o canceló.
                 cursor.execute(
                     """
                     UPDATE reservas
@@ -266,11 +274,13 @@ def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
                     """,
                     {"reserva_id": reserva_id, "fecha_limite": fecha_limite},
                 )
+                # No se actualizó ninguna fila: nada que confirmar.
                 if cursor.rowcount != 1:
                     conexion.rollback()
                     return 0
 
                 for entrada_id, codigo_qr in codigos_qr:
+                    # "codigo_qr IS NULL": no pisa un QR ya asignado.
                     cursor.execute(
                         """
                         UPDATE entrada
@@ -286,6 +296,7 @@ def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
                         },
                     )
                     if cursor.rowcount != 1:
+                        # Cae al except, que hace rollback: o se guarda todo o nada.
                         raise RuntimeError(
                             f"No se pudo asignar el QR de la entrada {entrada_id}."
                         )
@@ -404,6 +415,7 @@ def crear_reserva_con_entradas(datos, butaca_ids):
                     {"funcion_id": datos["funcion_id"], **parametros_in},
                 )
                 ocupadas = sorted({int(f["butaca_id"]) for f in cursor.fetchall()})
+                # Alguna butaca ya está tomada: no se inserta nada.
                 if ocupadas:
                     conexion.rollback()
                     return None, ocupadas
@@ -415,6 +427,7 @@ def crear_reserva_con_entradas(datos, butaca_ids):
                     """,
                     datos,
                 )
+                # Id que MySQL le asignó a la reserva recién insertada.
                 reserva_id = cursor.lastrowid
                 # Un solo INSERT multi-fila en vez de uno por butaca (menos viajes a la base).
                 cursor.executemany(
@@ -442,7 +455,9 @@ def obtener_fecha_funcion_de_reserva(reserva_id):
 
 
 def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None, estados_esperados=None):
-    """Actualiza el estado de la reserva."""
+    """Cambia el estado de una reserva y devuelve cuántas filas cambió.
+    Con estados_esperados solo actualiza si sigue en alguno de esos estados (evita cancelar algo
+    que justo cambió de estado). Si el estado es "cancelada" también guarda fecha_cancelacion."""
     condicion_estado = ""
     parametros = {
         "estado": estado,
@@ -462,6 +477,7 @@ def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None, estado
         parametros["fecha_cancelacion"] = fecha_cancelacion
     else:
         sql = "UPDATE reservas SET estado = %(estado)s WHERE id = %(reserva_id)s"
+    # Agrega el "AND estado IN (...)" al final del WHERE.
     sql = sql.rstrip() + condicion_estado
     return ejecutar_actualizacion(sql, parametros)
 
@@ -490,6 +506,7 @@ def eliminar_entradas_reserva(reserva_id):
 
 def procesar_reservas_vencidas(ahora):
     """Expira las reservas pendientes vencidas y devuelve solo los ids que expiró esta llamada."""
+    # Reservas compradas antes de este momento ya vencieron.
     limite = (ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)).replace(tzinfo=None)
     sql_vencidas = ("SELECT id FROM reservas "
                     "WHERE estado = 'pendiente' AND fecha_compra <= %(limite)s")
@@ -498,9 +515,9 @@ def procesar_reservas_vencidas(ahora):
     with obtener_conexion() as conexion:
         conexion.begin()
         with conexion.cursor() as cursor:
-            # Lectura actual + lock: si otro proceso ya las expiró, o se pagaron mientras tanto,
-            # no vuelven a aparecer acá.
-            cursor.execute(sql_vencidas + " FOR UPDATE", {"limite": limite}) #con FOR UPDATE MySQL bloquea esas filas si otro pedido quiere modificarlas (pagar, cancelar, expirar), tiene que esperar al commit
+            # Lectura actual + lock: si otro proceso ya las expiró o se pagaron, no aparecen acá.
+            # con el "FOR UPDATE" Quien quiera modificar esas filas (pagar, cancelar, expirar) espera a este commit.
+            cursor.execute(sql_vencidas + " FOR UPDATE", {"limite": limite})
             ids = [f["id"] for f in cursor.fetchall()]
             if ids:
                 cursor.execute("UPDATE reservas SET estado = 'expirada' WHERE id IN %(ids)s",

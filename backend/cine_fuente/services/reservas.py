@@ -33,12 +33,14 @@ def generar_codigo_ingreso():
 
 
 def error(code, message, description, status):
-    """Construye un error de negocio."""
+    """Lanza un ValueError con el JSON de error y el status HTTP.
+    El errorhandler de app.py lo convierte en la respuesta."""
     raise ValueError(construir_error_api(code, message, description), status)
 
 
 def normalizar_fecha_local(valor):
-    """Normaliza fechas a GMT-3 para compararlas."""
+    """MySQL devuelve fechas sin zona horaria: las marca como GMT-3 (o las convierte si ya
+    tenían zona) para poder compararlas con ahora_gmt3()."""
     zona_gmt3 = timezone(timedelta(hours=-3))
     if valor.tzinfo is None:
         return valor.replace(tzinfo=zona_gmt3)
@@ -76,8 +78,9 @@ def entrada_api(fila):
 
 # GET /reservas, /usuarios/me/reservas, /reservas/{id} y /reservas/{id}/entradas
 
-#se usa para expirar las reservas en estado "pendiente" una vez ya pasados el tiempo antes de varias operaciones (como cancelar)
 def procesar_expiraciones():
+    """Expira las reservas pendientes vencidas y manda el mail de aviso. Se llama antes de operar
+    con reservas y además cada 30 s desde el scheduler (cine_fuente/scheduler.py)."""
     # Expira las pendientes vencidas y recorre los ids que expiró esta llamada
     for id_reserva in compras_repo.procesar_reservas_vencidas(ahora_gmt3()):
         # Si no hay mail configurado (por ejemplo, en Render), no hay nada más que hacer con esta reserva
@@ -100,15 +103,16 @@ def listar_reservas(filtros, limit, offset, usuario_propio_id=None):
     total = compras_repo.contar_reservas(filtros, usuario_propio_id)
     return [reserva_api(reserva) for reserva in reservas], total
 
-#obtiene las reservas del usuario con todos sus detalles
 def listar_reservas_perfil(filtros, limit, offset, usuario_id):
+    """Arma las reservas del perfil con película, sala, entradas (con QR si corresponde) y servicios.
+    Devuelve (lista, total)."""
 
     # una sola conexion a la base para todo el perfil
     reservas, total, entradas, servicios = compras_repo.obtener_datos_perfil(
         filtros, limit, offset, usuario_id
     )
 
-    # agrupamos por reserva una sola vez
+    # dict reserva_id -> lista, para no recorrer todas las entradas por cada reserva
     entradas_por_reserva, servicios_por_reserva = {}, {}
     for entrada in entradas:
         entradas_por_reserva.setdefault(entrada["reserva_id"], []).append(entrada)
@@ -194,6 +198,7 @@ def listar_entradas_reserva(reserva_id, usuario, limit, offset):
 def crear_reserva(usuario_id, funcion_id, butaca_ids):
     """Valida la función y las butacas y crea la reserva pendiente."""
     ahora = ahora_gmt3()
+    # Sin zona horaria, porque así se guarda en MySQL.
     ahora_db = ahora.replace(tzinfo=None)
 
     # Se procesan vencimientos antes de comprobar disponibilidad.
@@ -226,6 +231,7 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
 
     butacas = obtener_butacas(butaca_ids)
 
+    # Si trajo menos de las pedidas, alguna no existe.
     if len(butacas) != len(butaca_ids):
         encontradas = {int(butaca["id"]) for butaca in butacas}
         faltantes = sorted(set(butaca_ids) - encontradas)
@@ -250,6 +256,8 @@ def crear_reserva(usuario_id, funcion_id, butaca_ids):
         error("PRECIO_FUNCION_INVALIDO", "Precio de función inválido",
               "La función no tiene un precio válido para calcular la reserva.", 409)
 
+    # El chequeo final de butacas ocupadas se hace dentro de la transacción con FOR UPDATE,
+    # para que dos compras simultáneas no vendan la misma butaca.
     reserva_id, ocupadas = compras_repo.crear_reserva_con_entradas(
         {"usuario_id": usuario_id, "funcion_id": funcion_id,
          "fecha_compra": ahora_db, "estado": "pendiente"},
@@ -270,6 +278,7 @@ def confirmar_pago(reserva_id, usuario):
         error("RESERVA_NO_ENCONTRADA", "Reserva no encontrada", f"No existe la reserva {reserva_id}.", 404)
     if int(reserva["usuario_id"]) != int(usuario["id"]):
         error("RECURSO_NO_AUTORIZADO", "Acceso denegado", "Solo el titular puede pagar la reserva.", 403)
+    # Chequeo rápido; la garantía real está en el UPDATE de confirmar_reserva_con_qr (puede vencer entre medio).
     if reserva["estado"] != "pendiente":
         error(
             "RESERVA_NO_PENDIENTE",
@@ -287,7 +296,9 @@ def confirmar_pago(reserva_id, usuario):
             409,
         )
 
+    # Lista de (id_entrada, código nuevo).
     codigos_qr = [(int(entrada["id"]), generar_codigo_ingreso()) for entrada in entradas]
+    # Compras anteriores a esto ya vencieron.
     fecha_limite = (
         ahora - timedelta(minutes=RESERVA_EXPIRACION_MINUTOS)
     ).replace(tzinfo=None)
@@ -319,7 +330,7 @@ def confirmar_pago(reserva_id, usuario):
 # PATCH /reservas/{id}
 
 def cancelar_reserva(reserva_id, usuario):
-    """Cancela la reserva si pertenece al usuario y faltan al menos 60 minutos."""
+    """Cancela la reserva si pertenece al usuario y faltan al menos 60 minutos, el estado de la misma es pendiente o confirmada"""
     ahora = ahora_gmt3()
     procesar_expiraciones()
     reserva = compras_repo.obtener_reserva_por_id(reserva_id)
@@ -351,6 +362,7 @@ def cancelar_reserva(reserva_id, usuario):
         reserva_id,
         "cancelada",
         fecha_cancelacion=ahora.replace(tzinfo=None),
+        # Solo cancela si sigue pendiente o confirmada en el momento del UPDATE.
         estados_esperados=("pendiente", "confirmada"),
     )
     if actualizadas != 1:
@@ -362,6 +374,7 @@ def cancelar_reserva(reserva_id, usuario):
         )
 
     datos = compras_repo.obtener_datos_notificacion(reserva_id)
+    # La cancelación ya quedó guardada; si el mail falla solo se anota en el log.
     try:
         if mail_posible({"email": True}):
             datos = compras_repo.obtener_datos_notificacion(reserva_id)
