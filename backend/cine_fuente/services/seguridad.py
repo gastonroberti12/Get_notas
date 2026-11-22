@@ -33,6 +33,7 @@ def generar_token(usuario_id: int, rol: str) -> str:
 
 
 def decodificar_token(token: str) -> dict:
+    """Valida firma, vencimiento y logout del JWT; devuelve sus claims o lanza 401."""
     try:
         claims = jwt.decode(
             token,
@@ -47,6 +48,7 @@ def decodificar_token(token: str) -> dict:
         if filas and filas[0]["fecha_ultimo_logout"]:
             fecha_logout = filas[0]["fecha_ultimo_logout"]
             iat_dt = datetime.fromtimestamp(claims["iat"], tz=timezone.utc).replace(tzinfo=None) #se transcribe la fecha de creacion del token de segundos a tipo datetime  en UTC
+            # Si el token se emitió antes del último logout, ya no vale.
             if iat_dt <= fecha_logout:
                 raise ValueError(construir_error_api(
                     "TOKEN_INVALIDO", "Token inválido", "La sesión fue cerrada. Iniciá sesión nuevamente."

@@ -32,6 +32,7 @@ def obtener_sala(sala_id):
 
 
 def crear_sala(sucursal_id, nombre, capacidad):
+    """Crea una sala en una sucursal existente y devuelve la sala creada (409 si el nombre se repite)."""
     if consultar_sucursal_por_id(sucursal_id) is None:
         _error(
             "sucursal.not.found",
@@ -57,6 +58,7 @@ def crear_sala(sucursal_id, nombre, capacidad):
 
 
 def modificar_sala(sala_id, cambios):
+    """Modifica una sala existente (409 si el nombre se repite en la sucursal). No devuelve nada."""
     obtener_sala(sala_id)
     if "sucursal_id" in cambios and consultar_sucursal_por_id(
         cambios["sucursal_id"]

@@ -4,6 +4,7 @@ from cine_fuente.db import ejecutar_consulta, obtener_conexion
 
 
 def construir_filtros(filtros):
+    """Arma el WHERE según los filtros que vinieron y devuelve (texto_where, parametros)."""
     condiciones = []
     parametros = {}
 

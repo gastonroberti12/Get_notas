@@ -72,6 +72,7 @@ def enviar_confirmacion_pago(datos_reserva):
     if any(not e.get("codigo_qr") for e in entradas):
         raise ValueError("Hay entradas sin código QR asignado.")
     pngs = [generar_qr_png(e["codigo_qr"]) for e in entradas]
+    # Un id único por QR, para referenciarlo desde el HTML con src="cid:...".
     cids = [make_msgid(domain="cineparadiso.local") for _ in entradas]
 
     mensaje = EmailMessage()
@@ -82,8 +83,10 @@ def enviar_confirmacion_pago(datos_reserva):
 
     html = mensaje.get_body(preferencelist=("html",))
     for png, cid in zip(pngs, cids):
+        # Pega cada imagen dentro del HTML.
         html.add_related(png, maintype="image", subtype="png", cid=cid)
     for e, png in zip(entradas, pngs):
+        # Además va como adjunto descargable.
         mensaje.add_attachment(png, maintype="image", subtype="png",
                                filename=f"entrada-butaca-{_butaca(e)}.png")
 
@@ -130,6 +133,7 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
     if not mail_habilitado():
         return
 
+    # Corre en otro hilo.
     def tarea():
         for n in range(1, intentos + 1):
             try:
@@ -138,6 +142,7 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
                 return
             except Exception:
                 logger.exception("Falló el mail de la reserva %s (intento %s)", datos["id"], n)
+                # Cada reintento espera más.
                 time.sleep(espera * n)
         logger.error("Mail NO enviado tras %s intentos (reserva %s)", intentos, datos["id"])
 

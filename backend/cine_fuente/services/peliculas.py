@@ -50,6 +50,7 @@ def insertar_pelicula_segura(datos):
 
 
 def crear_pelicula_desde_omdb(imdb_id, fecha_inicio, fecha_fin):
+    """Trae los datos de OMDb, la guarda activa con su período de cartelera y devuelve la película creada."""
     pelicula_existente = consultar_pelicula_por_imdb(imdb_id)
     if pelicula_existente is not None:
         mensaje = (
@@ -114,6 +115,7 @@ def eliminar_pelicula(pelicula_id):
 
 
 def actualizar_pelicula_por_id(pelicula_id, cambios):
+    """Valida y guarda los cambios de una película (fechas, baja o reactivación). No devuelve nada."""
     pelicula_actual = consultar_pelicula_por_id(pelicula_id)
     if pelicula_actual is None:
         raise ValueError(construir_error_api(
@@ -123,6 +125,7 @@ def actualizar_pelicula_por_id(pelicula_id, cambios):
         ), 404)
 
     cambios = dict(cambios)
+    # Fechas: combina las enviadas con las guardadas y valida el rango.
     if "fecha_inicio_cartelera" in cambios or "fecha_fin_cartelera" in cambios:
         fecha_inicio = convertir_fecha_existente(
             cambios.get(
@@ -164,7 +167,7 @@ def actualizar_pelicula_por_id(pelicula_id, cambios):
                     validar_inicio_no_pasado(inicio_dt)
         _normalizar_fechas_para_bd(cambios)
 
-     # baja: no se puede si tiene reservas activas en funciones futuras. reactivar: exige un periodo de cartelera nuevo
+    # Baja: falla si tiene reservas activas en funciones futuras.
     if cambios.get("activa") is False:
         if not dar_de_baja(pelicula_id):
             raise ValueError(construir_error_api(
@@ -173,6 +176,7 @@ def actualizar_pelicula_por_id(pelicula_id, cambios):
                 "La película tiene reservas activas para funciones futuras.",
             ), 409)
         cambios.pop("activa")
+    # Reactivación: exige un período de cartelera nuevo.
     elif cambios.get("activa") is True and not pelicula_actual["activa"]:
         if (
             "fecha_inicio_cartelera" not in cambios

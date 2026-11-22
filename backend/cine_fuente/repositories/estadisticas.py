@@ -30,8 +30,8 @@ def consulta(sql, parametros):
     return filas
 
 
-# GET /admin/estadisticas/ocupacion/general: suma entradas vendidas y capacidad de las funciones del período.
 def consultar_ocupacion_general(filtros):
+    """GET /admin/estadisticas/ocupacion/general: devuelve un dict con entradas vendidas y capacidad del período."""
     rango, parametros = filtro_fechas("f.fecha_hora", filtros)
     sql = f"""
         SELECT
@@ -60,8 +60,8 @@ def consultar_ocupacion_general(filtros):
     return filas[0] if filas else {"entradas_vendidas": 0, "capacidad_total": 0}
 
 
-# GET /admin/estadisticas/ocupacion/salas: calcula entradas y capacidad agrupadas por sala.
 def consultar_ocupacion_salas(filtros):
+    """GET /admin/estadisticas/ocupacion/salas: devuelve una lista de dict con entradas y capacidad por sala."""
     rango, parametros = filtro_fechas("f.fecha_hora", filtros)
     sql = f"""
         SELECT
@@ -95,8 +95,8 @@ def consultar_ocupacion_salas(filtros):
     return consulta(sql, parametros)
 
 
-# GET /admin/estadisticas/ocupacion/franjas_horarias: cuenta entradas vendidas agrupadas por hora de inicio.
 def consultar_franjas_horarias(filtros):
+    """GET /admin/estadisticas/ocupacion/franjas_horarias: devuelve una lista de dict con entradas por hora de inicio."""
     rango, parametros = filtro_fechas("f.fecha_hora", filtros)
     sql = f"""
         SELECT
@@ -114,8 +114,8 @@ def consultar_franjas_horarias(filtros):
     return consulta(sql, parametros)
 
 
-# GET /admin/estadisticas/ventas/total: calcula importes de entradas y servicios para reservas confirmadas/finalizadas.
 def consultar_ventas_total(filtros):
+    """GET /admin/estadisticas/ventas/total: devuelve un dict con importes de entradas y servicios (confirmadas/finalizadas)."""
     rango, parametros = filtro_fechas("r.fecha_compra", filtros)
     sql_entradas = f"""
         SELECT
@@ -147,8 +147,8 @@ def consultar_ventas_total(filtros):
     }
 
 
-# GET /admin/estadisticas/ventas/generos: agrupa cantidad e importe de entradas por género.
 def consultar_ventas_generos(filtros):
+    """GET /admin/estadisticas/ventas/generos: devuelve una lista de dict con cantidad e importe por género."""
     rango, parametros = filtro_fechas("r.fecha_compra", filtros)
     sql = f"""
         SELECT
@@ -167,8 +167,8 @@ def consultar_ventas_generos(filtros):
     return consulta(sql, parametros)
 
 
-# GET /admin/estadisticas/ventas/peliculas: agrupa cantidad e importe de entradas por película.
 def consultar_ventas_peliculas(filtros):
+    """GET /admin/estadisticas/ventas/peliculas: devuelve una lista de dict con cantidad e importe por película."""
     rango, parametros = filtro_fechas("r.fecha_compra", filtros)
     sql = f"""
         SELECT
@@ -188,8 +188,8 @@ def consultar_ventas_peliculas(filtros):
     return consulta(sql, parametros)
 
 
-# GET /admin/estadisticas/cancelaciones: cuenta reservas del período y calcula cuántas fueron canceladas.
 def consultar_cancelaciones(filtros):
+    """GET /admin/estadisticas/cancelaciones: devuelve un dict con reservas del período y cuántas se cancelaron."""
     rango, parametros = filtro_fechas("r.fecha_compra", filtros)
     sql = """
         SELECT

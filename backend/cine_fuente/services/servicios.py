@@ -24,8 +24,9 @@ def verificar_servicio(servicio_id):
     return None
 
 
-# Verificar acceso y estado de una reserva
 def verificar_reserva(reserva_id, usuario, modificar=False):
+    """Verifica acceso y estado de una reserva.
+    Devuelve None si está todo bien o (error, status) si no."""
 
     if reserva_id <= 0:
         return construir_error_api(
@@ -46,6 +47,7 @@ def verificar_reserva(reserva_id, usuario, modificar=False):
     es_propietario = reserva["usuario_id"] == usuario["id"]
     es_administrador = usuario["rol"] == "administrador"
 
+    # El titular siempre puede; el admin solo puede ver, no modificar.
     if not es_propietario and (modificar or not es_administrador):
         return construir_error_api(
             "ACCESO_DENEGADO",
@@ -65,8 +67,9 @@ def verificar_reserva(reserva_id, usuario, modificar=False):
     return None
 
 
-# Verificar que un servicio reservado pertenezca a la reserva
 def verificar_servicio_reservado(reserva_id, servicio_reserva_id, usuario):
+    """Verifica que el servicio reservado pertenezca a la reserva y que se pueda modificar.
+    Devuelve None si está todo bien o (error, status) si no."""
 
     if servicio_reserva_id <= 0:
         return construir_error_api(
