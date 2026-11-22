@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from constants import RESERVA_EXPIRACION_MINUTOS
-from cine_fuente.db import ejecutar_consulta, ejecutar_escritura, obtener_conexion, ejecutar_actualizacion
+from cine_fuente.db import ejecutar_consulta, obtener_conexion, ejecutar_actualizacion
 
 # Total de la reserva = cantidad de entradas * precio de la función + lo gastado en servicios.
 # COALESCE pone 0 si la reserva no tiene entradas o servicios.
@@ -23,11 +23,6 @@ TOTAL_RESERVA_JOINS = """
 def consultar(sql, parametros=None):
     """Ejecuta una consulta de lectura en db.py."""
     return ejecutar_consulta(sql, parametros or {})
-
-
-def escribir(sql, parametros=None):
-    """Ejecuta una escritura en db.py."""
-    return ejecutar_escritura(sql, parametros or {})
 
 
 def clausula_in(valores, prefijo):
@@ -219,31 +214,6 @@ def obtener_butacas_ocupadas(funcion_id, butaca_ids):
     return [int(fila["butaca_id"]) for fila in filas]
 
 
-def insertar_reserva(datos):
-    """Inserta una reserva sin almacenar su total calculado."""
-    sql = """
-        INSERT INTO reservas
-            (usuario_id, funcion_id, fecha_compra, estado, fecha_cancelacion)
-        VALUES
-            (%(usuario_id)s, %(funcion_id)s, %(fecha_compra)s, %(estado)s, NULL)
-    """
-    return escribir(sql, datos)
-
-
-def insertar_entrada(reserva_id, butaca_id):
-    """Inserta una entrada por butaca con código QR nulo."""
-    sql = """
-        INSERT INTO entrada (reserva_id, butaca_id, codigo_qr, fecha_uso)
-        VALUES (%(reserva_id)s, %(butaca_id)s, NULL, NULL)
-    """
-    return escribir(sql, {"reserva_id": reserva_id, "butaca_id": butaca_id})
-
-
-def eliminar_reserva_incompleta(reserva_id):
-    """Elimina la fila recién creada si falló la creación de sus entradas."""
-    return escribir("DELETE FROM reservas WHERE id = %(reserva_id)s", {"reserva_id": reserva_id})
-
-
 def obtener_entradas_para_pago(reserva_id):
     """Obtiene todas las entradas cuyos QR deben generarse."""
     sql = """
@@ -305,26 +275,6 @@ def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
         except Exception:
             conexion.rollback()
             raise
-
-
-def actualizar_entrada_qr(entrada_id, codigo_qr):
-    """Asigna un QR."""
-    sql = """
-        UPDATE entrada
-        SET codigo_qr = %(codigo_qr)s
-        WHERE id = %(entrada_id)s
-    """
-    return escribir(sql, {"codigo_qr": codigo_qr, "entrada_id": entrada_id})
-
-
-def restaurar_entrada_pendiente(entrada_id):
-    """Limpia el QR si falla la confirmación parcial del pago."""
-    sql = """
-        UPDATE entrada
-        SET codigo_qr = NULL
-        WHERE id = %(entrada_id)s
-    """
-    return escribir(sql, {"entrada_id": entrada_id})
 
 
 def obtener_datos_notificacion(reserva_id):
@@ -480,25 +430,6 @@ def actualizar_estado_reserva(reserva_id, estado, fecha_cancelacion=None, estado
     # Agrega el "AND estado IN (...)" al final del WHERE.
     sql = sql.rstrip() + condicion_estado
     return ejecutar_actualizacion(sql, parametros)
-
-
-def restaurar_estado_reserva(reserva_id, estado, fecha_cancelacion=None):
-    """Compensa una escritura parcial ante un error."""
-    sql = """
-        UPDATE reservas
-        SET estado = %(estado)s, fecha_cancelacion = %(fecha_cancelacion)s
-        WHERE id = %(reserva_id)s
-    """
-    return escribir(sql, {
-        "estado": estado,
-        "fecha_cancelacion": fecha_cancelacion,
-        "reserva_id": reserva_id,
-    })
-
-
-def eliminar_entradas_reserva(reserva_id):
-    """Elimina entradas de una reserva incompleta durante una compensación."""
-    return escribir("DELETE FROM entrada WHERE reserva_id = %(reserva_id)s", {"reserva_id": reserva_id})
 
 
 # Expiración
