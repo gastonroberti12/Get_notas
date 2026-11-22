@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from routes.products import peliculas_bp
+from frontend.routes.peliculas import peliculas_bp
 from routes.cines import cines_bp
 from routes.users import users_bp
 from routes.backoffice.backoffice import backoffice_bp
