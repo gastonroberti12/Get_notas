@@ -7,7 +7,6 @@ Trabajo final de la cátedra Lanzillotta.
 - Gastón Roberti - 116174
 - Leandro Piccicacco - 116059
 - Cristian Nahuel Daglio - 116017
-- Tiago Elias Melilli - 116111
 - Juan Francisco Skanata - 116128
 - Alexis Martin Blazek - 115977
 - Lucía Hernández Tamagno 116281
