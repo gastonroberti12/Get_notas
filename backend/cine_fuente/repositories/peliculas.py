@@ -14,8 +14,8 @@ def consultar_pelicula_por_imdb(imdb_id):
     return filas[0] if filas else None
 
 
-# Consulta las películas almacenadas; con activa, filtra por ese estado.
 def consultar_peliculas(activa=None, sucursal_id=None, titulo=None, genero=None):
+    """Devuelve una lista de dict con las películas según activa, sucursal (con funciones futuras), título y género."""
     ahora = ahora_gmt3().replace(tzinfo=None)
     condiciones = []
     parametros = []

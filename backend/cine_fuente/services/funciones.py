@@ -62,6 +62,8 @@ def _crear_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, prec
 def validar_programacion_funcion_pelicula(
     cursor, pelicula_id, sala_id, fecha_hora, excluir_funcion_id=None
 ):
+    """Valida película, sala, cartelera y que no se superponga con otras funciones de la sala.
+    Devuelve el inicio (fecha local sin zona)."""
     pelicula = obtener_pelicula_para_funcion(cursor, pelicula_id)
     if pelicula is None:
         raise ValueError(construir_error_api(
@@ -69,6 +71,7 @@ def validar_programacion_funcion_pelicula(
             "La película indicada no existe.",
         ), 404)
 
+    # Lock sobre la sala para que dos altas simultáneas no se pisen.
     sala = bloquear_sala_para_funcion(cursor, sala_id)
     if sala is None:
         raise ValueError(construir_error_api(
@@ -104,6 +107,7 @@ def validar_programacion_funcion_pelicula(
             "La función debe estar dentro del período de cartelera de la película.",
         ), 409)
 
+    # +30 minutos: margen de limpieza entre funciones.
     fin_intervalo = fin_proyeccion + timedelta(minutes=30)
     for funcion in consultar_funciones_sala_en_transaccion(
         cursor, sala_id, excluir_funcion_id
@@ -115,6 +119,7 @@ def validar_programacion_funcion_pelicula(
         existente_fin = existente_inicio + timedelta(
             minutes=existente_duracion + 30
         )
+        # Dos intervalos se pisan si cada uno empieza antes de que termine el otro.
         if inicio < existente_fin and existente_inicio < fin_intervalo:
             raise ValueError(construir_error_api(
                 "funcion.overlap", "Horario ocupado",
@@ -145,6 +150,8 @@ def actualizar_funcion_por_id(funcion_id, cambios):
 
 
 def actualizar_funcion_en_transaccion(cursor, funcion_id, cambios):
+    """Aplica los cambios a una función dentro de la transacción; si cambian película, sala,
+    horario o se reactiva, vuelve a validar la programación."""
     funcion = obtener_funcion_para_actualizar(cursor, funcion_id)
     if funcion is None:
         raise ValueError(construir_error_api(

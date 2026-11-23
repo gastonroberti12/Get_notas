@@ -52,11 +52,13 @@ def validar_entrada(entrada_id, codigo_qr):
     ahora = ahora_gmt3()
     inicio = normalizar_fecha_local(entrada["fecha_hora"])
     limite_ingreso = inicio + timedelta(minutes=TOLERANCIA_INGRESO_MIN)
+    # ventana de ingreso (TOLERANCIA_INGRESO_MIN)
     if ahora < inicio - timedelta(minutes=TOLERANCIA_INGRESO_MIN) or ahora > limite_ingreso:
         error_entrada("FUNCION_FUERA_DE_HORARIO", "La entrada aún no está habilitada o la función ya terminó", 409)
 
     # MySQL guarda DATETIME sin zona horaria; mantenemos la hora local GMT-3.
     fecha_uso = ahora.replace(tzinfo=None)
+    # el UPDATE repite todos estos chequeos: si dos personas validan el mismo QR a la vez, solo una entra
     registrada = entradas_repo.registrar_uso_entrada(entrada_id, codigo_qr, fecha_uso, TOLERANCIA_INGRESO_MIN)
     if not registrada:
         error_entrada(

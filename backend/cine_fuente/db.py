@@ -8,6 +8,7 @@ from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 
 def obtener_conexion():
+    """Abre una conexión a MySQL (con TLS si DB_SSL=true) que devuelve las filas como dict."""
 
     configuracion_ssl = {}
 
@@ -54,6 +55,7 @@ def ejecutar_actualizacion(sql, params=None):
 
 
 def ejecutar_transaccion(operacion):
+    # recibe una funcion (casi siempre un lambda) y le pasa el cursor: si sale bien hace commit, si falla rollback
     conexion = obtener_conexion()
     try:
         with conexion.cursor() as cursor:

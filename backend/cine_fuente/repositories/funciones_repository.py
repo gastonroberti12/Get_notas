@@ -12,7 +12,6 @@ SELECT_FUNCION = (
 )
 
 
-# Consulta las funciones registradas.
 def consultar_funciones(
     pelicula_id=None,
     sala_id=None,
@@ -20,6 +19,7 @@ def consultar_funciones(
     sucursal_id=None,
     fecha=None,
 ):
+    """Devuelve una lista de dict con las funciones que cumplen los filtros, ordenadas por fecha."""
     sql = SELECT_FUNCION + " WHERE 1 = 1" #Con 1 = 1 cada if agrega " AND" sin preocuparse. Y si no viene ningún filtro, queda WHERE 1 = 1, que trae todo
     params = []
     if pelicula_id is not None:

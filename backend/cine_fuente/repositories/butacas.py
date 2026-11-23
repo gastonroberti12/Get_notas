@@ -58,7 +58,10 @@ def contar_butacas(sala_id):
 
 
 def generar_butacas_atomico(sala_id):
+    """Crea las butacas de una sala en una transacción, 10 por fila. Devuelve cuántas creó."""
+    # Se define adentro para pasarla a ejecutar_transaccion, que hace commit/rollback.
     def operacion(cursor):
+        # FOR UPDATE: bloquea la sala para que dos pedidos no generen butacas a la vez.
         cursor.execute(
             "SELECT capacidad FROM salas WHERE id = %s FOR UPDATE",
             (sala_id,),
@@ -92,6 +95,7 @@ def generar_butacas_atomico(sala_id):
 
         cantidad = capacidad
         for fila_numero in range(1, capacidad // 10 + 1):
+            # 1 -> "A", 2 -> "B"...
             fila = chr(64 + fila_numero)
             for numero in range(1, 11):
                 cursor.execute(

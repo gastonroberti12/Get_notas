@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from cine_fuente.scheduler import iniciar_scheduler
 
+# override=False: si la variable ya existe (Docker o Render) el .env no la pisa
 load_dotenv(Path(__file__).with_name('.env'), override=False)
 
 from flask import Flask
@@ -60,6 +61,9 @@ def crear_app():
             f"http.{error.code}", error.name, error.description
         ), error.code)
 
+
+    # todas las capas cortan con raise ValueError(json, status) y aca se convierte en la respuesta {"errors": [...]}.
+    # por eso casi ninguna ruta tiene try/except
     @app.errorhandler(ValueError)
     def manejar_error_validacion(error):
         return respuesta_error_excepcion(error)
@@ -72,6 +76,8 @@ def crear_app():
 
 
 app = crear_app()
+
+# arranca el job que vence las reservas impagas cada 30 s. esta afuera del __main__ para que tambien corra con gunicorn
 iniciar_scheduler()
 
 if __name__ == '__main__':
