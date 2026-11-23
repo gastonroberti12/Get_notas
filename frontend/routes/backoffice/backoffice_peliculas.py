@@ -42,6 +42,7 @@ def peliculas_admin():
 @backoffice_bp.route("/backoffice/peliculas/buscar")
 @solo_admin
 def pelicula_buscar():
+    """Busca películas en OMDb a través del backend y marca cuáles ya están cargadas en el cine."""
     q = request.args.get("q", "").strip()
     pagina = request.args.get("pagina", 1, type=int)
     resultados, total, error = [], 0, None
@@ -53,6 +54,7 @@ def pelicula_buscar():
             total = datos.get("total_resultados", 0)
             locales = peliculas_locales()
             if locales is not None:
+                # id_externo -> activa: para marcar en los resultados las que ya están cargadas y si están de baja
                 estado_por_imdb = {
                     pelicula["id_externo"]: pelicula["activa"]
                     for pelicula in locales
@@ -78,11 +80,14 @@ def pelicula_buscar():
 @backoffice_bp.route("/backoffice/peliculas/nueva", methods=["GET", "POST"])
 @solo_admin
 def pelicula_nueva():
+    """GET: si viene ?id= precarga el formulario con los datos de OMDb.
+    POST: crea la película con POST /peliculas y vuelve al listado."""
     if request.method == "POST":
         valores = {campo: request.form.get(campo, "").strip() for campo in CAMPOS}
         valores["id_externo"] = request.form.get("id_externo", "").strip()
         inicio = request.form.get("fecha_inicio_cartelera", "")
         fin = request.form.get("fecha_fin_cartelera", "")
+        # a_iso_gmt3: pasa el valor del input datetime-local al ISO con zona horaria que pide el backend
         datos = {
             "id_externo": valores["id_externo"],
             "fecha_inicio_cartelera": a_iso_gmt3(inicio),
@@ -93,6 +98,7 @@ def pelicula_nueva():
         if status == 201:
             flash("Película agregada correctamente.", "exito")
             return redirect(url_listado())
+        # 401: la sesión venció; se limpia para que vuelva a loguearse
         if status == 401:
             session.clear()
             return redirect(url_for("users.login"))
@@ -111,6 +117,7 @@ def pelicula_nueva():
         status, detalle = obtener_datos_omdb(imdb_id)
         if status == 200:
             valores = {campo: detalle.get(campo) or "" for campo in CAMPOS}
+            # OMDb manda varios géneros ("Action, Drama"); se queda solo con el primero
             valores["genero"] = valores["genero"].split(",")[0].strip()
         else:
             aviso = (
@@ -132,6 +139,8 @@ def traer_pelicula(pelicula_id):
 @backoffice_bp.route("/backoffice/peliculas/<int:pelicula_id>/editar", methods=["GET", "POST"])
 @solo_admin
 def pelicula_editar(pelicula_id):
+    """GET: muestra el formulario con los datos actuales.
+    POST: manda SOLO los campos que cambiaron con PATCH /peliculas/<id>."""
     actual = traer_pelicula(pelicula_id)
     accion = url_for("backoffice.pelicula_editar", pelicula_id=pelicula_id)
     valores = {campo: actual.get(campo) or "" for campo in CAMPOS}
@@ -154,6 +163,7 @@ def pelicula_editar(pelicula_id):
     }
     cambios = {}
     error = None
+    # Compara cada campo enviado con el actual: solo los distintos van en "cambios"
     for campo, nuevo in enviados.items():
         if nuevo == str(valores[campo]):
             continue
@@ -164,6 +174,7 @@ def pelicula_editar(pelicula_id):
             cambios[campo] = duracion
         else:
             cambios[campo] = nuevo or None
+    # Reactivar: el backend exige un período de cartelera nuevo, así que siempre se mandan las dos fechas
     if not valores["activa"] and request.form.get("reactivar") == "true":
         cambios["activa"] = True
         cambios["fecha_inicio_cartelera"] = a_iso_gmt3(
@@ -183,6 +194,7 @@ def pelicula_editar(pelicula_id):
             volver=url_listado(),
             error=error,
         )
+    # Nada distinto: no se llama al backend, se avisa en el formulario
     if not cambios:
         return render_template(
             "backadmin/pelicula_form.html",
@@ -194,6 +206,7 @@ def pelicula_editar(pelicula_id):
         )
 
     status, cuerpo = actualizar_pelicula(pelicula_id, cambios)
+    # 204 = guardado OK (el PATCH no devuelve cuerpo)
     if status == 204:
         return redirect(url_listado())
     if status == 401:

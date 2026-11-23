@@ -22,6 +22,7 @@ def _payload():
 @backoffice_bp.route("/backoffice/servicios", methods=["GET", "POST"]) # asocio servicios_admin al bp backoffice
 @solo_admin
 def servicios_admin(): 
+    """GET: lista los servicios (activos o dados de baja). POST: da de alta uno nuevo."""
     error_alta = None
 
     if request.method == "POST":
@@ -58,6 +59,7 @@ def servicios_estado(servicio_id):
 @backoffice_bp.route("/backoffice/servicios/<int:servicio_id>/editar", methods=["GET", "POST"])
 @solo_admin
 def servicios_editar(servicio_id):
+    """GET: muestra el formulario con el servicio. POST: guarda los cambios con PATCH /servicios/<id>."""
     error = None
 
     if request.method == "POST":

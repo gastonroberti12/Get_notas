@@ -54,12 +54,15 @@ def listado_peliculas():
 
 @peliculas_bp.route("/peliculas/<int:pelicula_id>")
 def detalle_pelicula(pelicula_id):
+    """Trae la película, sus funciones activas en la sucursal, las reseñas y, si sos cliente,
+    si podés reseñarla."""
     status, pelicula = obtener_pelicula(pelicula_id)
     if status != 200:
         abortar_por_status(status)
 
     status, datos = listar_funciones(f"&pelicula_id={pelicula_id}&activa=true{filtro_sucursal()}")
     funciones = datos.get("funciones", []) if status == 200 else []
+    # El backend manda fechas ISO; se muestran como "21/11" y "19:00"
     for f in funciones:
         f["dia"] = formatear_fecha(f.get("fecha_hora"), "%d/%m", "")
         f["hora"] = formatear_fecha(f.get("fecha_hora"), "%H:%M", "")

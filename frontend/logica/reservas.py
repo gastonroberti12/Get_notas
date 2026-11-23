@@ -58,7 +58,8 @@ def estado_entrada(reserva, entrada, ingreso_vencido):
 
 
 def armar_reserva(reserva):
-    #prepara los datos de una reserva para mostrarlos en el perfil
+    """Adapta una reserva del backend a lo que usa perfil.html: renombra campos, calcula el estado
+    de cada entrada, separa fecha y hora, y decide si se puede cancelar."""
     ingreso_vencido = funcion_termino_tolerancia(reserva)
 
     entradas = []
