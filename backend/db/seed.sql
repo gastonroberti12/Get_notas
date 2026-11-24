@@ -34,7 +34,7 @@ CROSS JOIN secuencia AS numeros;
 INSERT INTO usuarios (nombre, apellido, email, contrasena, rol) VALUES
     ('Admin', 'Paradiso', 'cineparadisoarg@gmail.com',
      'scrypt:32768:8:1$BlIl9UlLuZjSmkI4$2192facdac3616c69fe2665c9a2489b71ad98e6679a866b1cc3bcc70272ddd3c880a726fcd544eba2438e55b4cb1e2991392df2a55a101886e97fbf7028c3c3d',
-     'administrador'),
+     'administrador');
 
 INSERT INTO servicios (nombre, descripcion, precio) VALUES
     ('Pochoclo grande', 'Pochoclo salado o dulce', 4500),
