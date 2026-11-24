@@ -470,10 +470,11 @@
 
 @media (max-width: 860px) {
   .perfil {
-    grid-template-columns: 1fr;            /* una sola columna */
+    grid-template-columns: 1fr;   /* una sola columna */
     margin: 16px auto;
-    padding: 0;                            /*gi
-  .perfil_datos { position: static; }      /* sin sticky en mobile */
+    padding: 0;                   /* main ya aporta el padding lateral */
+  }
+  .perfil_datos { position: static; }   /* sin sticky en mobile */
 }
 
 @media (max-width: 600px) {
