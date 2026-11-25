@@ -5,6 +5,7 @@
 {% block subtitulo %}<p class="admin-subtitle">Consultá las salas y sus capacidades.</p>{% endblock %}
 
 {% block contenido_admin %}
+<!-- Título y descripción -->
 <div class="admin-section-heading">
     <h2>Salas disponibles</h2>
 </div>
@@ -40,6 +41,7 @@
     </div>
 
     {% elif not error %}
+    <!-- Sin salas para mostrar -->
     <div class="admin-empty-chart">
         <span class="admin-chart-icon">▥</span>
         <p>No hay salas cargadas</p>

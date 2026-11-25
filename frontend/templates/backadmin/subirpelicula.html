@@ -15,12 +15,14 @@
                 Buscá por título y elegí una de las coincidencias de OMDb.
             </p>
 
+            <!-- BUSCADOR: GET a backoffice.pelicula_buscar con el título -->
             <form class="admin-search" method="get" action="{{ url_for('backoffice.pelicula_buscar') }}">
                 <input type="search" name="q" value="{{ q or '' }}" maxlength="100"
                        required placeholder="Ejemplo: Inception" aria-label="Título de la película" autofocus>
                 <button type="submit" class="admin-btn-primary">Buscar</button>
             </form>
 
+            <!-- Según la búsqueda: error de OMDb, sin resultados, resultados o explicación inicial -->
             {% if error %}
             <div class="admin-alert" role="alert">{{ error }}</div>
             {% elif buscado and not resultados %}
@@ -33,6 +35,7 @@
                 {{ total }} resultado{{ 's' if total != 1 }} para “{{ q }}”
             </p>
 
+            <!-- RESULTADOS: las que ya están cargadas no tienen link (no se pueden volver a agregar) -->
             <div class="admin-results">
                 {% for resultado in resultados %}
                 <a class="admin-result"
@@ -53,6 +56,7 @@
                 {% endfor %}
             </div>
 
+            <!-- Paginación: OMDb devuelve 10 resultados por página -->
             <div class="admin-pager">
                 {% if pagina > 1 %}
                 <a class="admin-btn-secondary"

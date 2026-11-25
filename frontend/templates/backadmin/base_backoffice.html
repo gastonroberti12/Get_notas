@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block head %}
+<!-- CSS común del backoffice; cada página puede sumar el suyo en el bloque head_extra -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backadmin/backoffice.css') }}">
 {% block head_extra %}{% endblock %}
 {% endblock %}
 
 {% block content %}
+<!-- PLANTILLA BASE DEL BACKOFFICE: la extienden todas las páginas de administración -->
 <section class="admin-panel">
+    <!-- Encabezado: cada página completa los bloques titulo_admin y subtitulo -->
     <div class="admin-header">
         <div>
             <p class="admin-eyebrow">CINE PARADISO · BACKOFFICE</p>
@@ -16,7 +19,9 @@
         <span class="admin-role">Administrador</span>
     </div>
     <div class="admin-layout">
+        <!-- Menú lateral, igual en todas las páginas -->
         {% include "backadmin/barralateral.html" %}
+        <!-- Contenido propio de cada página (bloque contenido_admin) -->
         <div class="admin-content">
             {% block contenido_admin %}{% endblock %}
         </div>

@@ -15,6 +15,7 @@
                 su validez y autorizar el ingreso.
             </p>
 
+            <!-- FORMULARIO: envía el código a backoffice.validar_qr_admin (también lo envía qr_scanner.js al leer el QR) -->
             <div class="admin-form-card">
 
                 <form class="admin-form" method="post" id="form-validar" action="{{ url_for('backoffice.validar_qr_admin') }}">
@@ -34,6 +35,7 @@
                             generado al confirmar la compra.
                         </small>
 
+                        <!-- Lector con la cámara: lo maneja qr_scanner.js -->
                         <div class="admin-camara">
                             <button type="button" id="btn-camara" class="admin-btn-secondary">
                                 Escanear con la cámara
@@ -82,6 +84,7 @@
                 El resultado de la verificación aparecerá
                 en esta sección.
             </p>
+            <!-- Si ya se validó algo: válida o rechazada, con los datos de la entrada si los hay -->
             <div class="admin-form-card">
                 {% if resultado %}
                 <div class="validacion-resultado {{ 'valida' if resultado.ok else 'rechazada' }}">

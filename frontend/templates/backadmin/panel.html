@@ -9,6 +9,7 @@
 
 {% block contenido_admin %}
 
+            <!-- RESUMEN DE ESTADÍSTICAS -->
             <div class="admin-section-heading">
                 <h2>Estadísticas</h2>
                 <a href="{{ url_for('backoffice.estadisticas_admin') }}">Ver estadísticas completas</a>
@@ -16,6 +17,7 @@
 
             <p class="admin-description">Resumen de la actividad de Cine Paradiso.</p>
 
+            <!-- Tarjetas con los 4 indicadores; si uno falla muestra un guion y el error -->
             <div class="admin-stats">
                 {% for titulo, s in [("Ocupación", d.ocupacion), ("Entradas", d.entradas), ("Ventas", d.importe), ("Cancelaciones", d.cancelaciones)] %}
                 <article class="admin-stat">
@@ -31,6 +33,7 @@
                 {% endfor %}
             </div>
 
+            <!-- GRÁFICOS: barras por género y columnas por franja horaria (sin datos o con error, un recuadro vacío) -->
             <div class="admin-charts">
                 <section class="admin-chart">
                     <h3>Ventas por género</h3>

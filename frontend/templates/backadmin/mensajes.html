@@ -1,3 +1,4 @@
+<!-- Mensajes flash y error de la página: se incluye en los listados y formularios del backoffice -->
 {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
   <p class="admin-msg admin-msg-{{ categoria }}">{{ mensaje }}</p>
 {% endfor %}

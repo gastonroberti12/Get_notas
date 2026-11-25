@@ -9,6 +9,7 @@
 
 {% block contenido_admin %}
 
+            <!-- RESUMEN GENERAL -->
             <div class="admin-section-heading">
                 <h2>Resumen general</h2>
             </div>
@@ -34,6 +35,7 @@
                 <a class="admin-btn-secondary" href="{{ url_for('backoffice.estadisticas_admin') }}">Limpiar</a>
             </form>
 
+            <!-- Tarjetas con los 4 indicadores; si uno falla muestra un guion y el error -->
             <div class="admin-stats">
                 {% for titulo, s in [("Ocupación general", d.ocupacion), ("Entradas vendidas", d.entradas), ("Ventas totales", d.importe), ("Cancelaciones", d.cancelaciones)] %}
                 <article class="admin-stat">
@@ -49,6 +51,7 @@
                 {% endfor %}
             </div>
 
+            <!-- OCUPACIÓN POR SALA: una barra por sala (sin datos o con error, un recuadro vacío) -->
             <div class="admin-section-heading admin-list-heading">
                 <h2>Ocupación</h2>
             </div>
@@ -75,6 +78,7 @@
                 </section>
             </div>
 
+            <!-- VENTAS: barras por género y columnas por franja horaria (la más vendida se destaca) -->
             <div class="admin-section-heading admin-list-heading">
                 <h2>Ventas</h2>
             </div>

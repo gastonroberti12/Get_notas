@@ -8,6 +8,7 @@
 {% block subtitulo %}<p class="admin-subtitle">Revisá los datos y definí el período en cartelera.</p>{% endblock %}
 
 {% block contenido_admin %}
+            <!-- Sirve para alta (datos de OMDb, solo lectura salvo las fechas) y para edición (todo editable) -->
             <div class="admin-section-heading">
                 <h2>{{ 'Editar película' if editando else 'Agregar película' }}</h2>
             </div>
@@ -16,15 +17,18 @@
                    else 'Todos los campos se pueden editar antes de guardar.' }}
             </p>
 
+            <!-- Mensajes de error o aviso -->
             {% if error %}<div class="admin-alert" role="alert">{{ error }}</div>{% endif %}
             {% if aviso %}
             <div class="admin-alert admin-alert-info" role="status">{{ aviso }}</div>
             {% endif %}
 
+            <!-- FORMULARIO: solo se muestra si hay datos; envía a backoffice.pelicula_editar o a backoffice.pelicula_nueva -->
             {% if v.titulo %}
             <div class="admin-form-card">
                 <form class="admin-form" method="post"
                       action="{{ url_for('backoffice.pelicula_editar', pelicula_id=v.id) if editando else url_for('backoffice.pelicula_nueva') }}">
+                    <!-- En el alta viaja oculto el id de IMDb para que el backend traiga la película de OMDb -->
                     {% if not editando %}
                     <input type="hidden" name="id_externo" value="{{ v.id_externo or '' }}">
                     {% endif %}
@@ -36,6 +40,7 @@
                             <span id="poster-vacio" {% if v.poster_url %}hidden{% endif %}>Sin póster</span>
                         </div>
 
+                        <!-- Datos de la película (readonly en el alta) -->
                         <div class="admin-form-fields">
                             <div class="admin-form-group">
                                 <label for="titulo">Título *</label>
@@ -70,6 +75,7 @@
                         </div>
                     </div>
 
+                    <!-- Período de cartelera (el JS sugiere el fin = inicio + 7 días) -->
                     <div class="admin-form-dates">
                         <div class="admin-form-group">
                             <label for="fecha_inicio_cartelera">Inicio de cartelera *</label>
@@ -83,6 +89,7 @@
                         </div>
                     </div>
                     <p class="admin-form-help">La película puede permanecer en cartelera como máximo 7 días.</p>
+                    <!-- Solo para películas dadas de baja: tildar para reactivarla con las fechas de arriba -->
                     {% if editando and not v.activa %}
                     <label class="admin-form-help">
                         <input type="checkbox" name="reactivar" value="true">
@@ -90,6 +97,7 @@
                     </label>
                     {% endif %}
 
+                    <!-- Botones: volver al listado (edición) o al buscador (alta) -->
                     <div class="admin-form-actions">
                         {% if editando %}
                         <a href="{{ url_for('backoffice.peliculas_admin') }}" class="admin-btn-secondary">Cancelar</a>
@@ -101,6 +109,7 @@
                 </form>
             </div>
             {% elif aviso %}
+            <!-- No se pudieron traer los datos de OMDb: solo se ofrece volver -->
             <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-secondary">Volver al buscador</a>
             {% endif %}
 {% endblock contenido_admin %}
