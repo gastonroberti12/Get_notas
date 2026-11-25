@@ -41,8 +41,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Cambiar película con animación
     function mostrarPelicula(indice, direccion = 1) {
 
-        if (animando) return;
-
+        if (animando) return; // si hay una animacion en curso no arranca otra 
+        // el % hace que de la vuelta: despues de la ultima viene la primera y antes de la primera, la ultima
         const nuevoIndice = (indice + peliculas.length) % peliculas.length;
 
         if (nuevoIndice === indiceActual) return;
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!contenedorFiltros || peliculas.length === 0) return;
 
-    // Obtener todos los géneros disponibles
+    // los generos salen del data-generos de cada tarjeta (index.html). el filtro es solo en el navegador, no le pide nada al back
     const generos = new Set();
 
     peliculas.forEach(pelicula => {
