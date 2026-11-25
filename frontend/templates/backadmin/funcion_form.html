@@ -5,12 +5,15 @@
 
 {% block contenido_admin %}
 {% set editando = funcion and funcion.id %}
+      <!-- El mismo formulario sirve para crear y para editar: si la función ya tiene id, se está editando -->
       <div class="admin-section-heading"><h2>{{ 'Editar función' if editando else 'Agregar función' }}</h2></div>
       {% include "backadmin/mensajes.html" %}
+      <!-- FORMULARIO: envía a backoffice.editar_funcion o a backoffice.nueva_funcion -->
       <div class="admin-form-card">
         <form method="post" class="admin-form"
               action="{{ url_for('backoffice.editar_funcion', funcion_id=funcion.id) if editando else url_for('backoffice.nueva_funcion') }}">
 
+          <!-- Selects de película (solo activas) y sala; al editar queda elegida la actual -->
           <div class="admin-form-group">
             <label for="pelicula_id">Película</label>
             <select id="pelicula_id" name="pelicula_id" required>
@@ -41,6 +44,7 @@
             <input type="number" id="precio" name="precio" min="1" step="1" value="{{ funcion.precio }}" required>
           </div>
 
+          <!-- Botones: cancelar vuelve al listado -->
           <div class="admin-form-actions">
             <a href="{{ url_for('backoffice.funciones_admin') }}" class="admin-btn-secondary">Cancelar</a>
             <button type="submit" class="admin-btn-primary">{{ 'Guardar cambios' if editando else 'Crear función' }}</button>

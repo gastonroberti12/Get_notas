@@ -7,16 +7,19 @@
 {% block titulo_admin %}Gestión de películas{% endblock %}
 
 {% block contenido_admin %}
+            <!-- Título y botón que lleva al buscador de OMDb para agregar una película -->
             <div class="admin-section-heading admin-heading-listado">
                 <h2>Películas cargadas</h2>
                 <a href="{{ url_for('backoffice.pelicula_buscar') }}" class="admin-btn-primary">Agregar película</a>
             </div>
 
+            <!-- Pestañas: activas / dadas de baja o vencidas -->
             {% with etiqueta_activos="Activas", etiqueta_bajas="Dadas de baja o vencidas" %}
                 {% include "backadmin/filtro_estado.html" %}
             {% endwith %}
             {% include "backadmin/mensajes.html" %}
 
+            <!-- LISTADO DE PELÍCULAS: una fila por película con sus acciones -->
             {% if peliculas %}
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -40,6 +43,7 @@
                                 <div class="admin-actions">
                                     <a href="{{ url_for('backoffice.pelicula_editar', pelicula_id=p.id) }}"
                                        class="admin-btn-secondary">Editar</a>
+                                    <!-- Activa: envía la baja a backoffice.cambiar_estado_pelicula. Inactiva: para reactivarla hay que definir fechas nuevas en el formulario de edición -->
                                     {% if p.activa and not ver_inactivos %}
                                     <form method="post"
                                           action="{{ url_for('backoffice.cambiar_estado_pelicula', pelicula_id=p.id) }}"
@@ -59,6 +63,7 @@
                 </table>
             </div>
             {% elif not error %}
+            <!-- Sin películas para mostrar -->
             <p class="admin-description">{{ 'No hay películas dadas de baja.' if ver_inactivos else 'Todavía no hay películas cargadas.' }}</p>
             {% endif %}
 {% endblock contenido_admin %}

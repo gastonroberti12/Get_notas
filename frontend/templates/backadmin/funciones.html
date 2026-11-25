@@ -4,16 +4,19 @@
 {% block titulo_admin %}Gestión de funciones{% endblock %}
 
 {% block contenido_admin %}
+      <!-- Título y botón para agregar una función -->
       <div class="admin-section-heading admin-heading-listado">
         <h2>Funciones</h2>
         <a href="{{ url_for('backoffice.nueva_funcion') }}" class="admin-btn-primary">Agregar función</a>
       </div>
       
+      <!-- Pestañas: próximas / pasadas o dadas de baja -->
       {% with etiqueta_activos="Próximas", etiqueta_bajas="Pasadas o dadas de baja" %}
         {% include "backadmin/filtro_estado.html" %}
       {% endwith %}
 
       {% include "backadmin/mensajes.html" %}
+      <!-- LISTADO DE FUNCIONES: una fila por función con sus acciones -->
       {% if funciones %}
       <div class="admin-table-wrap">
         <table class="admin-table">
@@ -38,9 +41,11 @@
 
                   <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
                     class="admin-btn-secondary">Editar</a>
+                  <!-- Una función que ya pasó no se puede dar de alta: se muestra Finalizada en vez del botón -->
                   {% if (ver_inactivos and f.activa) or (f.pasada and not f.activa) %}
                   <span class="admin-btn-secondary">Finalizada</span>
                   {% else %}
+                  <!-- Envía el alta/baja a backoffice.cambiar_estado_funcion, previa confirmación -->
                   <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"
                     data-confirmar="{{ '¿Dar de baja esta función?' if f.activa else '¿Dar de alta esta función?' }}"
                     onsubmit="return confirm(this.dataset.confirmar)">
@@ -57,6 +62,7 @@
         </table>
       </div>
       {% elif not error %}
+      <!-- Sin funciones para mostrar -->
       <p class="admin-description">{{ 'No hay funciones dadas de baja.' if ver_inactivos else 'Todavía no hay funciones cargadas.' }}</p>
       {% endif %}
 {% endblock contenido_admin %}

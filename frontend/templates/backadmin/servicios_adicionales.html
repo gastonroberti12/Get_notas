@@ -14,7 +14,7 @@
                 adicional al sistema.
             </p>
 
-            <!--form para agregar servicios-->
+            <!-- FORMULARIO DE ALTA: envía a backoffice.servicios_admin (POST) -->
             <div class="admin-form-card">
 
                 {% if error_alta %}
@@ -111,6 +111,7 @@
 
             </div>
 
+            <!-- LISTADO DE SERVICIOS -->
             <div class="admin-section-heading admin-list-heading">
                 <h2>Servicios registrados</h2>
             </div>
@@ -121,6 +122,7 @@
 
             <div class="admin-form-card">
             
+                <!-- Pestañas: activos / dados de baja -->
                 {% with etiqueta_activos="Activos", etiqueta_bajas="Dados de baja" %}
                     {% include "backadmin/filtro_estado.html" %}
                 {% endwith %}
@@ -150,6 +152,7 @@
                                     <div class="admin-actions">
                                         <a href="{{ url_for('backoffice.servicios_editar', servicio_id=s.id) }}"
                                            class="admin-btn-secondary">Editar</a>
+                                        <!-- Envía el alta/baja a backoffice.servicios_estado (pide confirmación solo para la baja) -->
                                         <form method="POST"
                                               action="{{ url_for('backoffice.servicios_estado', servicio_id=s.id) }}"
                                               {% if s.activo %}onsubmit="return confirm('¿Dar de baja este servicio?')"{% endif %}>
@@ -167,6 +170,7 @@
                 </div>
 
                 {% elif not error %}
+                    <!-- Sin servicios para mostrar -->
                     <div class="admin-empty-chart">
                         <span class="admin-chart-icon">▥</span>
                         {% if ver_inactivos %}
