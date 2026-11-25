@@ -32,7 +32,7 @@ def clausula_in(valores, prefijo):
     marcadores_parametros = ", ".join(f"%({nombre})s" for nombre in nombres)
     parametros = {nombre: valor for nombre, valor in zip(nombres, valores)}
     return marcadores_parametros, parametros
-
+        
 
 def _construir_filtros(filtros, usuario_propio_id=None):
     """Arma el WHERE dinámico según los filtros que vinieron y devuelve (texto_where, parametros)."""
@@ -244,6 +244,7 @@ def confirmar_reserva_con_qr(reserva_id, codigos_qr, fecha_limite):
                     """,
                     {"reserva_id": reserva_id, "fecha_limite": fecha_limite},
                 )
+            
                 # No se actualizó ninguna fila: nada que confirmar.
                 if cursor.rowcount != 1:
                     conexion.rollback()

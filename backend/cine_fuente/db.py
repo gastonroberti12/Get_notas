@@ -2,7 +2,7 @@ import os
 import certifi # Para obtener los certificados de confianza
 import pymysql
 
-from pymysql.cursors import DictCursor
+from pymysql.cursors import DictCursor # objeto que envia las instrucciones sql, con dictcursor traes la info como un diccionario
 
 from constants import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
