@@ -24,7 +24,7 @@ def create_app():
     app.register_blueprint(purchases_bp)
     app.register_blueprint(errores_bp)
 
-    # Expone sucursales y sucursal_actual a todas las plantillas que se renderizan
+    # Expone sucursales y sucursal_actual a todas las plantillas que se renderizan, pide un diccionario donde cada clave pasa a ser una variable del template.
     app.context_processor(lambda: dict(zip(("sucursales", "sucursal_actual"), contexto_sucursales())))
     
     # Expone las funciones de roles a todas las plantillas, para mostrar u ocultar partes segun el rol

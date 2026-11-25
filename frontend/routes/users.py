@@ -68,6 +68,7 @@ def logout():
 @users_bp.route("/perfil")
 @solo_logueado
 def profile():
+    """Trae tus datos y tus reservas del backend y separa las reservas en próximas e historial."""
     #pedir datos del usuario y sus reservas al backend
     status, usuario = obtener_mi_usuario()
     if status in (401, 404):  # token vencido: se limpia la sesion para no quedar "logueado" sin poder consultar
@@ -119,6 +120,8 @@ def actualizar_perfil():
 @users_bp.route("/perfil/contrasenia", methods=['GET', 'POST'])
 @solo_logueado
 def cambiar_contrasenia():
+    """GET: muestra el formulario. POST: valida y cambia la contraseña en el backend; si sale bien,
+    cierra la sesión y manda al login."""
     if request.method == 'POST':
         actual = request.form.get('actual', '')
         nueva = request.form.get('nueva', '')
