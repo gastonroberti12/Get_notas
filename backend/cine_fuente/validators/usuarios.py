@@ -1,6 +1,10 @@
 from cine_fuente.validators.auth import validar_contrasenia, validar_email
-from cine_fuente.validators.comunes import error_validacion, validar_campos
-from cine_fuente.validators.reservas import validar_entero_positivo
+from cine_fuente.validators.comunes import (
+    error_validacion,
+    validar_campos,
+    validar_entero_positivo,
+    validar_texto,
+)
 
 ROLES_VALIDOS = ("cliente", "administrador")
 # Longitudes máximas según las columnas de la tabla usuarios.
@@ -36,16 +40,6 @@ def validar_filtros_usuarios(args) -> dict:
     }
 
 
-def _validar_texto_obligatorio(valor, campo):
-    """Texto no vacío, sin espacios laterales y dentro del largo de su columna."""
-    if not isinstance(valor, str) or not valor.strip():
-        error_validacion("Campo inválido", f"'{campo}' debe ser un texto no vacío.")
-    valor = valor.strip()
-    maximo = LONGITUDES_MAXIMAS[campo]
-    if len(valor) > maximo:
-        error_validacion("Campo inválido", f"'{campo}' no puede superar {maximo} caracteres.")
-    return valor
-
 
 def _validar_campo(campo, valor):
     """Aplica la validación propia de cada campo de usuario."""
@@ -57,7 +51,7 @@ def _validar_campo(campo, valor):
         if valor not in ROLES_VALIDOS:
             error_validacion("Rol inválido", f"'rol' debe ser uno de: {', '.join(ROLES_VALIDOS)}.")
         return valor
-    return _validar_texto_obligatorio(valor, campo)
+    return validar_texto(valor, campo, LONGITUDES_MAXIMAS[campo])
 
 
 

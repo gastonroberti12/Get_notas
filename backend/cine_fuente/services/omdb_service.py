@@ -30,8 +30,8 @@ class OmdbResponseError(OmdbError):
     """Se lanza cuando la API responde correctamente pero devuelve un error de negocio (ej: 'Movie not found!')."""
     pass
 
-# Realiza una consulta a OMDb.
 def solicitar_omdb(params):
+    """Hace el GET a OMDb con la API key y devuelve el JSON como dict; lanza error si no se puede."""
     api_key = os.getenv("OMDB_API_KEY", "").strip()
     if not api_key:
         raise OmdbConfigurationError("Falta configurar la variable OMDB_API_KEY.")
@@ -81,8 +81,8 @@ def resumen_pelicula(item):
     }
 
 
-# Busca películas mediante OMDb.
 def buscar_peliculas(query, page=1):
+    """Busca películas en OMDb y devuelve {"resultados": [...], "total_resultados": n}."""
     data = solicitar_omdb({"s": query, "type": "movie", "page": page})
     error = data.get("Error", "").strip() if isinstance(data.get("Error"), str) else ""
     if data.get("Response") == "False" and error in {
@@ -107,8 +107,8 @@ def buscar_peliculas(query, page=1):
     }
 
 
-# Obtiene el detalle normalizado de una película.
 def obtener_detalle_pelicula(imdb_id):
+    """Trae el detalle de una película de OMDb y lo devuelve como dict con los campos de nuestra tabla."""
     if not IMDB_ID_PATTERN.fullmatch(imdb_id):
         raise ValueError("El identificador debe tener el formato tt seguido de números.")
 

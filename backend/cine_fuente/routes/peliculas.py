@@ -1,15 +1,9 @@
-from datetime import datetime
-
 from flask import Blueprint, jsonify, request
 from cine_fuente.services.seguridad import requiere_rol
-from cine_fuente.repositories.peliculas import (
-    consultar_pelicula_por_id as obtener_pelicula,
-    consultar_pelicula_por_imdb as obtener_pelicula_por_imdb,
-    actualizar_pelicula,
-)
 from cine_fuente.utils import (
     construir_error_api,
     respuesta_error_api,
+    respuesta_error_excepcion,
     respuesta_paginada,
     validar_paginacion,
 )
@@ -22,15 +16,16 @@ from cine_fuente.services.omdb_service import (
     buscar_peliculas as buscar_peliculas_omdb,
 )
 
-from cine_fuente.services.peliculas_service import (
-    dar_de_baja,
+from cine_fuente.services.peliculas import (
+    actualizar_pelicula_por_id,
+    crear_pelicula_desde_omdb,
+    eliminar_pelicula,
     formatear_pelicula,
-    insertar_pelicula_segura,
+    obtener_pelicula_por_id,
     obtener_peliculas,
 )
 
 from cine_fuente.validators.peliculas import (
-    convertir_fecha_existente,
     parsear_fecha_cartelera,
     validar_modificacion_pelicula,
     validar_inicio_no_pasado,
@@ -40,18 +35,6 @@ from cine_fuente.validators.peliculas import (
 
 
 peliculas_bp = Blueprint("peliculas", __name__, url_prefix="/peliculas")
-
-
-def normalizar_fecha_cartelera(valor):
-    if valor is None:
-        return None
-    return datetime.fromisoformat(valor).replace(tzinfo=None)
-
-
-def normalizar_cambios_fecha(cambios):
-    for campo in ("fecha_inicio_cartelera", "fecha_fin_cartelera"):
-        if campo in cambios:
-            cambios[campo] = normalizar_fecha_cartelera(cambios[campo])
 
 
 @peliculas_bp.route("", methods=["GET"])
@@ -83,20 +66,6 @@ def crear_pelicula():
             "Datos de película inválidos",
             "El id_externo es obligatorio.",
         ), 400)
-    pelicula_existente = obtener_pelicula_por_imdb(imdb_id.strip())
-    if pelicula_existente is not None:
-        mensaje = (
-            "La película ya existe pero está dada de baja; "
-            "reactivala desde el listado."
-            if not pelicula_existente["activa"]
-            else "La película ya existe en la cartelera."
-        )
-        return respuesta_error_api(construir_error_api(
-            "pelicula.already.exists",
-            "Película duplicada",
-            mensaje,
-        ), 409)
-
     if "fecha_inicio_cartelera" not in datos or "fecha_fin_cartelera" not in datos:
         raise ValueError(construir_error_api(
             "pelicula.fecha.required",
@@ -107,12 +76,16 @@ def crear_pelicula():
         datos["fecha_inicio_cartelera"],
         datos["fecha_fin_cartelera"],
     )
-    validar_inicio_no_pasado(parsear_fecha_cartelera(
-        fecha_inicio, "fecha_inicio_cartelera"
-    ))
+    validar_inicio_no_pasado(parsear_fecha_cartelera(fecha_inicio, "fecha_inicio_cartelera"))
 
     try:
-        pelicula = obtener_detalle_pelicula(imdb_id.strip())
+        pelicula = crear_pelicula_desde_omdb(
+            imdb_id.strip(),
+            fecha_inicio,
+            fecha_fin,
+        )
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
     except OmdbResponseError as error:
         return respuesta_error_api(construir_error_api(
             "pelicula.not.found", "Película no encontrada", str(error)
@@ -122,73 +95,16 @@ def crear_pelicula():
             "omdb.error", "Error de OMDb", str(error)
         ), 502)
 
-    pelicula.update({
-        "fecha_inicio_cartelera": normalizar_fecha_cartelera(fecha_inicio),
-        "fecha_fin_cartelera": normalizar_fecha_cartelera(fecha_fin),
-        "activa": True,
-    })
-    pelicula_id = insertar_pelicula_segura(pelicula)
-    return jsonify(formatear_pelicula(obtener_pelicula(pelicula_id))), 201
+    return jsonify(pelicula), 201
 
 
 @peliculas_bp.route("/<int:pelicula_id>", methods=["PATCH"])
 @requiere_rol("administrador")
 # Actualiza los datos editables de una película.
 def modificar_pelicula(pelicula_id):
-    pelicula_actual = obtener_pelicula(pelicula_id)
-    if pelicula_actual is None:
-        return jsonify(construir_error_api(
-            "pelicula.not.found", "Película no encontrada",
-            "La película solicitada no existe.",
-        )), 404
     datos = request.get_json(silent=True)
     cambios = validar_modificacion_pelicula(datos)
-    if "fecha_inicio_cartelera" in cambios or "fecha_fin_cartelera" in cambios:
-        fecha_inicio = convertir_fecha_existente(
-            cambios.get("fecha_inicio_cartelera", pelicula_actual["fecha_inicio_cartelera"])
-        )
-        fecha_fin = convertir_fecha_existente(
-            cambios.get("fecha_fin_cartelera", pelicula_actual["fecha_fin_cartelera"])
-        )
-        if fecha_inicio is not None or fecha_fin is not None:
-            if fecha_inicio is None or fecha_fin is None:
-                raise ValueError(construir_error_api(
-                    "pelicula.fecha.required",
-                    "Fechas requeridas",
-                    "La película debe tener fecha de inicio y fecha de fin.",
-                ), 400)
-            validar_rango_cartelera(fecha_inicio, fecha_fin)
-            inicio_enviado = "fecha_inicio_cartelera" in cambios
-            reactivando = cambios.get("activa") is True and not pelicula_actual["activa"]
-            if inicio_enviado:
-                inicio_dt = parsear_fecha_cartelera(
-                    convertir_fecha_existente(cambios["fecha_inicio_cartelera"]),
-                    "fecha_inicio_cartelera",
-                )
-                inicio_guardado = parsear_fecha_cartelera(
-                    convertir_fecha_existente(pelicula_actual["fecha_inicio_cartelera"]),
-                    "fecha_inicio_cartelera",
-                )
-                if reactivando or inicio_dt != inicio_guardado:
-                    validar_inicio_no_pasado(inicio_dt)
-        normalizar_cambios_fecha(cambios)
-    if cambios.get("activa") is False:
-        if not dar_de_baja(pelicula_id):
-            return respuesta_error_api(construir_error_api(
-                "BAJA_CON_RESERVAS_ACTIVAS",
-                "No se puede dar de baja la película",
-                "La película tiene reservas activas para funciones futuras.",
-            ), 409)
-        cambios.pop("activa")
-    elif cambios.get("activa") is True and not pelicula_actual["activa"]:
-        if "fecha_inicio_cartelera" not in cambios or "fecha_fin_cartelera" not in cambios:
-            raise ValueError(construir_error_api(
-                "pelicula.fecha.required",
-                "Fechas requeridas",
-                "La reactivación requiere un nuevo período de cartelera.",
-            ), 400)
-    if cambios:
-        actualizar_pelicula(pelicula_id, cambios)
+    actualizar_pelicula_por_id(pelicula_id, cambios)
     return "", 204
 
 
@@ -196,30 +112,23 @@ def modificar_pelicula(pelicula_id):
 @requiere_rol("administrador")
 # Da de baja una película sin eliminarla.
 def borrar_pelicula(pelicula_id):
-    if obtener_pelicula(pelicula_id) is None:
-        return jsonify(construir_error_api(
-            "pelicula.not.found", "Película no encontrada",
-            "La película solicitada no existe.",
-        )), 404
-    if not dar_de_baja(pelicula_id):
-        return respuesta_error_api(construir_error_api(
-            "BAJA_CON_RESERVAS_ACTIVAS",
-            "No se puede dar de baja la película",
-            "La película tiene reservas activas para funciones futuras.",
-        ), 409)
+    try:
+        eliminar_pelicula(pelicula_id)
+    except ValueError as error:
+        return respuesta_error_excepcion(error)
     return "", 204
 
 
 @peliculas_bp.route("/<int:pelicula_id>", methods=["GET"])
 # Obtiene una película por su identificador.
 def consultar_pelicula(pelicula_id):
-    pelicula = obtener_pelicula(pelicula_id)
+    pelicula = obtener_pelicula_por_id(pelicula_id)
     if pelicula is None:
         return respuesta_error_api(construir_error_api(
             "pelicula.not.found", "Película no encontrada",
             "La película solicitada no existe."
         ), 404)
-    return jsonify(formatear_pelicula(pelicula)), 200
+    return jsonify(pelicula), 200
 
 
 @peliculas_bp.route("/buscar", methods=["GET"])

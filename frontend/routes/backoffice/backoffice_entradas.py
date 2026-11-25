@@ -1,18 +1,17 @@
-from flask import render_template, redirect, url_for, request
-from api_cliente import llamar_api, mensaje_error
-from routes.roles import es_admin
+from flask import render_template, request
+from services.api_cliente import mensaje_error
+from services.entradas import validar_entrada
+from logica.roles import solo_admin
 from routes.backoffice.backoffice import backoffice_bp
 
 
 @backoffice_bp.route("/backoffice/validar-qr", methods=["GET", "POST"])
+@solo_admin
 def validar_qr_admin():
-    if not es_admin():
-        return redirect(url_for("peliculas.inicio"))
-
     resultado = None
     if request.method == "POST":
         codigo = request.form.get("codigo_qr", "").strip()
-        status, cuerpo = llamar_api("POST", "/entradas/validacion", {"codigo_qr": codigo})
+        status, cuerpo = validar_entrada(codigo)
         ok = status == 200
         resultado = {
             "ok": ok,

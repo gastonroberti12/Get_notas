@@ -1,7 +1,7 @@
 from constants import CAMPOS_SERVICIOS_PERMITIDOS
 from functools import partial
 from cine_fuente.utils import validar_precio
-from cine_fuente.validators.comunes import error_validacion, validar_texto
+from cine_fuente.validators.comunes import error_validacion, validar_campos, validar_texto
 
 def validar_nombre(nombre):
     return validar_texto(nombre, "nombre", 100)
@@ -83,11 +83,30 @@ def validar_creacion_servicio(datos):
 
 # En una reserva solamente se puede modificar la cantidad del servicio.
 def validar_modificacion_servicio_reserva(datos):
-    if not isinstance(datos, dict):
-        error_validacion("Cuerpo JSON invalido", "Se debe enviar un objeto JSON")
-
-    if "cantidad" not in datos or len(datos) != 1:
-        error_validacion("Campos invalidos", "Se debe enviar únicamente el campo cantidad")
-
+    validar_campos(
+        datos,
+        {"cantidad"},
+        {"cantidad"},
+        error_cuerpo=("Cuerpo JSON invalido", "Se debe enviar un objeto JSON"),
+        error_desconocidos=("Campos invalidos", "Se debe enviar únicamente el campo cantidad"),
+        error_faltantes=("Campos invalidos", "Se debe enviar únicamente el campo cantidad"),
+    )
     return validar_cantidad(datos["cantidad"])
 
+
+def validar_agregado_servicio_reserva(datos):
+    if not isinstance(datos, dict):
+        error_validacion(
+            "Cuerpo JSON inválido",
+            "Cuerpo JSON inválido",
+        )
+
+    try:
+        servicio_id = int(datos["servicio_id"])
+        cantidad = validar_cantidad(datos["cantidad"])
+    except (KeyError, TypeError, ValueError):
+        error_validacion(
+            "Se requieren servicio_id y una cantidad válida",
+            "Se requieren servicio_id y una cantidad válida",
+        )
+    return servicio_id, cantidad

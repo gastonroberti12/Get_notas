@@ -38,7 +38,7 @@
 
                   <a href="{{ url_for('backoffice.editar_funcion', funcion_id=f.id) }}"
                     class="admin-btn-secondary">Editar</a>
-                  {% if ver_inactivos and f.activa %}
+                  {% if (ver_inactivos and f.activa) or (f.pasada and not f.activa) %}
                   <span class="admin-btn-secondary">Finalizada</span>
                   {% else %}
                   <form method="post" action="{{ url_for('backoffice.cambiar_estado_funcion', funcion_id=f.id) }}"

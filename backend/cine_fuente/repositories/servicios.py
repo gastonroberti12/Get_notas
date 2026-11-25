@@ -105,6 +105,7 @@ def existe_servicio(servicio_id):
 
 # PATCH /servicios/<id>
 def actualizar_servicio(servicio_id, campos):
+    """Actualiza solo los campos enviados (de una lista permitida) de un servicio."""
 
     if not campos:
         raise ValueError("No hay campos para actualizar")

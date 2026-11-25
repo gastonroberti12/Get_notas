@@ -12,7 +12,6 @@ SELECT_FUNCION = (
 )
 
 
-# Consulta las funciones registradas.
 def consultar_funciones(
     pelicula_id=None,
     sala_id=None,
@@ -20,7 +19,8 @@ def consultar_funciones(
     sucursal_id=None,
     fecha=None,
 ):
-    sql = SELECT_FUNCION + " WHERE 1 = 1"
+    """Devuelve una lista de dict con las funciones que cumplen los filtros, ordenadas por fecha."""
+    sql = SELECT_FUNCION + " WHERE 1 = 1" #Con 1 = 1 cada if agrega " AND" sin preocuparse. Y si no viene ningún filtro, queda WHERE 1 = 1, que trae todo
     params = []
     if pelicula_id is not None:
         sql += " AND f.pelicula_id = %s"
@@ -37,7 +37,7 @@ def consultar_funciones(
     if activa is not None:
         # Activas = vigentes y futuras; inactivas = dadas de baja o ya pasadas.
         sql += " AND f.activa = TRUE AND f.fecha_hora >= %s" if activa else " AND (f.activa = FALSE OR f.fecha_hora < %s)"
-        params.append(ahora_gmt3().replace(tzinfo=None))
+        params.append(ahora_gmt3().replace(tzinfo=None)) #se agrega la fecha actual en formato dateTime sin formato de zona para poder hacer las comparaciones
     sql += " ORDER BY f.fecha_hora"
     return ejecutar_consulta(sql, tuple(params))
 
@@ -71,13 +71,19 @@ def bloquear_sala_para_funcion(cursor, sala_id):
     return cursor.fetchone()
 
 
-def consultar_funciones_sala_en_transaccion(cursor, sala_id):
-    cursor.execute(
-        "SELECT f.fecha_hora, p.duracion_min "
+def consultar_funciones_sala_en_transaccion(
+    cursor, sala_id, excluir_funcion_id=None
+):
+    sql = (
+        "SELECT f.id, f.fecha_hora, p.duracion_min "
         "FROM funcion f JOIN pelicula p ON p.id = f.pelicula_id "
-        "WHERE f.sala_id = %s",
-        (sala_id,),
+        "WHERE f.sala_id = %s"
     )
+    parametros = [sala_id]
+    if excluir_funcion_id is not None:
+        sql += " AND f.id <> %s"
+        parametros.append(excluir_funcion_id)
+    cursor.execute(sql, tuple(parametros))
     return cursor.fetchall()
 
 
@@ -92,7 +98,7 @@ def insertar_funcion_en_transaccion(cursor, pelicula_id, sala_id, fecha_hora, pr
 
 def obtener_funcion_para_actualizar(cursor, funcion_id):
     cursor.execute(
-        "SELECT id, pelicula_id, sala_id, fecha_hora "
+        "SELECT id, pelicula_id, sala_id, fecha_hora, activa "
         "FROM funcion WHERE id = %s FOR UPDATE",
         (funcion_id,),
     )

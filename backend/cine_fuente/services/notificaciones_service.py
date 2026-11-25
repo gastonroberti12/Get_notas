@@ -7,13 +7,19 @@ from markupsafe import Markup
 import logging, threading, time
 logger = logging.getLogger(__name__)
 
+# Jinja es el mismo motor de templates que usa Flask; acá se usa directo porque el backend
+# no tiene páginas web (no hay render_template), solo arma el HTML de los mails
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from constants import RESERVA_CANCELACION_MINUTOS
 from cine_fuente.services.qr_service import generar_qr_png
 
+# Rutas a las carpetas, calculadas desde este archivo para que funcionen en cualquier compu: sube dos carpetas, hasta backend/cine_fuente/
 DIR_BASE = Path(__file__).resolve().parent.parent
-DIR_TEMPLATES = DIR_BASE / "templates" / "email"
-DIR_CSS = DIR_BASE / "static" / "css"
+DIR_TEMPLATES = DIR_BASE / "templates" / "email"   # confirmacion.html y estado_reserva.html
+DIR_CSS = DIR_BASE / "static" / "css"              # confirmacion.css (estilos de los mails)
+
+# Entorno de Jinja propio para los mails: busca los templates en DIR_TEMPLATES.
+# autoescape: si un dato trae < o > (ej. un nombre raro), se muestra como texto y no como HTML
 _entorno = Environment(loader=FileSystemLoader(DIR_TEMPLATES), autoescape=select_autoescape())
 
 
@@ -37,11 +43,13 @@ def _url_cancelacion(d):
 
 
 def _crear_texto(d):
-    """Versión texto plano (fallback para clientes sin HTML)."""
+    """Versión texto plano del mail de confirmación (se ve si el programa de correo no muestra HTML)."""
     items = "\n".join(f"{c} x {n}: ${c * p}" for n, c, p in _items(d))
     butacas = ", ".join(_butaca(e) for e in d["entradas"])
     url = _url_cancelacion(d)
     cancelar = f"\nPodés cancelar hasta {RESERVA_CANCELACION_MINUTOS} min antes de la función: {url}\n" if url else ""
+    
+    # El código de cada entrada en texto, por si no se puede escanear el QR
     codigos = "\n".join(f"{_butaca(e)}: {e['codigo_qr']}" for e in d["entradas"])
     return (
         f"Hola {d['nombre']},\n\nTu reserva #{d['id']} fue confirmada.\n\n"
@@ -54,7 +62,8 @@ def _crear_texto(d):
 
 
 def _crear_html(d, cids):
-    """Renderiza el template del mail con su CSS embebido en el <head>."""
+    """Renderiza el template del mail con su CSS embebido en el <head>, sin <href>, los programas de email no lo aceptan."""
+    
     css = (DIR_CSS / "confirmacion.css").read_text(encoding="utf-8")
     return _entorno.get_template("confirmacion.html").render(
         d=d, cids=cids, items=_items(d), fecha=_fecha(d), url=_url_cancelacion(d),
@@ -72,18 +81,23 @@ def enviar_confirmacion_pago(datos_reserva):
     if any(not e.get("codigo_qr") for e in entradas):
         raise ValueError("Hay entradas sin código QR asignado.")
     pngs = [generar_qr_png(e["codigo_qr"]) for e in entradas]
+    # Un id único por QR, para referenciarlo desde el HTML con src="cid:...".
     cids = [make_msgid(domain="cineparadiso.local") for _ in entradas]
 
+    #partes del email:
     mensaje = EmailMessage()
     mensaje["Subject"] = f"Entradas confirmadas: {datos_reserva['pelicula']} - Reserva #{datos_reserva['id']}"
     mensaje["To"] = destinatario
-    mensaje.set_content(_crear_texto(datos_reserva))
-    mensaje.add_alternative(_crear_html(datos_reserva, cids), subtype="html")
+    mensaje.set_content(_crear_texto(datos_reserva)) #version en texto plano
+    mensaje.add_alternative(_crear_html(datos_reserva, cids), subtype="html") #agrega la versión HTML, con colores y botones.
 
     html = mensaje.get_body(preferencelist=("html",))
+    #recorro las dos listas de a pares, el 1ero con el 1ero...
     for png, cid in zip(pngs, cids):
+        # Pega cada imagen dentro del HTML.
         html.add_related(png, maintype="image", subtype="png", cid=cid)
     for e, png in zip(entradas, pngs):
+        # Además va como adjunto descargable.
         mensaje.add_attachment(png, maintype="image", subtype="png",
                                filename=f"entrada-butaca-{_butaca(e)}.png")
 
@@ -101,20 +115,31 @@ def mail_habilitado():
 
 
 def _enviar_smtp(mensaje):
+    """Entrega un mail ya armado (EmailMessage) al servidor de correo por SMTP."""
+
     if not mail_habilitado():
         raise RuntimeError("El envío de mails está deshabilitado en Render.")
+
+    # A qué servidor conectarse (ej. smtp.gmail.com) y desde qué dirección sale el mail
     servidor, remitente = os.getenv("SMTP_HOST"), os.getenv("SMTP_FROM")
     if not servidor or not remitente:
         raise RuntimeError("Faltan SMTP_HOST o SMTP_FROM.")
-    mensaje["From"] = remitente
+    mensaje["From"] = remitente    # el mail venía sin remitente: se completa acá, en un solo lugar
+
+    # Cuenta para iniciar sesión en el servidor
     usuario, contrasena = os.getenv("SMTP_USER"), os.getenv("SMTP_PASSWORD")
+
+    # Abre la conexión al servidor. Puerto 587 por defecto (el estándar para mandar mails con TLS)
     with smtplib.SMTP(servidor, int(os.getenv("SMTP_PORT", "587")), timeout=10) as conexion:
-        conexion.starttls()
+        conexion.starttls()        # encripta la conexión ANTES de mandar usuario y contraseña
+
+        # Si hay usuario configurado, se loguea (los servidores reales como Gmail lo exigen)
         if usuario:
             if not contrasena:
                 raise RuntimeError("Falta SMTP_PASSWORD.")
             conexion.login(usuario, contrasena)
-        conexion.send_message(mensaje)
+
+        conexion.send_message(mensaje)    # entrega el mail; el servidor se encarga de hacerlo llegar
 
 
 def mail_posible(datos):
@@ -130,6 +155,7 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
     if not mail_habilitado():
         return
 
+    # Corre en otro hilo.
     def tarea():
         for n in range(1, intentos + 1):
             try:
@@ -138,28 +164,48 @@ def enviar_en_segundo_plano(funcion_envio, datos, intentos=3, espera=2):
                 return
             except Exception:
                 logger.exception("Falló el mail de la reserva %s (intento %s)", datos["id"], n)
+                # Cada reintento espera más.
                 time.sleep(espera * n)
         logger.error("Mail NO enviado tras %s intentos (reserva %s)", intentos, datos["id"])
 
     try:
+        #daemon=True: el hilo no frena el cierre del servidor, y la respuesta del pago no espera al mail
         threading.Thread(target=tarea, daemon=True).start()
     except Exception:
         logger.exception("No se pudo iniciar el hilo de envío de mail")
 
 def enviar_estado_reserva(d):
-    """Mail de cancelación o expiración, según d['estado']."""
-    expirada = d["estado"] == "expirada"
+    """Manda el mail que avisa que una reserva se canceló o expiró.
+
+    d: diccionario con los datos de la reserva (sale de obtener_datos_notificacion).
+       Usa: id, estado, email, nombre, pelicula, fecha_hora, sucursal, sala.
+    """
+    # 1) Elegir los textos según el motivo: un mismo mail sirve para los dos casos
+    expirada = d["estado"] == "expirada"          # True si expiró, False si se canceló
     titulo = "Tu reserva expiró" if expirada else "Tu reserva fue cancelada"
     detalle = ("No se registró el pago a tiempo y las butacas fueron liberadas."
                if expirada else "Las butacas fueron liberadas.")
+    fecha = _fecha(d)                             # "21/11/2026 a las 19:00 hs"
+
+    # 2) Crear el mail y completar los encabezados (el remitente lo pone _enviar_smtp)
     mensaje = EmailMessage()
     mensaje["Subject"] = f"{titulo} - Reserva #{d['id']}"
     mensaje["To"] = d["email"]
+
+    # 3) Versión en texto plano: la ven los clientes de correo que no muestran HTML
     mensaje.set_content(f"Hola {d['nombre']},\n\n{titulo}.\n{detalle}\n\n"
-                        f"Película: {d['pelicula']}\nFecha: {_fecha(d)}\n"
+                        f"Película: {d['pelicula']}\nFecha: {fecha}\n"
                         f"Lugar: {d['sucursal']} - {d['sala']}")
-    mensaje.add_alternative(_entorno.get_template("estado_reserva.html").render(
-        d=d, titulo=titulo, detalle=detalle, fecha=_fecha(d),
-        estilos=Markup(f"<style>{(DIR_CSS / 'confirmacion.css').read_text(encoding='utf-8')}</style>"),
-    ), subtype="html")
+
+    # 4) Versión HTML : se arma con el template de Jinja.
+    #    El CSS va pegado dentro del mail porque los correos no cargan archivos externos.
+    #    Markup avisa a Jinja que ese <style> es HTML seguro, para que no lo "escape".
+    css = (DIR_CSS / "confirmacion.css").read_text(encoding="utf-8")
+    html = _entorno.get_template("estado_reserva.html").render(
+        d=d, titulo=titulo, detalle=detalle, fecha=fecha,
+        estilos=Markup(f"<style>{css}</style>"),
+    )
+    mensaje.add_alternative(html, subtype="html")
+
+    # 5) Mandarlo por SMTP. Si falla, lanza un error que atrapa enviar_en_segundo_plano
     _enviar_smtp(mensaje)

@@ -14,8 +14,8 @@ def consultar_pelicula_por_imdb(imdb_id):
     return filas[0] if filas else None
 
 
-# Consulta las películas almacenadas; con activa, filtra por ese estado.
 def consultar_peliculas(activa=None, sucursal_id=None, titulo=None, genero=None):
+    """Devuelve una lista de dict con las películas según activa, sucursal (con funciones futuras), título y género."""
     ahora = ahora_gmt3().replace(tzinfo=None)
     condiciones = []
     parametros = []
@@ -31,12 +31,15 @@ def consultar_peliculas(activa=None, sucursal_id=None, titulo=None, genero=None)
             ")",
         ])
         parametros.extend([ahora, sucursal_id, ahora])
-    elif activa is False:
-        condiciones.append("(activa = FALSE OR fecha_fin_cartelera < %s)")
-        parametros.append(ahora)
-    else:
+        if activa is not None:
+            condiciones.append("activa = %s")
+            parametros.append(activa)
+    elif activa is None:
         condiciones.extend(["activa = TRUE", "fecha_fin_cartelera >= %s"])
         parametros.append(ahora)
+    else:
+        condiciones.append("activa = %s")
+        parametros.append(activa)
 
     if titulo is not None:
         condiciones.append("LOWER(titulo) LIKE LOWER(%s)")
