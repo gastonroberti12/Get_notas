@@ -8,6 +8,8 @@ const formulario = document.getElementById('form-validar');
 let flujo = null;
 
 function detenerCamara() {
+    //Apaga cada pista del flujo (aca solo hay una, la del video).
+    // Si no se frenan, la camara sigue encendida aunque se oculte el video.
     if (flujo) {
         flujo.getTracks().forEach(pista => pista.stop());
         flujo = null;
@@ -16,10 +18,11 @@ function detenerCamara() {
     botonCamara.textContent = 'Escanear con la cámara';
 }
 
-
+//Revisa el video una y otra vez hasta encontrar un QR.
+//Cuando lo encuentra carga el codigo en el formulario y lo envia.
 async function buscarQr(detector) {
     if (!flujo) return;
-    const codigos = await detector.detect(video);
+    const codigos = await detector.detect(video); //Le pide al detector que mire el cuadro de video.
     if (codigos.length > 0) {
         campoCodigo.value = codigos[0].rawValue;
         detenerCamara();
@@ -30,6 +33,7 @@ async function buscarQr(detector) {
 }
 
 
+//Prende o apaga la camara cuando se hace click en el boton. Al prenderla empieza a buscar QR.
 async function activarCamara() {
     if (flujo) {
         detenerCamara();
@@ -40,6 +44,7 @@ async function activarCamara() {
         return;
     }
     try {
+        //Pide permiso para usar la camara trasera del celular.
         flujo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         video.srcObject = flujo;
         video.hidden = false;
