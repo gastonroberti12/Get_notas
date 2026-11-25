@@ -19,19 +19,19 @@ INSERT INTO salas (sucursal_id, nombre, capacidad) VALUES
     ((SELECT id FROM sucursales WHERE nombre = 'Belgrano'), 'Sala 2',    50);
  
 
---Genera las butacas de TODAS las salas, con filas A-J y butacas 1-10
---Cada sala tiene (capacidad / 10) filas de 10 butacas cada una.
+-- Genera las butacas de TODAS las salas, con filas A-J y butacas 1-10
+-- Cada sala tiene (capacidad / 10) filas de 10 butacas cada una.
 INSERT INTO butacas (sala_id, fila, numero)
 WITH RECURSIVE secuencia AS (
     SELECT 1 AS n
     UNION ALL
     SELECT n + 1 FROM secuencia WHERE n < 10
 )
---Combina la secuencia de filas con los numeros
+-- Combina la secuencia de filas con los numeros
 SELECT salas.id, CHAR(64 + filas.n), numeros.n
 FROM salas
 JOIN secuencia AS filas ON filas.n <= salas.capacidad / 10
-CROSS JOIN secuencia AS numeros; --cada fila se combina con los 10 numeros de butaca.
+CROSS JOIN secuencia AS numeros; -- cada fila se combina con los 10 numeros de butaca.
 
 -- Usuarios de prueba (contraseña: Admin1234, solo para desarrollo)
 INSERT INTO usuarios (nombre, apellido, email, contrasena, rol) VALUES
