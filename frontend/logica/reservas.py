@@ -41,6 +41,7 @@ def clasificar_reserva(reserva):
             return 'historial'
 
         return 'proximas'
+    # pendientes y expiradas no se muestran en el perfil (la pendiente se retoma desde el checkout)
     return None
 
 
